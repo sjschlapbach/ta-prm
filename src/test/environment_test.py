@@ -3,12 +3,13 @@ import os
 from src.environment import Environment
 from shapely.geometry import Polygon, Point, LineString
 
+
 class TestEnvironment:
     def test_create_environment(self):
         empty_env = Environment()
         assert empty_env is not None
 
-    def test_create_env_polygon(self):        
+    def test_create_env_polygon(self):
         polygon = Polygon([(0, 0), (0, 1), (1, 1), (1, 0)])
         env_poly = Environment([polygon])
         assert env_poly is not None

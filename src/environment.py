@@ -4,6 +4,7 @@ from shapely import wkt
 import json
 import matplotlib.pyplot as plt
 
+
 class Environment:
     """
     A class to represent an environment consisting of a list of shapely polygon objects.
@@ -51,16 +52,16 @@ class Environment:
             self.polygons = polygons
         else:
             self.polygons = []
-    
+
     def plot(self):
         """
         Plots the polygons in the environment using matplotlib.
         """
         for polygon in self.polygons:
-            x,y = polygon.exterior.xy
-            plt.fill(x,y, color="#0000ff", alpha=0.5)
+            x, y = polygon.exterior.xy
+            plt.fill(x, y, color="#0000ff", alpha=0.5)
         plt.show()
-    
+
     def closest_polygon_distance(self, point: Point) -> float:
         """
         Computes the distance between a shapely point object and the closest polygon in the environment.
@@ -77,7 +78,7 @@ class Environment:
             the distance between the point and the closest polygon in the environment, or 0.0 if there is a collision
         """
         return min([polygon.distance(point) for polygon in self.polygons])
-    
+
     def closest_line_distance(self, line: LineString) -> float:
         """
         Computes the distance between a shapely line object and the closest polygon in the environment.
@@ -93,7 +94,7 @@ class Environment:
             the distance between the line and the closest polygon in the environment
         """
         return min([line.distance(polygon) for polygon in self.polygons])
-    
+
     def change_polygons(self, new_polygons: List[Polygon]):
         """
         Changes the polygons stored in the environment.
@@ -104,7 +105,7 @@ class Environment:
             a list of shapely polygon objects representing the new environment
         """
         self.polygons = new_polygons
-    
+
     def save(self, filepath: str):
         """
         Logs the polygons stored in the environment to a file in JSON format.
@@ -114,9 +115,9 @@ class Environment:
         filepath : str
             the path to the file where the polygons will be logged
         """
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             json.dump([polygon.wkt for polygon in self.polygons], f)
-    
+
     def load(self, filepath: str):
         """
         Loads the polygons stored in a file into the environment.
@@ -126,6 +127,6 @@ class Environment:
         filepath : str
             the path to the file where the polygons are stored
         """
-        with open(filepath, 'r') as f:
+        with open(filepath, "r") as f:
             polygons_wkt = json.load(f)
         self.polygons = [wkt.loads(element) for element in polygons_wkt]
