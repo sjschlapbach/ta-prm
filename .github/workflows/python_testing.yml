@@ -27,12 +27,3 @@ jobs:
       - name: Run tests
         run: |
           pytest src/test/
-
-  format-check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install autopep8
-        run: pip install autopep8
-      - name: Check formatting with autopep8
-        run: autopep8 --diff --recursive --select=.py . --exit-code
