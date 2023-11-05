@@ -5,14 +5,6 @@ from shapely.geometry import Polygon, Point, LineString
 
 
 class TestEnvironment:
-
-
-
-
-
-
-
-    
     def test_create_environment(self):
         empty_env = Environment()
         assert empty_env is not None
@@ -37,8 +29,7 @@ class TestEnvironment:
         point = Point(0.5, 0.5)
         assert env.closest_polygon_distance(point) == 0
         point = Point(5, 5)
-        assert abs(env.closest_polygon_distance(
-            point) - 5.656854249492381) < 1e-10
+        assert abs(env.closest_polygon_distance(point) - 5.656854249492381) < 1e-10
         point = Point(10, 10)
         assert env.closest_polygon_distance(point) == 0
         point = Point(10.5, 10.5)
@@ -52,8 +43,7 @@ class TestEnvironment:
         line = LineString([(0, 0), (1, 1)])
         assert env.closest_line_distance(line) == 0
         line = LineString([(2, 2), (9, 9)])
-        assert abs(env.closest_line_distance(
-            line) - 1.4142135623730951) < 1e-10
+        assert abs(env.closest_line_distance(line) - 1.4142135623730951) < 1e-10
         line = LineString([(10, 10), (11, 11)])
         assert env.closest_line_distance(line) == 0
         line = LineString([(5, 5), (15, 15)])
