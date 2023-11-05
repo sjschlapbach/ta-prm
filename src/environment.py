@@ -115,7 +115,7 @@ class Environment:
         filepath : str
             the path to the file where the polygons will be logged
         """
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             json.dump([polygon.wkt for polygon in self.polygons], f)
 
     def load(self, filepath: str):
@@ -127,6 +127,6 @@ class Environment:
         filepath : str
             the path to the file where the polygons are stored
         """
-        with open(filepath, 'r') as f:
+        with open(filepath, "r") as f:
             polygons_wkt = json.load(f)
         self.polygons = [wkt.loads(element) for element in polygons_wkt]
