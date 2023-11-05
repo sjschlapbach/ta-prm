@@ -1,5 +1,11 @@
 name: Python Testing
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    types: [opened, synchronize]
 
 jobs:
   test:
