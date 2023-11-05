@@ -34,4 +34,4 @@ jobs:
       - name: Install autopep8
         run: pip install autopep8
       - name: Check formatting with autopep8
-        run: autopep8 --diff --recursive .
+        run: autopep8 --diff --recursive --select=.py . --exit-code
