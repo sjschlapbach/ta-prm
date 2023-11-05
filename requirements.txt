@@ -1,5 +1,5 @@
-networkx>=3.2.1
 numpy>=1.26.1
-polytope>=0.2.4
 scipy>=1.11.3
-setuptools>=68.2.2
+shapely>=2.0.2
+pytest>=7.4.3
+matplotlib>=3.8.1
