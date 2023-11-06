@@ -1,6 +1,6 @@
-# Time Aware PRM
+# Time-Aware PRM
 
-This repository contains a Python implementation of the Time Aware PRM (TAPRM) algorithm. TAPRM is a sampling-based motion planning algorithm that is able to find a solution to a motion planning problem in a time-varying environment.
+This repository contains a Python implementation of the Time-Aware PRM (TA-PRM) algorithm. TA-PRM is a sampling-based motion planning algorithm that is able to find a solution to a motion planning problem in a time-varying environment.
 
 ## Setup
 
