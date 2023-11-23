@@ -3,6 +3,7 @@ from shapely.geometry import Point as ShapelyPoint, LineString, Polygon
 from pandas import Interval
 from enum import Enum
 from src.geometry.point import Point
+from matplotlib import pyplot as plt
 
 
 class TestPoint:
@@ -163,3 +164,50 @@ class TestPoint:
         assert point.check_collision(polygon, query_interval=in1) == True
         assert point.check_collision(polygon, query_time=15) == False
         assert point.check_collision(polygon, query_interval=in3) == False
+
+    def test_plot(self):
+        fig = plt.figure()
+
+        # Test case 1: No query time or query interval provided
+        point = Point(geometry=ShapelyPoint(0, 0), radius=5)
+        point.plot(fig=fig)  # Plot the point and circle
+
+        # Test case 2: Query time is provided, but point has no time interval
+        point = Point(geometry=ShapelyPoint(2, 2), radius=5)
+        point.plot(query_time=5, fig=fig)
+
+        # Test case 3: Query time is within the point's time interval
+        point = Point(
+            geometry=ShapelyPoint(-1, 3),
+            radius=5,
+            time_interval=Interval(0, 10, closed="both"),
+        )
+        point.plot(query_time=5, fig=fig)  # Plot the point and circle at query time 5
+
+        # Test case 4: Query interval overlaps with the point's time interval
+        point = Point(
+            geometry=ShapelyPoint(-2, 0),
+            radius=5,
+            time_interval=Interval(0, 10, closed="both"),
+        )
+        point.plot(query_interval=Interval(5, 15), fig=fig)
+
+        # Test case 5: Query time is outside the point's time interval
+        point = Point(
+            geometry=ShapelyPoint(0, -2),
+            radius=5,
+            time_interval=Interval(0, 10, closed="both"),
+        )
+        point.plot(query_time=15, fig=fig)
+
+        # Test case 6: Query interval does not overlap with the point's time interval
+        point = Point(
+            geometry=ShapelyPoint(2, -2),
+            radius=5,
+            time_interval=Interval(0, 10, closed="both"),
+        )
+        point.plot(query_interval=Interval(15, 25), fig=fig)
+
+        # Test case 7: No figure provided
+        point = Point(geometry=ShapelyPoint(0, 0), radius=5)
+        point.plot()  # Plot the point and circle on a new figure
