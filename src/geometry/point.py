@@ -21,7 +21,7 @@ class Point:
         radius (float): The radius around the point, considered to be in collision.
 
     Methods:
-        __init__(self, geometry, time_interval, radius):
+        __init__(self, geometry=None, time_interval=None, radius=0):
             Initializes a new instance of the Point class.
 
         set_geometry(self, x, y):
@@ -33,7 +33,7 @@ class Point:
         set_radius(self, radius):
             Sets the radius around the point, considered to be in collision.
 
-        check_collision(self, shape):
+        check_collision(self, shape, query_time=None, query_interval=None):
             Checks if the point is in collision with a given shape.
     """
 
@@ -114,5 +114,3 @@ class Point:
                 return False
 
         return distance <= self.radius
-
-    # TODO: implement collision check with temporal query time interval
