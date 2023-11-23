@@ -112,3 +112,54 @@ class TestPoint:
         point = self.setup_method()
         with pytest.raises(ValueError):
             point.check_collision("invalid shape")
+
+    def test_temporal_collision_check(self):
+        in1 = Interval(0, 10, closed="both")
+        in2 = Interval(5, 15, closed="both")
+        in3 = Interval(15, 25, closed="both")
+
+        assert in1.overlaps(in2) == True
+        assert in1.overlaps(in3) == False
+        assert in2.overlaps(in1) == True
+        assert in2.overlaps(in3) == True
+        assert in3.overlaps(in1) == False
+        assert in3.overlaps(in2) == True
+
+        point = self.setup_method()
+        test_pt = ShapelyPoint(0.5, 0.5)
+
+        # collision check with point inside spatial area
+        point.set_interval(0, 10)
+        assert point.check_collision(test_pt, query_time=5) == True
+        assert point.check_collision(test_pt, query_interval=in1) == True
+        assert point.check_collision(test_pt, query_time=15) == False
+        assert point.check_collision(test_pt, query_interval=in3) == False
+
+        # collision check with point outside spatial area
+        test_pt = ShapelyPoint(5.5, 5.5)
+        assert point.check_collision(test_pt, query_time=5) == False
+        assert point.check_collision(test_pt, query_interval=in1) == False
+        assert point.check_collision(test_pt, query_time=15) == False
+        assert point.check_collision(test_pt, query_interval=in3) == False
+
+        # collision check with point on the edge of spatial area
+        sqrt2_inv = 1 / 2**0.5
+        test_pt = ShapelyPoint(sqrt2_inv, sqrt2_inv)
+        assert point.check_collision(test_pt, query_time=5) == True
+        assert point.check_collision(test_pt, query_interval=in1) == True
+        assert point.check_collision(test_pt, query_time=15) == False
+        assert point.check_collision(test_pt, query_interval=in3) == False
+
+        # collision check with line and different temporal queries
+        line = LineString([(0, 0), (1, 1)])
+        assert point.check_collision(line, query_time=5) == True
+        assert point.check_collision(line, query_interval=in1) == True
+        assert point.check_collision(line, query_time=15) == False
+        assert point.check_collision(line, query_interval=in3) == False
+
+        # collision check with polygon and different temporal queries
+        polygon = Polygon([(0, 0), (0, 1), (1, 1), (1, 0)])
+        assert point.check_collision(polygon, query_time=5) == True
+        assert point.check_collision(polygon, query_interval=in1) == True
+        assert point.check_collision(polygon, query_time=15) == False
+        assert point.check_collision(polygon, query_interval=in3) == False

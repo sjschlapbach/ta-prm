@@ -82,12 +82,14 @@ class Point:
         """
         self.radius = radius
 
-    def check_collision(self, shape):
+    def check_collision(self, shape, query_time=None, query_interval=None):
         """
-        Checks if the point is in collision with a given shape.
+        Checks if the point is in collision with a given shape. Touching time intervals are considered to be overlapping.
 
         Args:
             shape (ShapelyPoint, LineString, or Polygon): The shape to check collision with.
+            query_time (optional): The specific time to check collision at.
+            query_interval (optional): The time interval to check collision within.
 
         Returns:
             bool: True if collision occurs, False otherwise.
@@ -102,6 +104,14 @@ class Point:
             raise ValueError(
                 "Invalid shape type. Only ShapelyPoint, LineString, or Polygon are supported."
             )
+
+        if query_time is not None:
+            if query_time not in self.time_interval:
+                return False
+
+        if query_interval is not None:
+            if not self.time_interval.overlaps(query_interval):
+                return False
 
         return distance <= self.radius
 
