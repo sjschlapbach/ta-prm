@@ -30,7 +30,10 @@ class Point(Geometry):
         set_geometry(self, x, y):
             Sets the geometry from a coordinate pair.
 
-        plot(self, query_time=None, query_interval=None):
+        check_collision(self, shape, query_time=None, query_interval=None):
+            Checks if the point is in collision with a given shape. Touching time intervals are considered to be overlapping.
+
+        plot(self, query_time=None, query_interval=None, fig=None):
             Plots the point with a circle of the corresponding radius around it.
             Optionally, only shows the point with the circle if it is active.
     """
@@ -61,6 +64,39 @@ class Point(Geometry):
             y (float): The y-coordinate.
         """
         self.geometry = ShapelyPoint(x, y)
+
+    def check_collision(
+        self,
+        shape: ShapelyPoint | LineString | Polygon,
+        query_time: float = None,
+        query_interval: Interval = None,
+    ):
+        """
+        Checks if the point is in collision with a given shape. Touching time intervals are considered to be overlapping.
+
+        Args:
+            shape (Point, LineString, or Polygon): The shape to check collision with.
+            query_time (optional): The specific time to check collision at.
+            query_interval (optional): The time interval to check collision within.
+
+        Returns:
+            bool: True if collision occurs, False otherwise. Objects without a time interval are considered to be always active.
+        """
+        if isinstance(shape, ShapelyPoint):
+            distance = self.geometry.distance(shape)
+        elif isinstance(shape, LineString):
+            distance = self.geometry.distance(shape)
+        elif isinstance(shape, Polygon):
+            distance = self.geometry.distance(shape.exterior)
+        else:
+            raise ValueError(
+                "Invalid shape type. Only Point, LineString, or Polygon are supported."
+            )
+
+        if self.is_active(query_time, query_interval):
+            return distance <= self.radius
+        else:
+            return False
 
     def plot(self, query_time: float = None, query_interval: Interval = None, fig=None):
         """
