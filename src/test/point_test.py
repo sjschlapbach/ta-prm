@@ -2,7 +2,7 @@ import pytest
 from shapely.geometry import Point as ShapelyPoint, LineString, Polygon
 from pandas import Interval
 from enum import Enum
-from src.geometry.point import Point
+from src.obstacles.point import Point
 from matplotlib import pyplot as plt
 
 
