@@ -1,17 +1,8 @@
-from enum import Enum
 from shapely.geometry import Point as ShapelyPoint, LineString, Polygon
 from pandas import Interval
 from matplotlib.patches import Circle
 import matplotlib.pyplot as plt
 from .geometry import Geometry
-
-# TODO: implement geometry wrapper which contains these enums
-# ! on creation of edges / a scenario, point objects with the same geometry are created multiple times
-# class Recurrence(Enum):
-#     NONE = "none"
-#     HOURLY = "hourly"
-#     DAILY = "daily"
-#     YEARLY = "yearly"
 
 
 class Point(Geometry):
