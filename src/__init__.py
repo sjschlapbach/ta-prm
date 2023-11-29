@@ -1,2 +1,2 @@
 from .environment import Environment
-from .geometry import *
+from .obstacles import *
