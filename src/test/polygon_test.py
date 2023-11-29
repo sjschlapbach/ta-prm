@@ -3,11 +3,6 @@ from shapely.geometry import Point, LineString, Polygon as ShapelyPolygon
 from pandas import Interval
 from src.obstacles.polygon import Polygon
 from matplotlib import pyplot as plt
-import pytest
-from shapely.geometry import Point, LineString, Polygon as ShapelyPolygon
-from pandas import Interval
-from src.obstacles.polygon import Polygon
-from matplotlib import pyplot as plt
 
 
 class TestPolygon:
