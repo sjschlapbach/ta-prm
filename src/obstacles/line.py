@@ -77,22 +77,16 @@ class Line(Geometry):
             query_interval (Interval, optional): The query time interval. Defaults to None.
             fig: The figure to plot on. Defaults to None.
         """
+        if not self.is_active(query_time, query_interval):
+            return
+
         if fig is None:
             fig = plt.figure()
 
         plt.figure(fig)
-        if query_time is None and query_interval is None or self.time_interval is None:
-            plt.plot(*self.geometry.xy, "r-")
-            for point in self.geometry.coords:
-                circle = Circle(point, self.radius, fill=False)
-                plt.gca().add_patch(circle)
-        elif query_time is not None and query_time in self.time_interval:
-            plt.plot(*self.geometry.xy, "r-")
-            for point in self.geometry.coords:
-                circle = Circle(point, self.radius, fill=False)
-                plt.gca().add_patch(circle)
-        elif query_interval is not None and self.time_interval.overlaps(query_interval):
-            plt.plot(*self.geometry.xy, "r-")
-            for point in self.geometry.coords:
-                circle = Circle(point, self.radius, fill=False)
-                plt.gca().add_patch(circle)
+
+        if self.radius is not None and self.radius > 0:
+            poly = self.geometry.buffer(self.radius)
+            plt.plot(*poly.exterior.xy, color="blue")
+        else:
+            plt.plot(*self.geometry.xy, color="blue")

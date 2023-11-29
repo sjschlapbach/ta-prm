@@ -99,20 +99,16 @@ class Point(Geometry):
             query_interval (optional): The time interval to check if the point is active.
             fig (optional): The figure to plot on. If not provided, a new figure will be created.
         """
+        if not self.is_active(query_time, query_interval):
+            return
+
         if fig is None:
             fig = plt.figure()
 
-        # Plot the point and circle around it
         plt.figure(fig)
-        if query_time is None and query_interval is None or self.time_interval is None:
-            plt.plot(self.geometry.x, self.geometry.y, "ro")
-            circle = Circle((self.geometry.x, self.geometry.y), self.radius, fill=False)
-            plt.gca().add_patch(circle)
-        elif query_time is not None and query_time in self.time_interval:
-            plt.plot(self.geometry.x, self.geometry.y, "ro")
-            circle = Circle((self.geometry.x, self.geometry.y), self.radius, fill=False)
-            plt.gca().add_patch(circle)
-        elif query_interval is not None and self.time_interval.overlaps(query_interval):
-            plt.plot(self.geometry.x, self.geometry.y, "ro")
-            circle = Circle((self.geometry.x, self.geometry.y), self.radius, fill=False)
-            plt.gca().add_patch(circle)
+
+        if self.radius is not None and self.radius > 0:
+            poly = self.geometry.buffer(self.radius)
+            plt.plot(*poly.exterior.xy, color="black")
+        else:
+            plt.plot(*self.geometry.xy, color="black", marker="o")
