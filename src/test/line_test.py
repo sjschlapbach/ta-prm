@@ -2,6 +2,7 @@ import pytest
 from shapely.geometry import Point, LineString, Polygon
 from pandas import Interval
 from src.obstacles.line import Line
+from matplotlib import pyplot as plt
 
 
 class TestLine:
@@ -214,3 +215,34 @@ class TestLine:
         # collision check with polygon outside at arbitrary time
         polygon = Polygon([(2, 2), (2, 3), (3, 3), (3, 2)])
         assert line.check_collision(polygon, query_time=5) == False
+
+    def test_plot(self):
+        fig = plt.figure()
+
+        # Test case 1: No query time or query interval provided
+        line = Line(LineString([(0, 0), (1, 1)]), Interval(0, 10, closed="both"), 1.0)
+        line.plot(fig=fig)  # Plot the line
+
+        # Test case 2: Query time is provided, but line has no time interval
+        line = Line(LineString([(2, 2), (3, 3)]))
+        line.plot(query_time=5, fig=fig)
+
+        # Test case 3: Query time is within the line's time interval
+        line = Line(LineString([(0, 0), (1, 1)]), Interval(0, 10, closed="both"), 1.0)
+        line.plot(query_time=5, fig=fig)  # Plot the line at query time 5
+
+        # Test case 4: Query interval overlaps with the line's time interval
+        line = Line(LineString([(0, 0), (1, 1)]), Interval(0, 10, closed="both"), 1.0)
+        line.plot(query_interval=Interval(5, 15), fig=fig)
+
+        # Test case 5: Query time is outside the line's time interval
+        line = Line(LineString([(0, 0), (1, 1)]), Interval(0, 10, closed="both"), 1.0)
+        line.plot(query_time=15, fig=fig)
+
+        # Test case 6: Query interval does not overlap with the line's time interval
+        line = Line(LineString([(0, 0), (1, 1)]), Interval(0, 10, closed="both"), 1.0)
+        line.plot(query_interval=Interval(15, 25), fig=fig)
+
+        # Test case 7: No figure provided
+        line = Line(LineString([(0, 0), (1, 1)]), Interval(0, 10, closed="both"), 1.0)
+        line.plot()  # Plot the line on a new figure
