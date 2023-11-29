@@ -4,7 +4,7 @@ from pandas import Interval
 from matplotlib.patches import Circle
 import matplotlib.pyplot as plt
 
-# TODO: impelemnt geometry wrapper which contains these enums
+# TODO: implement geometry wrapper which contains these enums
 # ! on creation of edges / a scenario, point objects with the same geometry are created multiple times
 # class Recurrence(Enum):
 #     NONE = "none"
@@ -43,7 +43,12 @@ class Point:
             Optionally, only shows the point with the circle if it is active.
     """
 
-    def __init__(self, geometry=None, time_interval=None, radius=0):
+    def __init__(
+        self,
+        geometry: ShapelyPoint = None,
+        time_interval: Interval = None,
+        radius: float = 0,
+    ):
         """
         Initializes a new instance of the Point class.
 
@@ -56,7 +61,7 @@ class Point:
         self.time_interval = time_interval
         self.radius = radius
 
-    def set_geometry(self, x, y):
+    def set_geometry(self, x: float, y: float):
         """
         Sets the geometry from a coordinate pair.
 
@@ -66,7 +71,7 @@ class Point:
         """
         self.geometry = ShapelyPoint(x, y)
 
-    def set_interval(self, lower_bound, upper_bound):
+    def set_interval(self, lower_bound: float, upper_bound: float):
         """
         Sets the closed time interval from a lower and upper bound.
 
@@ -79,7 +84,7 @@ class Point:
 
         self.time_interval = Interval(lower_bound, upper_bound, closed="both")
 
-    def set_radius(self, radius):
+    def set_radius(self, radius: float):
         """
         Sets the radius around the point, considered to be in collision.
 
@@ -88,7 +93,12 @@ class Point:
         """
         self.radius = radius
 
-    def check_collision(self, shape, query_time=None, query_interval=None):
+    def check_collision(
+        self,
+        shape: ShapelyPoint | LineString | Polygon,
+        query_time: float = None,
+        query_interval: Interval = None,
+    ):
         """
         Checks if the point is in collision with a given shape. Touching time intervals are considered to be overlapping.
 
@@ -121,7 +131,7 @@ class Point:
 
         return distance <= self.radius
 
-    def plot(self, query_time=None, query_interval=None, fig=None):
+    def plot(self, query_time: float = None, query_interval: Interval = None, fig=None):
         """
         Plots the point with a circle of the corresponding radius around it.
         Optionally, only shows the point with the circle if it is active.
@@ -133,10 +143,6 @@ class Point:
         """
         if fig is None:
             fig = plt.figure()
-
-        # ax = fig.add_subplot(111, aspect="equal", adjustable="box")
-
-        print("self time interval: ", self.time_interval)
 
         # Plot the point and circle around it
         plt.figure(fig)
