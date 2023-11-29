@@ -14,6 +14,7 @@ class Geometry:
         set_interval(lower_bound: float, upper_bound: float): Sets the closed time interval.
         set_radius(radius: float): Sets the radius around the point.
         check_collision(shape, query_time=None, query_interval=None): Checks if the point is in collision with a given shape.
+        is_active(query_time=None, query_interval=None): Checks if the geometry is active at a given time or time interval.
     """
 
     def __init__(self, radius, interval):
@@ -64,7 +65,7 @@ class Geometry:
             query_interval (optional): The time interval to check collision within.
 
         Returns:
-            bool: True if collision occurs, False otherwise.
+            bool: True if collision occurs, False otherwise. Objects without a time interval are considered to be always active.
         """
         if isinstance(shape, Point):
             distance = self.geometry.distance(shape)
@@ -77,12 +78,34 @@ class Geometry:
                 "Invalid shape type. Only Point, LineString, or Polygon are supported."
             )
 
-        if query_time is not None:
+        if query_time is not None and self.time_interval is not None:
             if query_time not in self.time_interval:
                 return False
 
-        if query_interval is not None:
+        if query_interval is not None and self.time_interval is not None:
             if not self.time_interval.overlaps(query_interval):
                 return False
 
         return distance <= self.radius
+
+    def is_active(self, query_time: float = None, query_interval: Interval = None):
+        """
+        Checks if the geometry is active at a given time or time interval.
+
+        Args:
+            query_time (optional): The specific time to check activity at.
+            query_interval (optional): The time interval to check activity within.
+
+        Returns:
+            bool: True if active, False otherwise. Objects without a time interval are always active.
+        """
+        if self.time_interval is None:
+            return True
+
+        if query_time is not None:
+            return query_time in self.time_interval
+
+        if query_interval is not None:
+            return self.time_interval.overlaps(query_interval)
+
+        return True

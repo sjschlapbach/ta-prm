@@ -131,9 +131,13 @@ class TestPoint:
 
         # collision check with point inside spatial area
         point.set_interval(0, 10)
+        assert point.is_active(query_time=5) == True
         assert point.check_collision(test_pt, query_time=5) == True
+        assert point.is_active(query_interval=in1) == True
         assert point.check_collision(test_pt, query_interval=in1) == True
+        assert point.is_active(query_time=15) == False
         assert point.check_collision(test_pt, query_time=15) == False
+        assert point.is_active(query_interval=in3) == False
         assert point.check_collision(test_pt, query_interval=in3) == False
 
         # collision check with point outside spatial area
@@ -164,6 +168,57 @@ class TestPoint:
         assert point.check_collision(polygon, query_interval=in1) == True
         assert point.check_collision(polygon, query_time=15) == False
         assert point.check_collision(polygon, query_interval=in3) == False
+
+    def test_check_collision_without_time_interval(self):
+        point = Point(ShapelyPoint(0, 0), None, 1.0)
+
+        # collision check with point outside
+        other_point = ShapelyPoint(1, 1)
+        assert point.check_collision(other_point) == False
+
+        # collision check with point inside
+        other_point = ShapelyPoint(0, 0)
+        assert point.check_collision(other_point) == True
+
+        # collision check with point inside at arbitrary time
+        other_point = ShapelyPoint(0, 0)
+        assert point.check_collision(other_point, query_time=5) == True
+
+        # collision check with point outside at arbitrary time
+        other_point = ShapelyPoint(1, 1)
+        assert point.check_collision(other_point, query_time=5) == False
+
+        # collision check with line inside
+        line = LineString([(0, 0), (0, 2), (2, 2)])
+        assert point.check_collision(line) == True
+
+        # collision check with line outside
+        line = LineString([(1, 1), (2, 2)])
+        assert point.check_collision(line) == False
+
+        # collision check with line inside at arbitrary time
+        line = LineString([(0, 0), (0, 2), (2, 2)])
+        assert point.check_collision(line, query_time=5) == True
+
+        # collision check with line outside at arbitrary time
+        line = LineString([(1, 1), (2, 2)])
+        assert point.check_collision(line, query_time=5) == False
+
+        # collision check with polygon inside
+        polygon = Polygon([(0, 0), (0, 2), (2, 2), (2, 0)])
+        assert point.check_collision(polygon) == True
+
+        # collision check with polygon outside
+        polygon = Polygon([(1, 1), (1, 2), (2, 2), (2, 1)])
+        assert point.check_collision(polygon) == False
+
+        # collision check with polygon inside at arbitrary time
+        polygon = Polygon([(0, 0), (0, 2), (2, 2), (2, 0)])
+        assert point.check_collision(polygon, query_time=5) == True
+
+        # collision check with polygon outside at arbitrary time
+        polygon = Polygon([(1, 1), (1, 2), (2, 2), (2, 1)])
+        assert point.check_collision(polygon, query_time=5) == False
 
     def test_plot(self):
         fig = plt.figure()
