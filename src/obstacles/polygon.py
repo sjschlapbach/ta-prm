@@ -1,8 +1,10 @@
 from shapely.geometry import Point, LineString, Polygon as ShapelyPolygon
 from pandas import Interval
 from matplotlib.patches import Circle
-from .geometry import Geometry
+from typing import Union
 import matplotlib.pyplot as plt
+
+from .geometry import Geometry
 
 
 class Polygon(Geometry):
@@ -57,7 +59,7 @@ class Polygon(Geometry):
 
     def check_collision(
         self,
-        shape: Point | LineString | ShapelyPolygon,
+        shape: Union[Point, LineString, ShapelyPolygon],
         query_time: float = None,
         query_interval: Interval = None,
     ):

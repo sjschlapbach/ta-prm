@@ -1,7 +1,8 @@
 import pytest
-from src.obstacles.geometry import Geometry
 from shapely.geometry import Polygon, Point, LineString
 from pandas import Interval
+
+from src.obstacles.geometry import Geometry
 
 
 class TestGeometry:

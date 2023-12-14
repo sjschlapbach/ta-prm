@@ -1,7 +1,8 @@
 import pytest
 import os
-from src.environment import Environment
 from shapely.geometry import Polygon, Point, LineString
+
+from src.environment import Environment
 
 
 class TestEnvironment:

@@ -1,6 +1,7 @@
 from src.obstacles.line import Line
 from src.obstacles.point import Point
 from src.obstacles.polygon import Polygon
+
 from shapely.geometry import (
     Point as ShapelyPoint,
     LineString as ShapelyLine,

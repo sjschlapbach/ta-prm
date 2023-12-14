@@ -1,8 +1,9 @@
 import pytest
 from shapely.geometry import Point as ShapelyPoint, LineString, Polygon
 from pandas import Interval
-from src.obstacles.point import Point
 from matplotlib import pyplot as plt
+
+from src.obstacles.point import Point
 
 
 class TestPoint:

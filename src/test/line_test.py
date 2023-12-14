@@ -1,8 +1,9 @@
 import pytest
 from shapely.geometry import Point, LineString, Polygon
 from pandas import Interval
-from src.obstacles.line import Line
 from matplotlib import pyplot as plt
+
+from src.obstacles.line import Line
 
 
 class TestLine:
