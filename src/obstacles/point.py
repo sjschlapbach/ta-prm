@@ -60,7 +60,7 @@ class Point(Geometry):
 
     def check_collision(
         self,
-        shape: Unione[ShapelyPoint, LineString, Polygon],
+        shape: Union[ShapelyPoint, LineString, Polygon],
         query_time: float = None,
         query_interval: Interval = None,
     ):
