@@ -19,3 +19,13 @@ In some cases, it might be necessary to set the `PYTHONPATH` environment variabl
 ```bash
 export PYTHONPATH=.
 ```
+
+## Test Suite
+
+After installing the pytest package, the test suite can be run with the following command:
+
+```bash
+pytest src/test/
+```
+
+A corresponding GitHub action is also available. The status of the latest run can be seen in the badge at the top of this README.
