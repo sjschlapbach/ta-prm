@@ -1,4 +1,6 @@
 import pytest
+import json
+import os
 from shapely.geometry import Polygon, Point, LineString
 from pandas import Interval
 
@@ -110,3 +112,83 @@ class TestGeometry:
         geometry8 = Geometry()
         assert geometry8.is_active(query_time=5) == True
         assert geometry8.is_active(query_interval=Interval(0, 10)) == True
+
+    def test_export_and_load_geometry(self):
+        # test parameters
+        radius = 2.5
+        interval_default = Interval(0.0, 10.0)
+        interval_open = Interval(1.5, 11.5, closed="neither")
+        interval_closed = Interval(3, 13.0, closed="both")
+        interval_left = Interval(5, 15.0, closed="left")
+        interval_right = Interval(7, 17.0, closed="right")
+
+        # Test case 1: Export and load geometry with radius and no interval
+        geometry = Geometry(radius=radius)
+        json_obj1 = geometry.export_to_json()
+        loaded_geometry1 = Geometry()
+        loaded_geometry1.load_from_json(json_obj1)
+        assert loaded_geometry1.radius == radius
+
+        # Test case 2: Export and load geometry with default interval and no radius
+        geometry = Geometry(interval=interval_default)
+        json_obj2 = geometry.export_to_json()
+        loaded_geometry2 = Geometry()
+        loaded_geometry2.load_from_json(json_obj2)
+        assert loaded_geometry2.time_interval == interval_default
+
+        # Test case 3: Export and load geometry with default interval and radius
+        geometry = Geometry(radius=radius, interval=interval_default)
+        json_obj3 = geometry.export_to_json()
+        loaded_geometry3 = Geometry()
+        loaded_geometry3.load_from_json(json_obj3)
+        assert loaded_geometry3.radius == radius
+        assert loaded_geometry3.time_interval == interval_default
+
+        # Test case 4: Export and load geometry with open interval and radius
+        geometry = Geometry(radius=radius, interval=interval_open)
+        json_obj4 = geometry.export_to_json()
+        loaded_geometry4 = Geometry()
+        loaded_geometry4.load_from_json(json_obj4)
+        assert loaded_geometry4.radius == radius
+        assert loaded_geometry4.time_interval == interval_open
+
+        # Test case 5: Export and load geometry with closed interval and radius
+        geometry = Geometry(radius=radius, interval=interval_closed)
+        json_obj5 = geometry.export_to_json()
+        loaded_geometry5 = Geometry()
+        loaded_geometry5.load_from_json(json_obj5)
+        assert loaded_geometry5.radius == radius
+        assert loaded_geometry5.time_interval == interval_closed
+
+        # Test case 6: Export and load geometry with left interval and radius
+        geometry = Geometry(radius=radius, interval=interval_left)
+        json_obj6 = geometry.export_to_json()
+        loaded_geometry6 = Geometry()
+        loaded_geometry6.load_from_json(json_obj6)
+        assert loaded_geometry6.radius == radius
+        assert loaded_geometry6.time_interval == interval_left
+
+        # Test case 7: Export and load geometry with right interval and radius
+        geometry = Geometry(radius=radius, interval=interval_right)
+        json_obj7 = geometry.export_to_json()
+        loaded_geometry7 = Geometry()
+        loaded_geometry7.load_from_json(json_obj7)
+        assert loaded_geometry7.radius == radius
+        assert loaded_geometry7.time_interval == interval_right
+
+        # Test case 8: Save and load geometry from file
+        geometry = Geometry(radius=radius, interval=interval_right)
+        json_obj8 = geometry.export_to_json()
+
+        with open("test_geometry_saving.txt", "w") as f:
+            json.dump(json_obj8, f)
+
+        with open("test_geometry_saving.txt", "r") as f:
+            json_obj8_loaded = json.load(f)
+
+        loaded_geometry8 = Geometry()
+        loaded_geometry8.load_from_json(json_obj8_loaded)
+        assert loaded_geometry8.radius == radius
+        assert loaded_geometry8.time_interval == interval_right
+
+        os.remove("test_geometry_saving.txt")
