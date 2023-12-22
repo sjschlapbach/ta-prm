@@ -1,4 +1,6 @@
 import pytest
+import json
+import os
 from shapely.geometry import Point, LineString, Polygon as ShapelyPolygon
 from pandas import Interval
 from matplotlib import pyplot as plt
@@ -245,3 +247,89 @@ class TestPolygon:
         # Test case 4: Plotting with temporal input arguments
         polygon = Polygon(ShapelyPolygon([(0, 0), (1, 1), (1, 0)]), None, 1.0)
         polygon.plot(fig=fig, query_interval=Interval(0, 10))
+
+    def test_load_save(self):
+        radius = 5.5
+        polygon = ShapelyPolygon([(0, 0), (1, 1), (1, 0)])
+        time_interval = Interval(0, 10, closed="left")
+
+        # Test case 1: Convert polygon object to JSON and back (only geometry)
+        poly_1 = Polygon(geometry=polygon)
+        json_1 = poly_1.export_to_json()
+        loaded_1 = Polygon()
+        loaded_1.load_from_json(json_1)
+        assert loaded_1.geometry == polygon
+        assert loaded_1.time_interval == None
+        assert loaded_1.radius == 0
+
+        # Test case 2: Convert polygon object to JSON and back (only geometry and time interval)
+        poly_2 = Polygon(geometry=polygon, time_interval=time_interval)
+        json_2 = poly_2.export_to_json()
+        loaded_2 = Polygon()
+        loaded_2.load_from_json(json_2)
+        assert loaded_2.geometry == polygon
+        assert loaded_2.time_interval == time_interval
+        assert loaded_2.radius == 0
+
+        # Test case 3: Convert polygon object to JSON and back (only geometry, time interval, and radius)
+        poly_3 = Polygon(geometry=polygon, time_interval=time_interval, radius=radius)
+        json_3 = poly_3.export_to_json()
+        loaded_3 = Polygon()
+        loaded_3.load_from_json(json_3)
+        assert loaded_3.geometry == polygon
+        assert loaded_3.time_interval == time_interval
+        assert loaded_3.radius == radius
+
+        # Test case 4: Convert polygon object to JSON and back (only time interval and radius)
+        poly_4 = Polygon(time_interval=time_interval, radius=radius)
+        json_4 = poly_4.export_to_json()
+        loaded_4 = Polygon()
+        loaded_4.load_from_json(json_4)
+        assert loaded_4.geometry == None
+        assert loaded_4.time_interval == time_interval
+        assert loaded_4.radius == radius
+
+        # Test case 5: Convert polygon object to JSON and back (only geometry and radius)
+        poly_5 = Polygon(geometry=polygon, radius=radius)
+        json_5 = poly_5.export_to_json()
+        loaded_5 = Polygon()
+        loaded_5.load_from_json(json_5)
+        assert loaded_5.geometry == polygon
+        assert loaded_5.time_interval == None
+        assert loaded_5.radius == radius
+
+        # Test case 6: Convert polygon object to JSON and back (only radius)
+        poly_6 = Polygon(radius=radius)
+        json_6 = poly_6.export_to_json()
+        loaded_6 = Polygon()
+        loaded_6.load_from_json(json_6)
+        assert loaded_6.geometry == None
+        assert loaded_6.time_interval == None
+        assert loaded_6.radius == radius
+
+        # Test case 7: Convert polygon object to JSON and back (only geometry and time interval)
+        poly_7 = Polygon(geometry=polygon, time_interval=time_interval)
+        json_7 = poly_7.export_to_json()
+        loaded_7 = Polygon()
+        loaded_7.load_from_json(json_7)
+        assert loaded_7.geometry == polygon
+        assert loaded_7.time_interval == time_interval
+        assert loaded_7.radius == 0
+
+        # Test case 8: Convert polygon object to JSON, save and load from file
+        poly_8 = Polygon(geometry=polygon, time_interval=time_interval, radius=radius)
+        json_8 = poly_8.export_to_json()
+
+        with open("test_polygon_saving.txt", "w") as f:
+            json.dump(json_8, f)
+
+        with open("test_polygon_saving.txt", "r") as f:
+            json_obj8_loaded = json.load(f)
+
+        loaded_8 = Polygon()
+        loaded_8.load_from_json(json_obj8_loaded)
+        assert loaded_8.geometry == polygon
+        assert loaded_8.time_interval == time_interval
+        assert loaded_8.radius == radius
+
+        os.remove("test_polygon_saving.txt")

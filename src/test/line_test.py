@@ -1,4 +1,6 @@
 import pytest
+import json
+import os
 from shapely.geometry import Point, LineString, Polygon
 from pandas import Interval
 from matplotlib import pyplot as plt
@@ -247,3 +249,89 @@ class TestLine:
         # Test case 7: No figure provided
         line = Line(LineString([(0, 0), (1, 1)]), Interval(0, 10, closed="both"), 1.0)
         line.plot()  # Plot the line on a new figure
+
+    def test_load_save(self):
+        radius = 5.5
+        line = LineString([(0, 0), (1, 1)])
+        time_interval = Interval(0, 10, closed="left")
+
+        # Test case 1: Convert line object to JSON and back (only geometry)
+        ln_1 = Line(geometry=line)
+        json_1 = ln_1.export_to_json()
+        loaded_1 = Line()
+        loaded_1.load_from_json(json_1)
+        assert loaded_1.geometry == line
+        assert loaded_1.time_interval == None
+        assert loaded_1.radius == 0
+
+        # Test case 2: Convert line object to JSON and back (only geometry and time interval)
+        ln_2 = Line(geometry=line, time_interval=time_interval)
+        json_2 = ln_2.export_to_json()
+        loaded_2 = Line()
+        loaded_2.load_from_json(json_2)
+        assert loaded_2.geometry == line
+        assert loaded_2.time_interval == time_interval
+        assert loaded_2.radius == 0
+
+        # Test case 3: Convert line object to JSON and back (only geometry, time interval, and radius)
+        ln_3 = Line(geometry=line, time_interval=time_interval, radius=radius)
+        json_3 = ln_3.export_to_json()
+        loaded_3 = Line()
+        loaded_3.load_from_json(json_3)
+        assert loaded_3.geometry == line
+        assert loaded_3.time_interval == time_interval
+        assert loaded_3.radius == radius
+
+        # Test case 4: Convert line object to JSON and back (only time interval and radius)
+        ln_4 = Line(time_interval=time_interval, radius=radius)
+        json_4 = ln_4.export_to_json()
+        loaded_4 = Line()
+        loaded_4.load_from_json(json_4)
+        assert loaded_4.geometry == None
+        assert loaded_4.time_interval == time_interval
+        assert loaded_4.radius == radius
+
+        # Test case 5: Convert line object to JSON and back (only geometry and radius)
+        ln_5 = Line(geometry=line, radius=radius)
+        json_5 = ln_5.export_to_json()
+        loaded_5 = Line()
+        loaded_5.load_from_json(json_5)
+        assert loaded_5.geometry == line
+        assert loaded_5.time_interval == None
+        assert loaded_5.radius == radius
+
+        # Test case 6: Convert line object to JSON and back (only radius)
+        ln_6 = Line(radius=radius)
+        json_6 = ln_6.export_to_json()
+        loaded_6 = Line()
+        loaded_6.load_from_json(json_6)
+        assert loaded_6.geometry == None
+        assert loaded_6.time_interval == None
+        assert loaded_6.radius == radius
+
+        # Test case 7: Convert line object to JSON and back (only geometry and time interval)
+        ln_7 = Line(geometry=line, time_interval=time_interval)
+        json_7 = ln_7.export_to_json()
+        loaded_7 = Line()
+        loaded_7.load_from_json(json_7)
+        assert loaded_7.geometry == line
+        assert loaded_7.time_interval == time_interval
+        assert loaded_7.radius == 0
+
+        # Test case 8: Convert line object to JSON, save and load from file
+        ln_8 = Line(geometry=line, time_interval=time_interval, radius=radius)
+        json_8 = ln_8.export_to_json()
+
+        with open("test_line_saving.txt", "w") as f:
+            json.dump(json_8, f)
+
+        with open("test_line_saving.txt", "r") as f:
+            json_obj8_loaded = json.load(f)
+
+        loaded_8 = Line()
+        loaded_8.load_from_json(json_obj8_loaded)
+        assert loaded_8.geometry == line
+        assert loaded_8.time_interval == time_interval
+        assert loaded_8.radius == radius
+
+        os.remove("test_line_saving.txt")

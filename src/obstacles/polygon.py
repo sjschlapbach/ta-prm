@@ -1,4 +1,5 @@
 from shapely.geometry import Point, LineString, Polygon as ShapelyPolygon
+from shapely import wkt
 from pandas import Interval
 from matplotlib.patches import Circle
 from typing import Union
@@ -113,3 +114,34 @@ class Polygon(Geometry):
             plt.plot(*poly.exterior.xy, color="red")
         else:
             plt.plot(*self.geometry.exterior.xy, color="red")
+
+    def export_to_json(self):
+        """
+        Returns a JSON representation of the polygon object, using the corresponding exporting
+        function of the Geometry class and the stringified version of the geometry.
+
+        Returns:
+            str: A JSON representation of the polygon object.
+        """
+        if self.geometry is None:
+            return {**super().export_to_json(), "geometry": "None"}
+
+        return {**super().export_to_json(), "geometry": self.geometry.wkt}
+
+    def load_from_json(self, json_object):
+        """
+        Loads the polygon object from a JSON representation, using the corresponding loading
+        function of the Geometry class and the stringified version of the geometry.
+
+        Args:
+            json_object (dict): The JSON representation of the polygon object.
+
+        Returns:
+            Object with updated attributes for both the geometry and the parent Geometry object
+        """
+        super().load_from_json(json_object)
+
+        if json_object["geometry"] == "None":
+            self.geometry = None
+        else:
+            self.geometry = wkt.loads(json_object["geometry"])
