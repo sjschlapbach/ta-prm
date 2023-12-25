@@ -97,8 +97,6 @@ class Environment:
         """
         self.obstacles = []
 
-    # TODO - update to new obstacles structure
-    # ? idea: solve point, line and polygon obstacles separately to be able to use the correct loading function later on
     def save(self, filepath: str):
         """
         Logs the polygons stored in the environment to a file in JSON format.
@@ -106,12 +104,30 @@ class Environment:
         Parameters
         ----------
         filepath : str
-            the path to the file where the polygons will be logged
-        """
-        with open(filepath, "w") as f:
-            json.dump([polygon.wkt for polygon in self.polygons], f)
+            The path to the file where the polygons will be logged.
 
-    # TODO - update to new obstacles structure
+        Raises
+        ------
+        ValueError
+            If an invalid obstacle type is encountered. Only Point, Line, or Polygon are supported.
+        """
+        output = {"points": [], "lines": [], "polygons": []}
+
+        for obstacle in self.obstacles:
+            if isinstance(obstacle, Point):
+                output["points"].append(obstacle.export_to_json())
+            elif isinstance(obstacle, Line):
+                output["lines"].append(obstacle.export_to_json())
+            elif isinstance(obstacle, Polygon):
+                output["polygons"].append(obstacle.export_to_json())
+            else:
+                raise ValueError(
+                    "Invalid obstacle type. Only Point, Line, or Polygon are supported."
+                )
+
+        with open(filepath, "w") as f:
+            json.dump(output, f)
+
     def load(self, filepath: str):
         """
         Loads the polygons stored in a file into the environment.
@@ -119,8 +135,38 @@ class Environment:
         Parameters
         ----------
         filepath : str
-            the path to the file where the polygons are stored
+            The path to the file where the polygons are stored.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the file specified by `filepath` does not exist.
+
+        JSONDecodeError
+            If there is an error decoding the JSON file.
+
+        Returns
+        -------
+        None
         """
+        obstacles = {}
+
+        # load obstacles from file
         with open(filepath, "r") as f:
-            polygons_wkt = json.load(f)
-        self.polygons = [wkt.loads(element) for element in polygons_wkt]
+            obstacles = json.load(f)
+
+        # convert obstacles to custom class objects and store them in class variable
+        for pt in obstacles["points"]:
+            point = Point()
+            point.load_from_json(pt)
+            self.obstacles.append(point)
+
+        for ln in obstacles["lines"]:
+            line = Line()
+            line.load_from_json(ln)
+            self.obstacles.append(line)
+
+        for poly in obstacles["polygons"]:
+            polygon = Polygon()
+            polygon.load_from_json(poly)
+            self.obstacles.append(polygon)
