@@ -14,36 +14,32 @@ from src.obstacles.polygon import Polygon
 
 
 class Environment:
-    # TODO - udpate docstring after methods have been updated
     """
-    A class to represent an environment consisting of a list of shapely polygon objects.
+    A class to represent an environment consisting of a list of custom obstacles.
 
     ...
 
     Attributes
     ----------
-    polygons : List[Polygon]
-        a list of shapely polygon objects representing the environment
+    obstacles : List[Union[Point, Line, Polygon]]
+        A list of obstacles representing the environment.
 
     Methods
     -------
-    plot()
-        Plots the polygons in the environment using matplotlib.
+    __init__(obstacles: List[Union[Point, Line, Polygon]] = None, filepath: str = None)
+        Initialize the Environment object.
 
-    closest_polygon_distance(point: Point) -> float
-        Computes the distance between a shapely point object and the closest polygon in the environment.
+    plot(query_time: float = None, fig=None)
+        Plots the obstacles in the environment using matplotlib.
 
-    closest_line_distance(line: LineString) -> float
-        Computes the distance between a shapely line object and the closest polygon in the environment.
+    add_obstacles(new_obstacles: List[Union[Point, Line, Polygon]])
+        Adds new obstacles to the environment.
 
-    change_polygons(new_polygons: List[Polygon])
-        Changes the polygons stored in the environment.
+    reset()
+        Resets the environment by removing all obstacles.
 
     save(filepath: str)
-        Logs the polygons stored in the environment to a file in JSON format.
-
-    load(filepath: str)
-        Loads the polygons stored in a file into the environment.
+        Logs the obstacles stored in the environment to a file in JSON format.
     """
 
     def __init__(
