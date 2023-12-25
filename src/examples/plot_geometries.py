@@ -32,7 +32,7 @@ if __name__ == "__main__":
     ln3 = Line(ShapelyLine([(4, 7), (7, 6), (7, 3)]), radius=0.5)
     pg3 = Polygon(ShapelyPolygon([(5, -2), (6, -3), (7, -1)]), radius=0.5)
 
-    # create a figure from 0,0 to 10,10
+    # create a figure from (-5, -5) to (10, 10)
     fig = plt.figure(figsize=(8, 8))
     pt1.plot(query_time=query_time, fig=fig)
     ln1.plot(query_time=query_time, fig=fig)
