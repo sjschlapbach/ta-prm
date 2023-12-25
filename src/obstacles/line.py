@@ -14,6 +14,7 @@ class Line(Geometry):
         geometry: LineString = None,
         time_interval: Interval = None,
         radius: float = 0,
+        json_data: dict = None,
     ):
         """
         Initialize a Line object.
@@ -22,7 +23,12 @@ class Line(Geometry):
             geometry (LineString, optional): The geometry of the line. Defaults to None.
             time_interval (Interval, optional): The time interval during which the line is active. Defaults to None.
             radius (float, optional): The radius of the line. Defaults to 0.
+            json_data (dict, optional): JSON data to initialize the line object. If provided, other arguments will be ignored. Defaults to None.
         """
+        if json_data is not None:
+            self.load_from_json(json_data)
+            return
+
         super().__init__(radius, time_interval)
         self.geometry = geometry
 

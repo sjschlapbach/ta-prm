@@ -153,16 +153,10 @@ class Environment:
 
         # convert obstacles to custom class objects and store them in class variable
         for pt in obstacles["points"]:
-            point = Point()
-            point.load_from_json(pt)
-            self.obstacles.append(point)
+            self.obstacles.append(Point(json_data=pt))
 
         for ln in obstacles["lines"]:
-            line = Line()
-            line.load_from_json(ln)
-            self.obstacles.append(line)
+            self.obstacles.append(Line(json_data=ln))
 
         for poly in obstacles["polygons"]:
-            polygon = Polygon()
-            polygon.load_from_json(poly)
-            self.obstacles.append(polygon)
+            self.obstacles.append(Polygon(json_data=poly))
