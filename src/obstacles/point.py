@@ -37,15 +37,21 @@ class Point(Geometry):
         geometry: ShapelyPoint = None,
         time_interval: Interval = None,
         radius: float = 0,
+        json_data: dict = None,
     ):
         """
         Initializes a new instance of the Point class.
 
         Args:
-            geometry (ShapelyPoint): The shapely point representing the geometry.
-            time_interval (Interval): The pandas interval representing the time interval.
-            radius (float): The radius around the point, considered to be in collision.
+            geometry (ShapelyPoint, optional): The shapely point representing the geometry.
+            time_interval (Interval, optional): The pandas interval representing the time interval.
+            radius (float, optional): The radius around the point, considered to be in collision.
+            json_data (dict, optional): JSON data to load the point from.
         """
+        if json_data is not None:
+            self.load_from_json(json_data)
+            return
+
         super().__init__(radius, time_interval)
         self.geometry = geometry
 

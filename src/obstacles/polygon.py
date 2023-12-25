@@ -37,15 +37,21 @@ class Polygon(Geometry):
         geometry: ShapelyPolygon = None,
         time_interval: Interval = None,
         radius: float = 0,
+        json_data: dict = None,
     ):
         """
         Initializes a new instance of the Polygon class.
 
         Args:
-            geometry (Polygon): The shapely polygon representing the geometry.
-            time_interval (Interval): The pandas interval representing the time interval.
-            radius (float): The radius around the polygon, considered to be in collision.
+            geometry (Polygon, optional): The shapely polygon representing the geometry.
+            time_interval (Interval, optional): The pandas interval representing the time interval.
+            radius (float, optional): The radius around the polygon, considered to be in collision.
+            json_data (dict, optional): Optional JSON data to load the polygon from.
         """
+        if json_data is not None:
+            self.load_from_json(json_data)
+            return
+
         super().__init__(radius, time_interval)
         self.geometry = geometry
 
