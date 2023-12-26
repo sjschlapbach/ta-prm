@@ -2,6 +2,7 @@ from src.obstacles.line import Line
 from src.obstacles.point import Point
 from src.obstacles.polygon import Polygon
 from src.environment import Environment
+from src.util.recurrence import Recurrence
 
 from pandas import Interval
 import matplotlib.pyplot as plt
@@ -32,7 +33,16 @@ if __name__ == "__main__":
     poly2 = Polygon(sh_poly2, Interval(9, 16), radius=1.5)
 
     # create an environment with all types of obstacles
-    env = Environment(obstacles=[pt1, pt2, line1, line2, poly1, poly2])
+    env = Environment(
+        obstacles=[
+            (Recurrence.NONE, pt1),
+            (Recurrence.NONE, pt2),
+            (Recurrence.NONE, line1),
+            (Recurrence.NONE, line2),
+            (Recurrence.NONE, poly1),
+            (Recurrence.NONE, poly2),
+        ]
+    )
 
     # plot the environment
     fig = plt.figure(figsize=(8, 8))

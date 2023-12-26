@@ -69,6 +69,7 @@ class Environment:
     def plot(self, query_time: float = None, fig=None):
         """
         Plots the obstacles in the environment using matplotlib.
+        Recurrence parameters are not considered when plotting environments.
 
         Parameters:
         - query_time (float): The time at which the query is made (optional).
