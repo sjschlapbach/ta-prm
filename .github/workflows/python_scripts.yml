@@ -1,4 +1,4 @@
-name: Python Scripts
+name: Python Testing
 
 on:
   push:
@@ -24,8 +24,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      - name: Run scripts
+      - name: Run python scripts
         run: |
-          export PYTHONPATH=.
-          python src/examples/plot_geometries.py
-          python src/examples/plot_environment.py
+          pytest src/examples/

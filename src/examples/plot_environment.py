@@ -13,7 +13,7 @@ from shapely.geometry import (
 )
 
 
-if __name__ == "__main__":
+def plot_environment(plotting: bool = True):
     # initialize point objects
     sh_pt1 = ShapelyPoint(0, 0)
     sh_pt2 = ShapelyPoint(8, 3)
@@ -53,6 +53,12 @@ if __name__ == "__main__":
         plt.title(f"Query Time: {query_time}")
         plt.xlim([-1, 15])
         plt.ylim([-1, 15])
-        plt.draw()
-        plt.pause(0.5)
-        plt.clf()
+
+        if plotting:
+            plt.draw()
+            plt.pause(0.5)
+            plt.clf()
+
+
+if __name__ == "__main__":
+    plot_environment()
