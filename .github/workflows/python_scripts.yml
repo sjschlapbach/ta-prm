@@ -24,6 +24,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          export PYTHONPATH=.
       - name: Run tests
         run: |
           python src/examples/plot_geometries.py
