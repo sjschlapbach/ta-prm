@@ -11,9 +11,10 @@ from pandas import Interval
 import matplotlib.pyplot as plt
 
 
-if __name__ == "__main__":
-    # get a query time from the user through a command line argument
-    query_time = float(input("Enter a query time: "))
+def plot_geometries(plotting: bool = True, query_time: float = None):
+    if query_time is None:
+        # get a query time from the user through a command line argument
+        query_time = float(input("Enter a query time: "))
 
     # create a point and a line
     pt1 = Point(ShapelyPoint(-3, 0), Interval(0, 10, closed="both"), 0.5)
@@ -46,4 +47,10 @@ if __name__ == "__main__":
 
     plt.xlim([-5, 10])
     plt.ylim([-5, 10])
-    plt.show()
+
+    if plotting:
+        plt.show()
+
+
+if __name__ == "__main__":
+    plot_geometries()
