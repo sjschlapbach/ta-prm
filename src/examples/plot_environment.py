@@ -1,7 +1,7 @@
 from src.obstacles.line import Line
 from src.obstacles.point import Point
 from src.obstacles.polygon import Polygon
-from src.environment import Environment
+from src.envs.environment import Environment
 from src.util.recurrence import Recurrence
 
 from pandas import Interval

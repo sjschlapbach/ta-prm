@@ -7,7 +7,7 @@ from shapely.geometry import (
     LineString as ShapelyLine,
 )
 
-from src.environment import Environment
+from src.envs.environment import Environment
 from src.obstacles.point import Point
 from src.obstacles.line import Line
 from src.obstacles.polygon import Polygon
