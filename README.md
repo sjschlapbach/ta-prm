@@ -1,6 +1,7 @@
 # Time-Aware PRM
 
 [![Python Testing](https://github.com/sjschlapbach/ta-prm/actions/workflows/python_testing.yml/badge.svg)](https://github.com/sjschlapbach/ta-prm/actions/workflows/python_testing.yml)
+[![Example Scripts](https://github.com/sjschlapbach/ta-prm/actions/workflows/python_scripts.yml/badge.svg)](https://github.com/sjschlapbach/ta-prm/actions/workflows/python_scripts.yml)
 
 This repository contains a Python implementation of the Time-Aware PRM (TA-PRM) algorithm. TA-PRM is a sampling-based motion planning algorithm that is able to find a solution to a motion planning problem in a time-varying environment.
 

@@ -22,18 +22,20 @@ class Environment:
 
     Attributes
     ----------
-    obstacles : List[Union[Point, Line, Polygon]]
+    obstacles : List[Tuple[Recurrence, Union[Point, Line, Polygon]]]
         A list of obstacles representing the environment.
+        Each obstacle is a tuple consisting of the obstacle recurrence parameter and its object data.
 
     Methods
     -------
-    __init__(obstacles: List[Union[Point, Line, Polygon]] = None, filepath: str = None)
+    __init__(obstacles: List[Tuple[Recurrence, Union[Point, Line, Polygon]]] = None, filepath: str = None)
         Initialize the Environment object.
 
     plot(query_time: float = None, fig=None)
         Plots the obstacles in the environment using matplotlib.
+        Recurrence parameters are not considered when plotting environments.
 
-    add_obstacles(new_obstacles: List[Union[Point, Line, Polygon]])
+    add_obstacles(new_obstacles: List[Tuple[Recurrence, Union[Point, Line, Polygon]]])
         Adds new obstacles to the environment.
 
     reset()
@@ -41,6 +43,19 @@ class Environment:
 
     save(filepath: str)
         Logs the obstacles stored in the environment to a file in JSON format.
+
+    Parameters
+    ----------
+    obstacles : List[Tuple[Recurrence, Union[Point, Line, Polygon]]], optional
+        A list of obstacles to be added to the environment.
+        Each obstacle is a tuple consisting of the obstacle recurrence parameter and its object data.
+    filepath : str, optional
+        The path to the file where the obstacles are stored. If provided, the obstacles will be loaded from the file.
+
+    Raises
+    ------
+    ValueError
+        If an invalid obstacle type is encountered. Only Point, Line, or Polygon are supported.
     """
 
     def __init__(
