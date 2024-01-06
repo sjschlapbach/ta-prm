@@ -399,8 +399,7 @@ class TestPoint:
         # Test case 1: Convert point object to JSON and back (only geometry)
         pt_1 = Point(geometry=point)
         json_1 = pt_1.export_to_json()
-        loaded_1 = Point()
-        loaded_1.load_from_json(json_1)
+        loaded_1 = Point(json_data=json_1)
         assert loaded_1.geometry == point
         assert loaded_1.time_interval == None
         assert loaded_1.radius == 0
@@ -408,8 +407,7 @@ class TestPoint:
         # Test case 2: Convert point object to JSON and back (only geometry and time interval)
         pt_2 = Point(geometry=point, time_interval=time_interval)
         json_2 = pt_2.export_to_json()
-        loaded_2 = Point()
-        loaded_2.load_from_json(json_2)
+        loaded_2 = Point(json_data=json_2)
         assert loaded_2.geometry == point
         assert loaded_2.time_interval == time_interval
         assert loaded_2.radius == 0
@@ -417,8 +415,7 @@ class TestPoint:
         # Test case 3: Convert point object to JSON and back (only geometry, time interval, and radius)
         pt_3 = Point(geometry=point, time_interval=time_interval, radius=radius)
         json_3 = pt_3.export_to_json()
-        loaded_3 = Point()
-        loaded_3.load_from_json(json_3)
+        loaded_3 = Point(json_data=json_3)
         assert loaded_3.geometry == point
         assert loaded_3.time_interval == time_interval
         assert loaded_3.radius == radius
@@ -426,8 +423,7 @@ class TestPoint:
         # Test case 4: Convert point object to JSON and back (only time interval and radius)
         pt_4 = Point(time_interval=time_interval, radius=radius)
         json_4 = pt_4.export_to_json()
-        loaded_4 = Point()
-        loaded_4.load_from_json(json_4)
+        loaded_4 = Point(json_data=json_4)
         assert loaded_4.geometry == None
         assert loaded_4.time_interval == time_interval
         assert loaded_4.radius == radius
@@ -435,8 +431,7 @@ class TestPoint:
         # Test case 5: Convert point object to JSON and back (only geometry and radius)
         pt_5 = Point(geometry=point, radius=radius)
         json_5 = pt_5.export_to_json()
-        loaded_5 = Point()
-        loaded_5.load_from_json(json_5)
+        loaded_5 = Point(json_data=json_5)
         assert loaded_5.geometry == point
         assert loaded_5.time_interval == None
         assert loaded_5.radius == radius
@@ -444,8 +439,7 @@ class TestPoint:
         # Test case 6: Convert point object to JSON and back (only radius)
         pt_6 = Point(radius=radius)
         json_6 = pt_6.export_to_json()
-        loaded_6 = Point()
-        loaded_6.load_from_json(json_6)
+        loaded_6 = Point(json_data=json_6)
         assert loaded_6.geometry == None
         assert loaded_6.time_interval == None
         assert loaded_6.radius == radius
@@ -453,8 +447,7 @@ class TestPoint:
         # Test case 7: Convert point object to JSON and back (only geometry and time interval)
         pt_7 = Point(geometry=point, time_interval=time_interval)
         json_7 = pt_7.export_to_json()
-        loaded_7 = Point()
-        loaded_7.load_from_json(json_7)
+        loaded_7 = Point(json_data=json_7)
         assert loaded_7.geometry == point
         assert loaded_7.time_interval == time_interval
         assert loaded_7.radius == 0
@@ -467,8 +460,7 @@ class TestPoint:
             recurrence=Recurrence.MINUTELY,
         )
         json_8 = pt_8.export_to_json()
-        loaded_8 = Point()
-        loaded_8.load_from_json(json_8)
+        loaded_8 = Point(json_data=json_8)
         assert loaded_8.geometry == point
         assert loaded_8.time_interval == time_interval
         assert loaded_8.radius == radius
@@ -489,8 +481,7 @@ class TestPoint:
         with open("test_point_saving.txt", "r") as f:
             json_obj8_loaded = json.load(f)
 
-        loaded_8 = Point()
-        loaded_8.load_from_json(json_obj8_loaded)
+        loaded_8 = Point(json_data=json_obj8_loaded)
         assert loaded_8.geometry == point
         assert loaded_8.time_interval == time_interval
         assert loaded_8.radius == radius

@@ -14,7 +14,7 @@ class Geometry:
         recurrence (Recurrence): The recurrence frequency.
 
     Methods:
-        __init__(radius: float = None, interval: Interval = None, recurrence: Recurrence = None): Initializes a Geometry object with the given radius, time interval, and recurrence.
+        __init__(radius: float = None, interval: Interval = None, recurrence: Recurrence = None, json_data: dict = None): Initializes a Geometry object with the given radius, time interval, recurrence, and json_data.
         set_interval(lower_bound: float, upper_bound: float): Sets the closed time interval from a lower and upper bound.
         set_radius(radius: float): Sets the radius around the point, considered to be in collision.
         set_recurrence(recurrence: Recurrence): Sets the recurrence frequency.
@@ -29,15 +29,25 @@ class Geometry:
         radius: float = None,
         interval: Interval = None,
         recurrence: Recurrence = None,
+        json_data: dict = None,
     ):
         """
         Initializes a Geometry object with the given radius, time interval, and recurrence.
 
         Args:
-            radius (float): The radius around the point, considered to be in collision.
-            interval (Interval): The closed time interval.
-            recurrence (Recurrence): The recurrence frequency.
+            radius (float, optional): The radius around the point, considered to be in collision.
+            interval (Interval, optional): The closed time interval.
+            recurrence (Recurrence, optional): The recurrence frequency.
+            json_data (dict, optional): A dictionary containing serialized data to load from.
+
+        If `json_data` is provided, the object will be initialized by loading data from it.
+        Otherwise, the object will be initialized with the provided `radius`, `interval`, and `recurrence`.
+        If `recurrence` is not provided, it defaults to `Recurrence.NONE`.
         """
+        if json_data is not None:
+            self.load_from_json(json_data)
+            return
+
         self.radius = radius
         self.time_interval = interval
 

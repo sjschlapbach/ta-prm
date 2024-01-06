@@ -308,54 +308,47 @@ class TestGeometry:
         # Test case 1: Export and load geometry with radius and no interval
         geometry = Geometry(radius=radius)
         json_obj1 = geometry.export_to_json()
-        loaded_geometry1 = Geometry()
-        loaded_geometry1.load_from_json(json_obj1)
+        loaded_geometry1 = Geometry(json_data=json_obj1)
         assert loaded_geometry1.radius == radius
 
         # Test case 2: Export and load geometry with default interval and no radius
         geometry = Geometry(interval=interval_default)
         json_obj2 = geometry.export_to_json()
-        loaded_geometry2 = Geometry()
-        loaded_geometry2.load_from_json(json_obj2)
+        loaded_geometry2 = Geometry(json_data=json_obj2)
         assert loaded_geometry2.time_interval == interval_default
 
         # Test case 3: Export and load geometry with default interval and radius
         geometry = Geometry(radius=radius, interval=interval_default)
         json_obj3 = geometry.export_to_json()
-        loaded_geometry3 = Geometry()
-        loaded_geometry3.load_from_json(json_obj3)
+        loaded_geometry3 = Geometry(json_data=json_obj3)
         assert loaded_geometry3.radius == radius
         assert loaded_geometry3.time_interval == interval_default
 
         # Test case 4: Export and load geometry with open interval and radius
         geometry = Geometry(radius=radius, interval=interval_open)
         json_obj4 = geometry.export_to_json()
-        loaded_geometry4 = Geometry()
-        loaded_geometry4.load_from_json(json_obj4)
+        loaded_geometry4 = Geometry(json_data=json_obj4)
         assert loaded_geometry4.radius == radius
         assert loaded_geometry4.time_interval == interval_open
 
         # Test case 5: Export and load geometry with closed interval and radius
         geometry = Geometry(radius=radius, interval=interval_closed)
         json_obj5 = geometry.export_to_json()
-        loaded_geometry5 = Geometry()
-        loaded_geometry5.load_from_json(json_obj5)
+        loaded_geometry5 = Geometry(json_data=json_obj5)
         assert loaded_geometry5.radius == radius
         assert loaded_geometry5.time_interval == interval_closed
 
         # Test case 6: Export and load geometry with left interval and radius
         geometry = Geometry(radius=radius, interval=interval_left)
         json_obj6 = geometry.export_to_json()
-        loaded_geometry6 = Geometry()
-        loaded_geometry6.load_from_json(json_obj6)
+        loaded_geometry6 = Geometry(json_data=json_obj6)
         assert loaded_geometry6.radius == radius
         assert loaded_geometry6.time_interval == interval_left
 
         # Test case 7: Export and load geometry with right interval and radius
         geometry = Geometry(radius=radius, interval=interval_right)
         json_obj7 = geometry.export_to_json()
-        loaded_geometry7 = Geometry()
-        loaded_geometry7.load_from_json(json_obj7)
+        loaded_geometry7 = Geometry(json_data=json_obj7)
         assert loaded_geometry7.radius == radius
         assert loaded_geometry7.time_interval == interval_right
 
@@ -371,8 +364,7 @@ class TestGeometry:
         with open("test_geometry_saving.txt", "r") as f:
             json_obj8_loaded = json.load(f)
 
-        loaded_geometry8 = Geometry()
-        loaded_geometry8.load_from_json(json_obj8_loaded)
+        loaded_geometry8 = Geometry(json_data=json_obj8_loaded)
         assert loaded_geometry8.radius == radius
         assert loaded_geometry8.time_interval == interval_right
         assert loaded_geometry8.recurrence == Recurrence.DAILY
