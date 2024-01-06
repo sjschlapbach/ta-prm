@@ -18,6 +18,8 @@ class TestEnvironment:
     def test_create_environment(self):
         empty_env = Environment()
         assert empty_env is not None
+        assert empty_env.dim_x is None
+        assert empty_env.dim_y is None
 
         sh_pt1 = ShapelyPoint(0, 0)
         sh_pt1_copy = ShapelyPoint(0, 0)
@@ -33,6 +35,11 @@ class TestEnvironment:
         sh_poly1_copy = ShapelyPolygon([(6, 6), (7, 7), (8, 8)])
         sh_poly2 = ShapelyPolygon([(9, 9), (10, 10), (11, 11)])
         sh_poly2_copy = ShapelyPolygon([(9, 9), (10, 10), (11, 11)])
+
+        # test that dimensionality is saved correctly
+        env = Environment(dimension_x=(10, 20), dimension_y=(20, 30))
+        assert env.dim_x == [10, 20]
+        assert env.dim_y == [20, 30]
 
         # create an environment with point obstacles only
         pt1 = Point(geometry=sh_pt1)
@@ -113,6 +120,19 @@ class TestEnvironment:
         assert env.obstacles[4].time_interval == None
         assert env.obstacles[5].time_interval == Interval(10, 30)
         assert env is not None
+
+    def test_set_dimensions(self):
+        env = Environment()
+        assert env.dim_x is None
+        assert env.dim_y is None
+
+        env.set_dimensions((10, 20), (20, 30))
+        assert env.dim_x == [10, 20]
+        assert env.dim_y == [20, 30]
+
+        env.set_dimensions((30, 40), (40, 50))
+        assert env.dim_x == [30, 40]
+        assert env.dim_y == [40, 50]
 
     def test_reset_add_obstacles(self):
         sh_pt = ShapelyPoint(0, 0)
