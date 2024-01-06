@@ -887,6 +887,145 @@ class TestEnvironmentInstance:
         assert saved_obstacle3.recurrence == Rec.NONE
         assert saved_obstacle3.radius == 1.0
 
-    # TODO - implement once spatial index is available
     def test_create_environment_instance_idx(self):
-        pass
+        resolution = 5
+        range_x = (0, 10)
+        range_y = (0, 10)
+
+        # create point, which is part of 4 cells (both static and dynamic)
+        shapely_pt = ShapelyPoint(2, 2)
+        pt1 = Point(geometry=shapely_pt, radius=1.0)
+        pt2 = Point(
+            geometry=shapely_pt,
+            time_interval=Interval(10, 20, closed="both"),
+            radius=1.0,
+        )
+
+        # create a line, which is part of 6 static cells and 3 dynamic cells
+        shapely_line = ShapelyLine([(3, 4.5), (7, 4.5)])
+        line1 = Line(geometry=shapely_line, radius=0.6)
+        line2 = Line(
+            geometry=shapely_line,
+            time_interval=Interval(10, 20, closed="both"),
+            radius=0.1,
+        )
+
+        # create a polygon, which is part of 5 static and dynamic cells
+        shapely_poly = ShapelyPolygon([(1, 1), (3, 1), (3, 3), (1, 4.5)])
+        poly1 = Polygon(geometry=shapely_poly, radius=0.01)
+        poly2 = Polygon(
+            geometry=shapely_poly,
+            time_interval=Interval(10, 20, closed="both"),
+            radius=0.01,
+        )
+
+        # create environment with all obstacles
+        env = Environment(obstacles=[pt1, pt2, line1, line2, poly1, poly2])
+
+        # create environment instance and check that all obstacles are added
+        env_instance = EnvironmentInstance(
+            environment=env,
+            query_interval=Interval(5, 25, closed="both"),
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+
+        assert len(env_instance.static_obstacles) == 3
+        assert len(env_instance.dynamic_obstacles) == 3
+
+        # check cell content of the two spatial indices
+        static_index = env_instance.static_idx
+        dynamic_index = env_instance.dynamic_idx
+
+        st_pt_ix = 1
+        st_line_ix = 3
+        st_poly_ix = 5
+        dyn_pt_ix = 2
+        dyn_line_ix = 4
+        dyn_poly_ix = 6
+
+        assert len(static_index) == resolution
+        assert len(dynamic_index) == resolution
+        assert len(static_index[0]) == resolution
+        assert len(dynamic_index[0]) == resolution
+
+        # check static index content
+        assert len(static_index[0][0]) == 2
+        assert static_index[0][0] == [st_pt_ix, st_poly_ix]
+        assert len(static_index[0][1]) == 2
+        assert static_index[0][1] == [st_pt_ix, st_poly_ix]
+        assert len(static_index[0][2]) == 1
+        assert static_index[0][2] == [st_poly_ix]
+        assert len(static_index[0][3]) == 0
+        assert len(static_index[0][4]) == 0
+
+        assert len(static_index[1][0]) == 2
+        assert static_index[1][0] == [st_pt_ix, st_poly_ix]
+        assert len(static_index[1][1]) == 3
+        assert static_index[1][1] == [st_pt_ix, st_line_ix, st_poly_ix]
+        assert len(static_index[1][2]) == 1
+        assert static_index[1][2] == [st_line_ix]
+        assert len(static_index[1][3]) == 0
+        assert len(static_index[1][4]) == 0
+
+        assert len(static_index[2][0]) == 0
+        assert len(static_index[2][1]) == 1
+        assert static_index[2][1] == [st_line_ix]
+        assert len(static_index[2][2]) == 1
+        assert static_index[2][2] == [st_line_ix]
+        assert len(static_index[2][3]) == 0
+        assert len(static_index[2][4]) == 0
+
+        assert len(static_index[3][0]) == 0
+        assert len(static_index[3][1]) == 1
+        assert static_index[3][1] == [st_line_ix]
+        assert len(static_index[3][2]) == 1
+        assert static_index[3][2] == [st_line_ix]
+        assert len(static_index[3][3]) == 0
+        assert len(static_index[3][4]) == 0
+
+        assert len(static_index[4][0]) == 0
+        assert len(static_index[4][1]) == 0
+        assert len(static_index[4][2]) == 0
+        assert len(static_index[4][3]) == 0
+        assert len(static_index[4][4]) == 0
+
+        # check dynamic index content
+        assert len(dynamic_index[0][0]) == 2
+        assert dynamic_index[0][0] == [dyn_pt_ix, dyn_poly_ix]
+        assert len(dynamic_index[0][1]) == 2
+        assert dynamic_index[0][1] == [dyn_pt_ix, dyn_poly_ix]
+        assert len(dynamic_index[0][2]) == 1
+        assert dynamic_index[0][2] == [dyn_poly_ix]
+        assert len(dynamic_index[0][3]) == 0
+        assert len(dynamic_index[0][4]) == 0
+
+        assert len(dynamic_index[1][0]) == 2
+        assert dynamic_index[1][0] == [dyn_pt_ix, dyn_poly_ix]
+        assert len(dynamic_index[1][1]) == 2
+        assert dynamic_index[1][1] == [dyn_pt_ix, dyn_poly_ix]
+        assert len(dynamic_index[1][2]) == 1
+        assert dynamic_index[1][2] == [dyn_line_ix]
+        assert len(dynamic_index[1][3]) == 0
+        assert len(dynamic_index[1][4]) == 0
+
+        assert len(dynamic_index[2][0]) == 0
+        assert len(dynamic_index[2][1]) == 0
+        assert len(dynamic_index[2][2]) == 1
+        assert dynamic_index[2][2] == [dyn_line_ix]
+        assert len(dynamic_index[2][3]) == 0
+        assert len(dynamic_index[2][4]) == 0
+
+        assert len(dynamic_index[3][0]) == 0
+        assert len(dynamic_index[3][1]) == 0
+        assert len(dynamic_index[3][2]) == 1
+        assert dynamic_index[3][2] == [dyn_line_ix]
+        assert len(dynamic_index[3][3]) == 0
+        assert len(dynamic_index[3][4]) == 0
+
+        assert len(dynamic_index[4][0]) == 0
+        assert len(dynamic_index[4][1]) == 0
+        assert len(dynamic_index[4][2]) == 0
+        assert len(dynamic_index[4][3]) == 0
+        assert len(dynamic_index[4][4]) == 0
