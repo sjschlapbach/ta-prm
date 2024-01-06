@@ -161,7 +161,11 @@ class Geometry:
         Returns:
             str: A JSON representation of the geometry.
         """
-        return {"radius": str(self.radius), "interval": str(self.time_interval)}
+        return {
+            "radius": str(self.radius),
+            "interval": str(self.time_interval),
+            "recurrence": self.recurrence.to_string(),
+        }
 
     def load_from_json(self, json_object: dict):
         """
@@ -173,10 +177,12 @@ class Geometry:
         # extract radius and interval from json object
         radius_str = json_object["radius"]
         interval_str = json_object["interval"]
+        recurrence_str = json_object["recurrence"]
 
-        # convert radius and interval to float and Interval
+        # convert stringified values back to python class instances
         self.radius = float(radius_str) if radius_str != "None" else None
         self.time_interval = self.interval_from_string(interval_str)
+        self.recurrence = Recurrence.from_string(recurrence_str)
 
     def interval_from_string(self, input_str: str):
         """

@@ -360,7 +360,9 @@ class TestGeometry:
         assert loaded_geometry7.time_interval == interval_right
 
         # Test case 8: Save and load geometry from file
-        geometry = Geometry(radius=radius, interval=interval_right)
+        geometry = Geometry(
+            radius=radius, interval=interval_right, recurrence=Recurrence.DAILY
+        )
         json_obj8 = geometry.export_to_json()
 
         with open("test_geometry_saving.txt", "w") as f:
@@ -373,5 +375,6 @@ class TestGeometry:
         loaded_geometry8.load_from_json(json_obj8_loaded)
         assert loaded_geometry8.radius == radius
         assert loaded_geometry8.time_interval == interval_right
+        assert loaded_geometry8.recurrence == Recurrence.DAILY
 
         os.remove("test_geometry_saving.txt")

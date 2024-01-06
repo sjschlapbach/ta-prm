@@ -447,8 +447,28 @@ class TestLine:
         assert loaded_7.time_interval == time_interval
         assert loaded_7.radius == 0
 
-        # Test case 8: Convert line object to JSON, save and load from file
-        ln_8 = Line(geometry=line, time_interval=time_interval, radius=radius)
+        # Tets case 8: Convert line object to JSON and back (geometry, time interval, radius, and recurrence)
+        ln_8 = Line(
+            geometry=line,
+            time_interval=time_interval,
+            radius=radius,
+            recurrence=Recurrence.MINUTELY,
+        )
+        json_8 = ln_8.export_to_json()
+        loaded_8 = Line()
+        loaded_8.load_from_json(json_8)
+        assert loaded_8.geometry == line
+        assert loaded_8.time_interval == time_interval
+        assert loaded_8.radius == radius
+        assert loaded_8.recurrence == Recurrence.MINUTELY
+
+        # Test case 9: Convert line object to JSON, save and load from file
+        ln_8 = Line(
+            geometry=line,
+            time_interval=time_interval,
+            radius=radius,
+            recurrence=Recurrence.DAILY,
+        )
         json_8 = ln_8.export_to_json()
 
         with open("test_line_saving.txt", "w") as f:
@@ -462,5 +482,6 @@ class TestLine:
         assert loaded_8.geometry == line
         assert loaded_8.time_interval == time_interval
         assert loaded_8.radius == radius
+        assert loaded_8.recurrence == Recurrence.DAILY
 
         os.remove("test_line_saving.txt")

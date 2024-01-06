@@ -421,8 +421,28 @@ class TestPolygon:
         assert loaded_7.time_interval == time_interval
         assert loaded_7.radius == 0
 
-        # Test case 8: Convert polygon object to JSON, save and load from file
-        poly_8 = Polygon(geometry=polygon, time_interval=time_interval, radius=radius)
+        # Test case 8: Convert polygon object to JSON and back (geometry, time interval, radius, and recurrence)
+        poly_8 = Polygon(
+            geometry=polygon,
+            time_interval=time_interval,
+            radius=radius,
+            recurrence=Recurrence.MINUTELY,
+        )
+        json_8 = poly_8.export_to_json()
+        loaded_8 = Polygon()
+        loaded_8.load_from_json(json_8)
+        assert loaded_8.geometry == polygon
+        assert loaded_8.time_interval == time_interval
+        assert loaded_8.radius == radius
+        assert loaded_8.recurrence == Recurrence.MINUTELY
+
+        # Test case 9: Convert polygon object to JSON, save and load from file
+        poly_8 = Polygon(
+            geometry=polygon,
+            time_interval=time_interval,
+            radius=radius,
+            recurrence=Recurrence.HOURLY,
+        )
         json_8 = poly_8.export_to_json()
 
         with open("test_polygon_saving.txt", "w") as f:
@@ -436,5 +456,6 @@ class TestPolygon:
         assert loaded_8.geometry == polygon
         assert loaded_8.time_interval == time_interval
         assert loaded_8.radius == radius
+        assert loaded_8.recurrence == Recurrence.HOURLY
 
         os.remove("test_polygon_saving.txt")
