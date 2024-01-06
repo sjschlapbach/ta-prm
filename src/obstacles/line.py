@@ -61,18 +61,18 @@ class Line(Geometry):
         Raises:
             ValueError: If the shape type is not supported.
         """
-        if isinstance(shape, Point):
-            distance = self.geometry.distance(shape)
-        elif isinstance(shape, LineString):
-            distance = self.geometry.distance(shape)
-        elif isinstance(shape, Polygon):
-            distance = self.geometry.distance(shape.exterior)
-        else:
-            raise ValueError(
-                "Invalid shape type. Only LineString or Polygon are supported."
-            )
-
         if self.is_active(query_time, query_interval):
+            if isinstance(shape, Point):
+                distance = self.geometry.distance(shape)
+            elif isinstance(shape, LineString):
+                distance = self.geometry.distance(shape)
+            elif isinstance(shape, Polygon):
+                distance = self.geometry.distance(shape.exterior)
+            else:
+                raise ValueError(
+                    "Invalid shape type. Only LineString or Polygon are supported."
+                )
+
             return distance <= self.radius
         else:
             return False

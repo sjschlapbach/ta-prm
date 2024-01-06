@@ -17,3 +17,18 @@ class Recurrence(Enum):
 
     # Recurs every day. (modulo 86400 seconds)
     DAILY = 3
+
+    def get_seconds(self):
+        """
+        Returns the number of seconds corresponding to the recurrence.
+        """
+        if self == Recurrence.NONE:
+            return 0
+        elif self == Recurrence.MINUTELY:
+            return 60
+        elif self == Recurrence.HOURLY:
+            return 3600
+        elif self == Recurrence.DAILY:
+            return 86400
+        else:
+            raise ValueError("Invalid recurrence value.")

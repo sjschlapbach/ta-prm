@@ -81,18 +81,18 @@ class Polygon(Geometry):
         Returns:
             bool: True if collision occurs, False otherwise. Objects without a time interval are considered to be always active.
         """
-        if isinstance(shape, Point):
-            distance = self.geometry.distance(shape)
-        elif isinstance(shape, LineString):
-            distance = self.geometry.distance(shape)
-        elif isinstance(shape, ShapelyPolygon):
-            distance = self.geometry.distance(shape)
-        else:
-            raise ValueError(
-                "Invalid shape type. Only Point, LineString, or Polygon are supported."
-            )
-
         if self.is_active(query_time, query_interval):
+            if isinstance(shape, Point):
+                distance = self.geometry.distance(shape)
+            elif isinstance(shape, LineString):
+                distance = self.geometry.distance(shape)
+            elif isinstance(shape, ShapelyPolygon):
+                distance = self.geometry.distance(shape)
+            else:
+                raise ValueError(
+                    "Invalid shape type. Only Point, LineString, or Polygon are supported."
+                )
+
             return distance <= self.radius
         else:
             return False
