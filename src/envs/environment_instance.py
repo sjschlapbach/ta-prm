@@ -27,13 +27,31 @@ class EnvironmentInstance:
     def __init__(self, environment: Environment, query_interval: Interval):
         # TODO - docstring
 
+        # set variables from environment
         self.query_interval = query_interval
+        self.dim_x = environment.dim_x
+        self.dim_y = environment.dim_y
+
+        # initialize obstacle lists and counter for indexing
         self.static_obstacles: Dict[int, Union[Point, Line, Polygon]] = {}
         self.dynamic_obstacles: Dict[int, Union[Point, Line, Polygon]] = {}
         counter = 1
 
         print("Loading obstacles into environment instance...")
         for obstacle in tqdm(environment.obstacles):
+            # if dimensions are specified for the environment, check that the obstacle is contained
+            if self.dim_x is not None and self.dim_y is not None:
+                env_poly = ShapelyPolygon(
+                    [
+                        (self.dim_x[0], self.dim_y[0]),
+                        (self.dim_x[0], self.dim_y[1]),
+                        (self.dim_x[1], self.dim_y[1]),
+                        (self.dim_x[1], self.dim_y[0]),
+                    ]
+                )
+                if not obstacle.check_collision(env_poly):
+                    continue
+
             # if the obstacle is static, add it to the static obstacles
             if obstacle.time_interval is None:
                 obs_copy = obstacle.copy()

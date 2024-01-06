@@ -495,6 +495,45 @@ class TestEnvironmentInstance:
         assert len(env_instance4.static_obstacles) == 4
         assert len(env_instance4.dynamic_obstacles) == 0
 
+        # Test creation of environment instance with combined static and dynamic obstacles
+        pt1 = ShapelyPoint(0, 0)
+        interval_dyn = Interval(10, 20)
+        rad_dyn = 0.5
+        pt_dynamic_obs = Point(
+            geometry=pt1,
+            time_interval=interval_dyn,
+            radius=rad_dyn,
+            recurrence=Rec.MINUTELY,
+        )
+
+        pt2 = ShapelyPoint(1, 1)
+        interval_static = Interval(0, 100)
+        rad_static = 1.0
+        pt_static_obs = Point(
+            geometry=pt2,
+            time_interval=interval_static,
+            radius=rad_static,
+            recurrence=Rec.DAILY,
+        )
+
+        env = Environment(obstacles=[pt_dynamic_obs, pt_static_obs])
+        env_instance = EnvironmentInstance(env, Interval(5, 25))
+        assert len(env_instance.static_obstacles) == 1
+        assert len(env_instance.dynamic_obstacles) == 1
+
+        saved_obstacle1 = env_instance.dynamic_obstacles[1]
+        saved_obstacle2 = env_instance.static_obstacles[2]
+
+        assert saved_obstacle1.geometry == pt1
+        assert saved_obstacle1.time_interval == interval_dyn
+        assert saved_obstacle1.recurrence == Rec.MINUTELY
+        assert saved_obstacle1.radius == rad_dyn
+
+        assert saved_obstacle2.geometry == pt2
+        assert saved_obstacle2.time_interval == None
+        assert saved_obstacle2.recurrence == Rec.NONE
+        assert saved_obstacle2.radius == rad_static
+
     def test_create_environment_instance_overloads(self):
         ## Re-reun test cases 1-6 for line and polygon obstacles again to ensure that overloads work the same
         # create shapely lines and copies for later comparison
@@ -736,6 +775,74 @@ class TestEnvironmentInstance:
         assert saved_obstacle.time_interval == interval
         assert saved_obstacle.recurrence == Rec.DAILY
         assert saved_obstacle.radius == 5.0
+
+    def test_create_environment_dimensionality_check(self):
+        # initialize points and query interval matching intervals and mismatching intervals
+        pt_inside = ShapelyPoint(0, 0)
+        pt_inside_copy = ShapelyPoint(0, 0)
+        pt_outside = ShapelyPoint(100, 100)
+        pt_outside_copy = ShapelyPoint(100, 100)
+        pt_intersecting = ShapelyPoint(11, 11)
+        pt_intersecting_copy = ShapelyPoint(11, 11)
+
+        interval_included = Interval(10, 20, closed="both")
+        interval_outside = Interval(100, 200, closed="both")
+        query_interval = Interval(5, 25, closed="both")
+
+        # create point obstacles categorized into matching and mismatching
+        pt1_match = Point(geometry=pt_inside, radius=0.0)
+        pt2_match = Point(
+            geometry=pt_inside, time_interval=interval_included, radius=1.0
+        )
+        pt3_match = Point(geometry=pt_intersecting, radius=2.0)
+
+        pt1_mismatch = Point(geometry=pt_outside, radius=5.0)
+        pt2_mismatch = Point(
+            geometry=pt_inside, time_interval=interval_outside, radius=0.0
+        )
+        pt3_mismatch = Point(geometry=pt_intersecting, radius=0.0)
+        pt4_mismatch = Point(
+            geometry=pt_intersecting, time_interval=interval_outside, radius=5.0
+        )
+
+        # create environment with all obstacles in random order
+        env = Environment(
+            obstacles=[
+                pt1_match,
+                pt1_mismatch,
+                pt2_match,
+                pt2_mismatch,
+                pt3_mismatch,
+                pt3_match,
+                pt4_mismatch,
+            ],
+            dimension_x=(0, 10),
+            dimension_y=(0, 10),
+        )
+
+        # create environment instance and check that only matching obstacles are added
+        env_instance = EnvironmentInstance(env, query_interval)
+        assert len(env_instance.static_obstacles) == 2
+        assert len(env_instance.dynamic_obstacles) == 1
+
+        saved_obstacle1 = env_instance.static_obstacles[1]
+        saved_obstacle2 = env_instance.static_obstacles[3]
+        saved_obstacle3 = env_instance.dynamic_obstacles[2]
+
+        assert saved_obstacle1.geometry == pt_inside_copy
+        assert saved_obstacle1.time_interval is None
+        assert saved_obstacle1.recurrence == Rec.NONE
+        assert saved_obstacle1.radius == 0.0
+
+        assert saved_obstacle2.geometry == pt_intersecting_copy
+        assert saved_obstacle2.time_interval is None
+        assert saved_obstacle2.recurrence == Rec.NONE
+        assert saved_obstacle2.radius == 2.0
+
+        assert saved_obstacle3.geometry == pt_inside_copy
+        assert saved_obstacle3.time_interval == interval_included
+        assert saved_obstacle3.recurrence == Rec.NONE
+        assert saved_obstacle3.radius == 1.0
 
     # TODO - implement once spatial index is available
     def test_create_environment_instance_idx(self):
