@@ -10,6 +10,7 @@ from pandas import Interval
 from matplotlib import pyplot as plt
 
 from src.obstacles.point import Point
+from src.util.recurrence import Recurrence
 
 
 class TestPoint:
@@ -27,12 +28,14 @@ class TestPoint:
         assert point.geometry == None
         assert point.time_interval == None
         assert point.radius == 0
+        assert point.recurrence == Recurrence.NONE
 
         # Test constructor with geometry
         point = Point(geometry=ShapelyPoint(0, 0))
         assert point.geometry == ShapelyPoint(0, 0)
         assert point.time_interval == None
         assert point.radius == 0
+        assert point.recurrence == Recurrence.NONE
 
         # Test constructor with geometry and time interval
         point = Point(
@@ -41,6 +44,7 @@ class TestPoint:
         assert point.geometry == ShapelyPoint(0, 0)
         assert point.time_interval == Interval(0, 10, closed="both")
         assert point.radius == 0
+        assert point.recurrence == Recurrence.NONE
 
         # Test constructor with geometry, time interval, and radius
         point = Point(
@@ -51,6 +55,19 @@ class TestPoint:
         assert point.geometry == ShapelyPoint(0, 0)
         assert point.time_interval == Interval(0, 10, closed="both")
         assert point.radius == 1.0
+        assert point.recurrence == Recurrence.NONE
+
+        # Test constructor with geometry, time interval, radius, and recurrence
+        point = Point(
+            geometry=ShapelyPoint(0, 0),
+            time_interval=Interval(0, 10, closed="both"),
+            radius=1.0,
+            recurrence=Recurrence.MINUTELY,
+        )
+        assert point.geometry == ShapelyPoint(0, 0)
+        assert point.time_interval == Interval(0, 10, closed="both")
+        assert point.radius == 1.0
+        assert point.recurrence == Recurrence.MINUTELY
 
     def test_set_geometry(self):
         point = self.setup_method()
@@ -86,6 +103,97 @@ class TestPoint:
         # collision check with point slightly outside the area
         other_point = ShapelyPoint(sqrt2_inv + 10e-5, sqrt2_inv + 10e-5)
         assert point.check_collision(other_point) == False
+
+        # check collision with recurring point
+        point_rec = Point(
+            geometry=ShapelyPoint(0, 0),
+            time_interval=Interval(5, 15, closed="both"),
+            radius=1.0,
+            recurrence=Recurrence.MINUTELY,
+        )
+        colliding_point = ShapelyPoint(0, 0)
+        non_colliding_point = ShapelyPoint(2, 2)
+        assert point_rec.check_collision(colliding_point, query_time=0) == False
+        assert point_rec.check_collision(non_colliding_point, query_time=0) == False
+        assert point_rec.check_collision(colliding_point, query_time=10) == True
+        assert point_rec.check_collision(non_colliding_point, query_time=10) == False
+        assert point_rec.check_collision(colliding_point, query_time=20) == False
+        assert point_rec.check_collision(non_colliding_point, query_time=20) == False
+
+        assert (
+            point_rec.check_collision(colliding_point, query_interval=Interval(0, 3))
+            == False
+        )
+        assert (
+            point_rec.check_collision(
+                non_colliding_point, query_interval=Interval(0, 3)
+            )
+            == False
+        )
+        assert (
+            point_rec.check_collision(colliding_point, query_interval=Interval(3, 10))
+            == True
+        )
+        assert (
+            point_rec.check_collision(
+                non_colliding_point, query_interval=Interval(3, 10)
+            )
+            == False
+        )
+        assert (
+            point_rec.check_collision(colliding_point, query_interval=Interval(10, 15))
+            == True
+        )
+        assert (
+            point_rec.check_collision(
+                non_colliding_point, query_interval=Interval(10, 15)
+            )
+            == False
+        )
+
+        assert point_rec.check_collision(colliding_point, query_time=120) == False
+        assert point_rec.check_collision(non_colliding_point, query_time=120) == False
+        assert point_rec.check_collision(colliding_point, query_time=130) == True
+        assert point_rec.check_collision(non_colliding_point, query_time=130) == False
+        assert point_rec.check_collision(colliding_point, query_time=140) == False
+        assert point_rec.check_collision(non_colliding_point, query_time=140) == False
+
+        assert (
+            point_rec.check_collision(
+                colliding_point, query_interval=Interval(120, 123)
+            )
+            == False
+        )
+        assert (
+            point_rec.check_collision(
+                non_colliding_point, query_interval=Interval(120, 123)
+            )
+            == False
+        )
+        assert (
+            point_rec.check_collision(
+                colliding_point, query_interval=Interval(125, 130)
+            )
+            == True
+        )
+        assert (
+            point_rec.check_collision(
+                non_colliding_point, query_interval=Interval(125, 130)
+            )
+            == False
+        )
+        assert (
+            point_rec.check_collision(
+                colliding_point, query_interval=Interval(130, 140)
+            )
+            == True
+        )
+        assert (
+            point_rec.check_collision(
+                non_colliding_point, query_interval=Interval(130, 140)
+            )
+            == False
+        )
 
     def test_check_collision_with_line_string(self):
         point = self.setup_method()

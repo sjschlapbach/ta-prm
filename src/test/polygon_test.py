@@ -10,6 +10,7 @@ from pandas import Interval
 from matplotlib import pyplot as plt
 
 from src.obstacles.polygon import Polygon
+from src.util.recurrence import Recurrence
 
 
 class TestPolygon:
@@ -27,6 +28,7 @@ class TestPolygon:
         assert polygon.geometry == None
         assert polygon.time_interval == None
         assert polygon.radius == 0
+        assert polygon.recurrence == Recurrence.NONE
 
         # Test constructor with points
         polygon = Polygon(geometry=ShapelyPolygon([(0, 0), (1, 1), (1, 0)]))
@@ -40,6 +42,7 @@ class TestPolygon:
         assert poly.geometry == ShapelyPolygon([(0, 0), (1, 1), (1, 0)])
         assert poly.time_interval == Interval(0, 10)
         assert poly.radius == 0
+        assert poly.recurrence == Recurrence.NONE
 
         # Test constructor with start and end points, time interval, and radius
         poly = Polygon(
@@ -50,6 +53,19 @@ class TestPolygon:
         assert poly.geometry == ShapelyPolygon([(0, 0), (1, 1), (3, 3)])
         assert poly.time_interval == Interval(0, 10, closed="both")
         assert poly.radius == 1.0
+        assert poly.recurrence == Recurrence.NONE
+
+        # Test constructor with start and end points, time interval, radius, and recurrence
+        poly = Polygon(
+            geometry=ShapelyPolygon([(0, 0), (1, 1), (3, 3)]),
+            time_interval=Interval(0, 10, closed="both"),
+            radius=1.0,
+            recurrence=Recurrence.MINUTELY,
+        )
+        assert poly.geometry == ShapelyPolygon([(0, 0), (1, 1), (3, 3)])
+        assert poly.time_interval == Interval(0, 10, closed="both")
+        assert poly.radius == 1.0
+        assert poly.recurrence == Recurrence.MINUTELY
 
     def test_set_geometry(self):
         polygon = self.setup_method()
@@ -126,6 +142,88 @@ class TestPolygon:
             [(1.75, 1.75), (1.75, 2.5), (2.5, 2.5), (2.5, 1.75)]
         )
         assert polygon.check_collision(other_polygon) == False
+
+        # check collision with recurring polygon
+        poly_rec = Polygon(
+            geometry=ShapelyPolygon([(0, 0), (1, 1), (1, 0)]),
+            time_interval=Interval(5, 15, closed="both"),
+            radius=1.0,
+            recurrence=Recurrence.MINUTELY,
+        )
+        colliding_poly = ShapelyPolygon([(0, 0), (0, 1), (1, 1), (1, 0)])
+        non_colliding_poly = ShapelyPolygon([(3, 3), (3, 4), (4, 4), (4, 3)])
+
+        assert poly_rec.check_collision(colliding_poly, query_time=0) == False
+        assert poly_rec.check_collision(non_colliding_poly, query_time=0) == False
+        assert poly_rec.check_collision(colliding_poly, query_time=10) == True
+        assert poly_rec.check_collision(non_colliding_poly, query_time=10) == False
+        assert poly_rec.check_collision(colliding_poly, query_time=20) == False
+        assert poly_rec.check_collision(non_colliding_poly, query_time=20) == False
+
+        assert (
+            poly_rec.check_collision(colliding_poly, query_interval=Interval(0, 3))
+            == False
+        )
+        assert (
+            poly_rec.check_collision(non_colliding_poly, query_interval=Interval(0, 3))
+            == False
+        )
+        assert (
+            poly_rec.check_collision(colliding_poly, query_interval=Interval(3, 10))
+            == True
+        )
+        assert (
+            poly_rec.check_collision(non_colliding_poly, query_interval=Interval(3, 10))
+            == False
+        )
+        assert (
+            poly_rec.check_collision(colliding_poly, query_interval=Interval(10, 15))
+            == True
+        )
+        assert (
+            poly_rec.check_collision(
+                non_colliding_poly, query_interval=Interval(10, 15)
+            )
+            == False
+        )
+
+        assert poly_rec.check_collision(colliding_poly, query_time=120) == False
+        assert poly_rec.check_collision(non_colliding_poly, query_time=120) == False
+        assert poly_rec.check_collision(colliding_poly, query_time=130) == True
+        assert poly_rec.check_collision(non_colliding_poly, query_time=130) == False
+        assert poly_rec.check_collision(colliding_poly, query_time=140) == False
+        assert poly_rec.check_collision(non_colliding_poly, query_time=140) == False
+
+        assert (
+            poly_rec.check_collision(colliding_poly, query_interval=Interval(120, 123))
+            == False
+        )
+        assert (
+            poly_rec.check_collision(
+                non_colliding_poly, query_interval=Interval(120, 123)
+            )
+            == False
+        )
+        assert (
+            poly_rec.check_collision(colliding_poly, query_interval=Interval(125, 130))
+            == True
+        )
+        assert (
+            poly_rec.check_collision(
+                non_colliding_poly, query_interval=Interval(125, 130)
+            )
+            == False
+        )
+        assert (
+            poly_rec.check_collision(colliding_poly, query_interval=Interval(130, 140))
+            == True
+        )
+        assert (
+            poly_rec.check_collision(
+                non_colliding_poly, query_interval=Interval(130, 140)
+            )
+            == False
+        )
 
     def test_check_collision_with_invalid_shape(self):
         polygon = self.setup_method()

@@ -6,6 +6,7 @@ from pandas import Interval
 from matplotlib import pyplot as plt
 
 from src.obstacles.line import Line
+from src.util.recurrence import Recurrence
 
 
 class TestLine:
@@ -23,12 +24,14 @@ class TestLine:
         assert line.geometry == None
         assert line.time_interval == None
         assert line.radius == 0
+        assert line.recurrence == Recurrence.NONE
 
         # Test constructor with start and end points
         line = Line(geometry=ShapelyLine([(0, 0), (1, 1)]))
         assert line.geometry == ShapelyLine([(0, 0), (1, 1)])
         assert line.time_interval == None
         assert line.radius == 0
+        assert line.recurrence == Recurrence.NONE
 
         # Test constructor with start and end points, time interval, and radius
         line = Line(
@@ -39,6 +42,19 @@ class TestLine:
         assert line.geometry == ShapelyLine([(0, 0), (1, 1)])
         assert line.time_interval == Interval(0, 10, closed="both")
         assert line.radius == 1.0
+        assert line.recurrence == Recurrence.NONE
+
+        # Test constructor with start and end points, time interval, radius, and recurrence
+        line = Line(
+            geometry=ShapelyLine([(0, 0), (1, 1)]),
+            time_interval=Interval(0, 10, closed="both"),
+            radius=1.0,
+            recurrence=Recurrence.MINUTELY,
+        )
+        assert line.geometry == ShapelyLine([(0, 0), (1, 1)])
+        assert line.time_interval == Interval(0, 10, closed="both")
+        assert line.radius == 1.0
+        assert line.recurrence == Recurrence.MINUTELY
 
     def test_set_geometry(self):
         line = self.setup_method()
@@ -100,6 +116,87 @@ class TestLine:
         # collision check with line slightly outside the line
         other_line = ShapelyLine([(1.75, 1.75), (2.5, 2.5)])
         assert line.check_collision(other_line) == False
+
+        # check collision with recurring line
+        line_rec = Line(
+            geometry=ShapelyLine([(0, 0), (1, 1)]),
+            time_interval=Interval(5, 15, closed="both"),
+            recurrence=Recurrence.MINUTELY,
+        )
+        colliding_line = ShapelyLine([(0.5, 0.5), (1.5, 1.5)])
+        non_colliding_line = ShapelyLine([(2, 2), (3, 3)])
+
+        assert line_rec.check_collision(colliding_line, query_time=0) == False
+        assert line_rec.check_collision(non_colliding_line, query_time=0) == False
+        assert line_rec.check_collision(colliding_line, query_time=10) == True
+        assert line_rec.check_collision(non_colliding_line, query_time=10) == False
+        assert line_rec.check_collision(colliding_line, query_time=20) == False
+        assert line_rec.check_collision(non_colliding_line, query_time=20) == False
+
+        assert (
+            line_rec.check_collision(colliding_line, query_interval=Interval(0, 3))
+            == False
+        )
+        assert (
+            line_rec.check_collision(non_colliding_line, query_interval=Interval(0, 3))
+            == False
+        )
+        assert (
+            line_rec.check_collision(colliding_line, query_interval=Interval(3, 10))
+            == True
+        )
+        assert (
+            line_rec.check_collision(non_colliding_line, query_interval=Interval(3, 10))
+            == False
+        )
+        assert (
+            line_rec.check_collision(colliding_line, query_interval=Interval(10, 15))
+            == True
+        )
+        assert (
+            line_rec.check_collision(
+                non_colliding_line, query_interval=Interval(10, 15)
+            )
+            == False
+        )
+
+        assert line_rec.check_collision(colliding_line, query_time=120) == False
+        assert line_rec.check_collision(non_colliding_line, query_time=120) == False
+        assert line_rec.check_collision(colliding_line, query_time=130) == True
+        assert line_rec.check_collision(non_colliding_line, query_time=130) == False
+        assert line_rec.check_collision(colliding_line, query_time=140) == False
+        assert line_rec.check_collision(non_colliding_line, query_time=140) == False
+
+        assert (
+            line_rec.check_collision(colliding_line, query_interval=Interval(120, 123))
+            == False
+        )
+        assert (
+            line_rec.check_collision(
+                non_colliding_line, query_interval=Interval(120, 123)
+            )
+            == False
+        )
+        assert (
+            line_rec.check_collision(colliding_line, query_interval=Interval(125, 130))
+            == True
+        )
+        assert (
+            line_rec.check_collision(
+                non_colliding_line, query_interval=Interval(125, 130)
+            )
+            == False
+        )
+        assert (
+            line_rec.check_collision(colliding_line, query_interval=Interval(130, 140))
+            == True
+        )
+        assert (
+            line_rec.check_collision(
+                non_colliding_line, query_interval=Interval(130, 140)
+            )
+            == False
+        )
 
     def test_check_collision_with_polygon(self):
         line = self.setup_method()
