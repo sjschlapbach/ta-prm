@@ -6,13 +6,44 @@ from typing import Union
 import matplotlib.pyplot as plt
 
 from .geometry import Geometry
+from src.util.recurrence import Recurrence
 
 
 class Line(Geometry):
+    """
+    A class representing a line in geometry.
+
+    Attributes:
+        geometry (LineString): The geometry of the line.
+        time_interval (Interval): The time interval during which the line is active.
+        recurrence (Recurrence): The recurrence frequency of the line.
+        radius (float): The radius of the line.
+
+    Methods:
+        __init__(self, geometry: LineString = None, time_interval: Interval = None, recurrence: Recurrence = None, radius: float = 0, json_data: dict = None):
+            Initialize a Line object.
+
+        set_geometry(self, points: list[tuple[float, float]]):
+            Set the geometry of the line.
+
+        check_collision(self, shape: Union[Point, LineString, Polygon], query_time: float = None, query_interval: Interval = None) -> bool:
+            Check if the line collides with a given shape.
+
+        plot(self, query_time: float = None, query_interval: Interval = None, fig=None):
+            Plot the line.
+
+        export_to_json(self) -> dict:
+            Returns a JSON representation of the line object.
+
+        load_from_json(self, json_data: dict):
+            Loads the line object from a JSON representation.
+    """
+
     def __init__(
         self,
         geometry: LineString = None,
         time_interval: Interval = None,
+        recurrence: Recurrence = None,
         radius: float = 0,
         json_data: dict = None,
     ):
@@ -22,6 +53,7 @@ class Line(Geometry):
         Args:
             geometry (LineString, optional): The geometry of the line. Defaults to None.
             time_interval (Interval, optional): The time interval during which the line is active. Defaults to None.
+            recurrence (Recurrence, optional): The recurrence frequency of the line. Defaults to None.
             radius (float, optional): The radius of the line. Defaults to 0.
             json_data (dict, optional): JSON data to initialize the line object. If provided, other arguments will be ignored. Defaults to None.
         """
@@ -29,7 +61,7 @@ class Line(Geometry):
             self.load_from_json(json_data)
             return
 
-        super().__init__(radius, time_interval)
+        super().__init__(radius=radius, interval=time_interval, recurrence=recurrence)
         self.geometry = geometry
 
     def set_geometry(self, points: list[tuple[float, float]]):

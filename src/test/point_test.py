@@ -1,7 +1,11 @@
 import pytest
 import json
 import os
-from shapely.geometry import Point as ShapelyPoint, LineString, Polygon
+from shapely.geometry import (
+    Point as ShapelyPoint,
+    LineString as ShapelyLine,
+    Polygon as ShapelyPolygon,
+)
 from pandas import Interval
 from matplotlib import pyplot as plt
 
@@ -21,19 +25,25 @@ class TestPoint:
         assert point.radius == 0
 
         # Test constructor with geometry
-        point = Point(ShapelyPoint(0, 0))
+        point = Point(geometry=ShapelyPoint(0, 0))
         assert point.geometry == ShapelyPoint(0, 0)
         assert point.time_interval == None
         assert point.radius == 0
 
         # Test constructor with geometry and time interval
-        point = Point(ShapelyPoint(0, 0), Interval(0, 10, closed="both"))
+        point = Point(
+            geometry=ShapelyPoint(0, 0), time_interval=Interval(0, 10, closed="both")
+        )
         assert point.geometry == ShapelyPoint(0, 0)
         assert point.time_interval == Interval(0, 10, closed="both")
         assert point.radius == 0
 
         # Test constructor with geometry, time interval, and radius
-        point = Point(ShapelyPoint(0, 0), Interval(0, 10, closed="both"), 1.0)
+        point = Point(
+            geometry=ShapelyPoint(0, 0),
+            time_interval=Interval(0, 10, closed="both"),
+            radius=1.0,
+        )
         assert point.geometry == ShapelyPoint(0, 0)
         assert point.time_interval == Interval(0, 10, closed="both")
         assert point.radius == 1.0
@@ -77,38 +87,38 @@ class TestPoint:
         point = self.setup_method()
 
         # collision check with line outside
-        line = LineString([(1, 1), (2, 2)])
+        line = ShapelyLine([(1, 1), (2, 2)])
         assert point.check_collision(line) == False
 
         # collision check with line passing through
-        line = LineString([(0, 0), (0, 2), (2, 2)])
+        line = ShapelyLine([(0, 0), (0, 2), (2, 2)])
         assert point.check_collision(line) == True
 
         # collision check with line on the edge
-        line = LineString([(1, -2), (1, 2)])
+        line = ShapelyLine([(1, -2), (1, 2)])
         assert point.check_collision(line) == True
 
         # collision check with line slightly outside the area
-        line = LineString([(1 + 10e-5, -2), (1 + 10e-5, 2)])
+        line = ShapelyLine([(1 + 10e-5, -2), (1 + 10e-5, 2)])
         assert point.check_collision(line) == False
 
     def test_check_collision_with_polygon(self):
         point = self.setup_method()
 
         # collision check with polygon outside
-        polygon = Polygon([(1, 1), (1, 2), (2, 2), (2, 1)])
+        polygon = ShapelyPolygon([(1, 1), (1, 2), (2, 2), (2, 1)])
         assert point.check_collision(polygon) == False
 
         # collision check with polygon containing point
-        polygon = Polygon([(0, 0), (0, 2), (2, 2), (2, 0)])
+        polygon = ShapelyPolygon([(0, 0), (0, 2), (2, 2), (2, 0)])
         assert point.check_collision(polygon) == True
 
         # collision check with polygon on the edge
-        polygon = Polygon([(1, -2), (1, 2), (2, 2)])
+        polygon = ShapelyPolygon([(1, -2), (1, 2), (2, 2)])
         assert point.check_collision(polygon) == True
 
         # collision check with polygon slightly outside the area
-        polygon = Polygon([(1 + 10e-5, -2), (1 + 10e-5, 2), (2, 2)])
+        polygon = ShapelyPolygon([(1 + 10e-5, -2), (1 + 10e-5, 2), (2, 2)])
         assert point.check_collision(polygon) == False
 
     def test_check_collision_with_invalid_shape(self):
@@ -158,21 +168,21 @@ class TestPoint:
         assert point.check_collision(test_pt, query_interval=in3) == False
 
         # collision check with line and different temporal queries
-        line = LineString([(0, 0), (1, 1)])
+        line = ShapelyLine([(0, 0), (1, 1)])
         assert point.check_collision(line, query_time=5) == True
         assert point.check_collision(line, query_interval=in1) == True
         assert point.check_collision(line, query_time=15) == False
         assert point.check_collision(line, query_interval=in3) == False
 
         # collision check with polygon and different temporal queries
-        polygon = Polygon([(0, 0), (0, 1), (1, 1), (1, 0)])
+        polygon = ShapelyPolygon([(0, 0), (0, 1), (1, 1), (1, 0)])
         assert point.check_collision(polygon, query_time=5) == True
         assert point.check_collision(polygon, query_interval=in1) == True
         assert point.check_collision(polygon, query_time=15) == False
         assert point.check_collision(polygon, query_interval=in3) == False
 
     def test_check_collision_without_time_interval(self):
-        point = Point(ShapelyPoint(0, 0), None, 1.0)
+        point = Point(geometry=ShapelyPoint(0, 0), radius=1.0)
 
         # collision check with point outside
         other_point = ShapelyPoint(1, 1)
@@ -191,35 +201,35 @@ class TestPoint:
         assert point.check_collision(other_point, query_time=5) == False
 
         # collision check with line inside
-        line = LineString([(0, 0), (0, 2), (2, 2)])
+        line = ShapelyLine([(0, 0), (0, 2), (2, 2)])
         assert point.check_collision(line) == True
 
         # collision check with line outside
-        line = LineString([(1, 1), (2, 2)])
+        line = ShapelyLine([(1, 1), (2, 2)])
         assert point.check_collision(line) == False
 
         # collision check with line inside at arbitrary time
-        line = LineString([(0, 0), (0, 2), (2, 2)])
+        line = ShapelyLine([(0, 0), (0, 2), (2, 2)])
         assert point.check_collision(line, query_time=5) == True
 
         # collision check with line outside at arbitrary time
-        line = LineString([(1, 1), (2, 2)])
+        line = ShapelyLine([(1, 1), (2, 2)])
         assert point.check_collision(line, query_time=5) == False
 
         # collision check with polygon inside
-        polygon = Polygon([(0, 0), (0, 2), (2, 2), (2, 0)])
+        polygon = ShapelyPolygon([(0, 0), (0, 2), (2, 2), (2, 0)])
         assert point.check_collision(polygon) == True
 
         # collision check with polygon outside
-        polygon = Polygon([(1, 1), (1, 2), (2, 2), (2, 1)])
+        polygon = ShapelyPolygon([(1, 1), (1, 2), (2, 2), (2, 1)])
         assert point.check_collision(polygon) == False
 
         # collision check with polygon inside at arbitrary time
-        polygon = Polygon([(0, 0), (0, 2), (2, 2), (2, 0)])
+        polygon = ShapelyPolygon([(0, 0), (0, 2), (2, 2), (2, 0)])
         assert point.check_collision(polygon, query_time=5) == True
 
         # collision check with polygon outside at arbitrary time
-        polygon = Polygon([(1, 1), (1, 2), (2, 2), (2, 1)])
+        polygon = ShapelyPolygon([(1, 1), (1, 2), (2, 2), (2, 1)])
         assert point.check_collision(polygon, query_time=5) == False
 
     def test_plot(self):
