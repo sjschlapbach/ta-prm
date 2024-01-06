@@ -1,4 +1,4 @@
-from typing import List, Union, Tuple
+from typing import List, Union
 from shapely.geometry import (
     Polygon as ShapelyPolygon,
     Point as ShapelyPoint,
@@ -25,17 +25,9 @@ class Environment:
         A list of obstacles representing the environment.
         Each obstacle is an instance of Point, Line, or Polygon.
 
-    dim_x : List[int, int], optional
-        The range of the x-dimension of the environment.
-        If not provided, the x-dimension is not limited.
-
-    dim_y : List[int, int], optional
-        The range of the y-dimension of the environment.
-        If not provided, the y-dimension is not limited.
-
     Methods
     -------
-    __init__(obstacles: List[Union[Point, Line, Polygon]] = None, dimension_x: Tuple[int, int] = None, dimension_y: Tuple[int, int] = None, filepath: str = None)
+    __init__(obstacles: List[Union[Point, Line, Polygon]] = None, filepath: str = None)
         Initialize the Environment object.
 
     plot(query_time: float = None, fig=None)
@@ -44,9 +36,6 @@ class Environment:
 
     add_obstacles(new_obstacles: List[Union[Point, Line, Polygon]])
         Adds new obstacles to the environment.
-
-    set_dimensions(dimension_x: Tuple[int, int], dimension_y: Tuple[int, int])
-        Sets the dimensions of the environment.
 
     reset()
         Resets the environment by removing all obstacles.
@@ -62,12 +51,6 @@ class Environment:
     obstacles : List[Union[Point, Line, Polygon]], optional
         A list of obstacles to be added to the environment.
         Each obstacle is an instance of Point, Line, or Polygon.
-
-    dimension_x : Tuple[int, int], optional
-        The range of the x-dimension of the environment.
-
-    dimension_y : Tuple[int, int], optional
-        The range of the y-dimension of the environment.
 
     filepath : str, optional
         The path to the file where the obstacles are stored.
@@ -88,8 +71,6 @@ class Environment:
     def __init__(
         self,
         obstacles: List[Union[Point, Line, Polygon]] = None,
-        dimension_x: Tuple[int, int] = None,
-        dimension_y: Tuple[int, int] = None,
         filepath: str = None,
     ):
         """
@@ -101,23 +82,11 @@ class Environment:
             A list of obstacles to be added to the environment.
             Each obstacle is an instance of Point, Line, or Polygon.
 
-        dimension_x : Tuple[int, int], optional
-            The range of the x-dimension of the environment.
-
-        dimension_y : Tuple[int, int], optional
-            The range of the y-dimension of the environment.
-
         filepath : str, optional
             The path to the file where the obstacles are stored.
             If provided, the obstacles will be loaded from the file.
         """
         self.obstacles = []
-        self.dim_x = (
-            [dimension_x[0], dimension_x[1]] if dimension_x is not None else None
-        )
-        self.dim_y = (
-            [dimension_y[0], dimension_y[1]] if dimension_y is not None else None
-        )
 
         if filepath is not None:
             self.load(filepath)
@@ -150,23 +119,6 @@ class Environment:
             Each obstacle can be a Point, Line, or Polygon object.
         """
         self.obstacles += new_obstacles
-
-    def set_dimensions(
-        self, dimension_x: Tuple[int, int], dimension_y: Tuple[int, int]
-    ):
-        """
-        Sets the dimensions of the environment.
-
-        Parameters
-        ----------
-        dimension_x : Tuple[int, int]
-            The range of the x-dimension of the environment.
-
-        dimension_y : Tuple[int, int]
-            The range of the y-dimension of the environment.
-        """
-        self.dim_x = [dimension_x[0], dimension_x[1]]
-        self.dim_y = [dimension_y[0], dimension_y[1]]
 
     def reset(self):
         """

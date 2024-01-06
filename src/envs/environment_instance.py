@@ -1,4 +1,4 @@
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Tuple
 from pandas import Interval
 from tqdm import tqdm
 from shapely.geometry import (
@@ -24,13 +24,19 @@ from src.util.recurrence import Recurrence
 class EnvironmentInstance:
     # TODO: Docstring
 
-    def __init__(self, environment: Environment, query_interval: Interval):
+    def __init__(
+        self,
+        environment: Environment,
+        query_interval: Interval,
+        scenario_range_x: Tuple[int, int],
+        scenario_range_y: Tuple[int, int],
+    ):
         # TODO - docstring
 
         # set variables from environment
         self.query_interval = query_interval
-        self.dim_x = environment.dim_x
-        self.dim_y = environment.dim_y
+        self.dim_x = [scenario_range_x[0], scenario_range_x[1]]
+        self.dim_y = [scenario_range_y[0], scenario_range_y[1]]
 
         # initialize obstacle lists and counter for indexing
         self.static_obstacles: Dict[int, Union[Point, Line, Polygon]] = {}
@@ -40,17 +46,20 @@ class EnvironmentInstance:
         print("Loading obstacles into environment instance...")
         for obstacle in tqdm(environment.obstacles):
             # if dimensions are specified for the environment, check that the obstacle is contained
-            if self.dim_x is not None and self.dim_y is not None:
-                env_poly = ShapelyPolygon(
-                    [
-                        (self.dim_x[0], self.dim_y[0]),
-                        (self.dim_x[0], self.dim_y[1]),
-                        (self.dim_x[1], self.dim_y[1]),
-                        (self.dim_x[1], self.dim_y[0]),
-                    ]
-                )
-                if not obstacle.check_collision(env_poly):
-                    continue
+            env_poly = ShapelyPolygon(
+                [
+                    (scenario_range_x[0], scenario_range_y[0]),
+                    (scenario_range_x[0], scenario_range_y[1]),
+                    (scenario_range_x[1], scenario_range_y[1]),
+                    (scenario_range_x[1], scenario_range_y[0]),
+                ]
+            )
+            if not obstacle.check_collision(shape=env_poly):
+                # print("obstacle lies outside of environment dimensions")
+                # print(scenario_range_x)
+                # print(scenario_range_y)
+                # print(env_poly)
+                continue
 
             # if the obstacle is static, add it to the static obstacles
             if obstacle.time_interval is None:

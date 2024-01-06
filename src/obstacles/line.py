@@ -102,7 +102,7 @@ class Line(Geometry):
             elif isinstance(shape, LineString):
                 distance = self.geometry.distance(shape)
             elif isinstance(shape, Polygon):
-                distance = self.geometry.distance(shape.exterior)
+                distance = self.geometry.distance(shape)
             else:
                 raise ValueError(
                     "Invalid shape type. Only LineString or Polygon are supported."

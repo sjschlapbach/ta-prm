@@ -17,6 +17,10 @@ from src.util.recurrence import Recurrence as Rec
 
 class TestEnvironmentInstance:
     def test_create_environment_instance_intervals(self):
+        # specify scenario dimensions, which include all points
+        range_x = (-100, 100)
+        range_y = (-100, 100)
+
         # create shapely points and copies for later comparison
         spt_static = ShapelyPoint(0, 0)
         spt_static_copy = ShapelyPoint(0, 0)
@@ -52,13 +56,13 @@ class TestEnvironmentInstance:
 
         # Test case 0: no obstacles - should create empty obstacles
         env = Environment(obstacles=[])
-        env_instance = EnvironmentInstance(env, Interval(10, 30))
+        env_instance = EnvironmentInstance(env, Interval(10, 30), range_x, range_y)
         assert len(env_instance.static_obstacles) == 0
         assert len(env_instance.dynamic_obstacles) == 0
 
         # Test case 1: single static obstacle - should be added to static obstacles
         env = Environment(obstacles=[pt_static])
-        env_instance = EnvironmentInstance(env, Interval(10, 30))
+        env_instance = EnvironmentInstance(env, Interval(10, 30), range_x, range_y)
         assert len(env_instance.static_obstacles) == 1
         assert len(env_instance.dynamic_obstacles) == 0
         saved_obstacle = env_instance.static_obstacles[1]
@@ -70,7 +74,7 @@ class TestEnvironmentInstance:
         # Test case 2: single static limited obstacle, overlapping with start of query interval
         # should be added to dynamic obstacles
         env = Environment(obstacles=[pt_limited])
-        env_instance = EnvironmentInstance(env, Interval(15, 30))
+        env_instance = EnvironmentInstance(env, Interval(15, 30), range_x, range_y)
         assert len(env_instance.static_obstacles) == 0
         assert len(env_instance.dynamic_obstacles) == 1
         saved_obstacle = env_instance.dynamic_obstacles[1]
@@ -82,7 +86,7 @@ class TestEnvironmentInstance:
         # Test case 3: single static limited obstacle, lying inside query interval
         # should be added to dynamic obstacles
         env = Environment(obstacles=[pt_limited])
-        env_instance = EnvironmentInstance(env, Interval(5, 30))
+        env_instance = EnvironmentInstance(env, Interval(5, 30), range_x, range_y)
         assert len(env_instance.static_obstacles) == 0
         assert len(env_instance.dynamic_obstacles) == 1
         saved_obstacle = env_instance.dynamic_obstacles[1]
@@ -94,7 +98,7 @@ class TestEnvironmentInstance:
         # Test case 4: single static limited obstacle, overlapping with end of query interval
         # should be added to dynamic obstacles
         env = Environment(obstacles=[pt_limited])
-        env_instance = EnvironmentInstance(env, Interval(5, 15))
+        env_instance = EnvironmentInstance(env, Interval(5, 15), range_x, range_y)
         assert len(env_instance.static_obstacles) == 0
         assert len(env_instance.dynamic_obstacles) == 1
         saved_obstacle = env_instance.dynamic_obstacles[1]
@@ -106,7 +110,7 @@ class TestEnvironmentInstance:
         # Test case 5: single static limited obstacle, overlapping with start and end of query interval
         # should be added to static obstacles
         env = Environment(obstacles=[pt_limited])
-        env_instance = EnvironmentInstance(env, Interval(12, 15))
+        env_instance = EnvironmentInstance(env, Interval(12, 15), range_x, range_y)
         assert len(env_instance.static_obstacles) == 1
         assert len(env_instance.dynamic_obstacles) == 0
         saved_obstacle = env_instance.static_obstacles[1]
@@ -118,7 +122,7 @@ class TestEnvironmentInstance:
         # Test case 6: recurring obstacle with first occurence overlapping with start of query interval
         # should be added to dynamic obstacles
         env1 = Environment(obstacles=[pt_minute])
-        env_instance1 = EnvironmentInstance(env1, Interval(15, 30))
+        env_instance1 = EnvironmentInstance(env1, Interval(15, 30), range_x, range_y)
         assert len(env_instance1.static_obstacles) == 0
         assert len(env_instance1.dynamic_obstacles) == 1
         saved_obstacle = env_instance1.dynamic_obstacles[1]
@@ -128,7 +132,7 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 3.0
 
         env2 = Environment(obstacles=[pt_hour])
-        env_instance2 = EnvironmentInstance(env2, Interval(15, 30))
+        env_instance2 = EnvironmentInstance(env2, Interval(15, 30), range_x, range_y)
         assert len(env_instance2.static_obstacles) == 0
         assert len(env_instance2.dynamic_obstacles) == 1
         saved_obstacle = env_instance2.dynamic_obstacles[1]
@@ -138,7 +142,7 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 4.0
 
         env3 = Environment(obstacles=[pt_day])
-        env_instance3 = EnvironmentInstance(env3, Interval(15, 30))
+        env_instance3 = EnvironmentInstance(env3, Interval(15, 30), range_x, range_y)
         assert len(env_instance3.static_obstacles) == 0
         assert len(env_instance3.dynamic_obstacles) == 1
         saved_obstacle = env_instance3.dynamic_obstacles[1]
@@ -150,7 +154,7 @@ class TestEnvironmentInstance:
         # Test case 7: recurring obstacle with first occurrence lying inside query interval
         # should be added to dynamic obstacles
         env1 = Environment(obstacles=[pt_minute])
-        env_instance1 = EnvironmentInstance(env1, Interval(5, 30))
+        env_instance1 = EnvironmentInstance(env1, Interval(5, 30), range_x, range_y)
         assert len(env_instance1.static_obstacles) == 0
         assert len(env_instance1.dynamic_obstacles) == 1
         saved_obstacle = env_instance1.dynamic_obstacles[1]
@@ -160,7 +164,7 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 3.0
 
         env2 = Environment(obstacles=[pt_hour])
-        env_instance2 = EnvironmentInstance(env2, Interval(5, 30))
+        env_instance2 = EnvironmentInstance(env2, Interval(5, 30), range_x, range_y)
         assert len(env_instance2.static_obstacles) == 0
         assert len(env_instance2.dynamic_obstacles) == 1
         saved_obstacle = env_instance2.dynamic_obstacles[1]
@@ -170,7 +174,7 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 4.0
 
         env3 = Environment(obstacles=[pt_day])
-        env_instance3 = EnvironmentInstance(env3, Interval(5, 30))
+        env_instance3 = EnvironmentInstance(env3, Interval(5, 30), range_x, range_y)
         assert len(env_instance3.static_obstacles) == 0
         assert len(env_instance3.dynamic_obstacles) == 1
         saved_obstacle = env_instance3.dynamic_obstacles[1]
@@ -182,7 +186,7 @@ class TestEnvironmentInstance:
         # Test case 8: recurring obstacle with first occurrence overlapping with end of query interval
         # should be added to dynamic obstacles
         env1 = Environment(obstacles=[pt_minute])
-        env_instance1 = EnvironmentInstance(env1, Interval(5, 15))
+        env_instance1 = EnvironmentInstance(env1, Interval(5, 15), range_x, range_y)
         assert len(env_instance1.static_obstacles) == 0
         assert len(env_instance1.dynamic_obstacles) == 1
         saved_obstacle = env_instance1.dynamic_obstacles[1]
@@ -192,7 +196,7 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 3.0
 
         env2 = Environment(obstacles=[pt_hour])
-        env_instance2 = EnvironmentInstance(env2, Interval(5, 15))
+        env_instance2 = EnvironmentInstance(env2, Interval(5, 15), range_x, range_y)
         assert len(env_instance2.static_obstacles) == 0
         assert len(env_instance2.dynamic_obstacles) == 1
         saved_obstacle = env_instance2.dynamic_obstacles[1]
@@ -202,7 +206,7 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 4.0
 
         env3 = Environment(obstacles=[pt_day])
-        env_instance3 = EnvironmentInstance(env3, Interval(5, 15))
+        env_instance3 = EnvironmentInstance(env3, Interval(5, 15), range_x, range_y)
         assert len(env_instance3.static_obstacles) == 0
         assert len(env_instance3.dynamic_obstacles) == 1
         saved_obstacle = env_instance3.dynamic_obstacles[1]
@@ -214,7 +218,7 @@ class TestEnvironmentInstance:
         # Test case 9: recurring obstacle with first occurrence overlapping with start and end of query interval
         # should be added to static obstacles
         env1 = Environment(obstacles=[pt_minute])
-        env_instance1 = EnvironmentInstance(env1, Interval(12, 15))
+        env_instance1 = EnvironmentInstance(env1, Interval(12, 15), range_x, range_y)
         assert len(env_instance1.static_obstacles) == 1
         assert len(env_instance1.dynamic_obstacles) == 0
         saved_obstacle = env_instance1.static_obstacles[1]
@@ -224,7 +228,7 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 3.0
 
         env2 = Environment(obstacles=[pt_hour])
-        env_instance2 = EnvironmentInstance(env2, Interval(12, 15))
+        env_instance2 = EnvironmentInstance(env2, Interval(12, 15), range_x, range_y)
         assert len(env_instance2.static_obstacles) == 1
         assert len(env_instance2.dynamic_obstacles) == 0
         saved_obstacle = env_instance2.static_obstacles[1]
@@ -234,7 +238,7 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 4.0
 
         env3 = Environment(obstacles=[pt_day])
-        env_instance3 = EnvironmentInstance(env3, Interval(12, 15))
+        env_instance3 = EnvironmentInstance(env3, Interval(12, 15), range_x, range_y)
         assert len(env_instance3.static_obstacles) == 1
         assert len(env_instance3.dynamic_obstacles) == 0
         saved_obstacle = env_instance3.static_obstacles[1]
@@ -246,7 +250,7 @@ class TestEnvironmentInstance:
         # Test case 10: recurring obstacle with third occurence overlapping with start of query interval
         # should be added to dynamic obstacles
         env1 = Environment(obstacles=[pt_minute])
-        env_instance1 = EnvironmentInstance(env1, Interval(135, 150))
+        env_instance1 = EnvironmentInstance(env1, Interval(135, 150), range_x, range_y)
         assert len(env_instance1.static_obstacles) == 0
         assert len(env_instance1.dynamic_obstacles) == 1
         saved_obstacle = env_instance1.dynamic_obstacles[1]
@@ -256,10 +260,14 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 3.0
 
         env2 = Environment(obstacles=[pt_hour])
-        env_instance2_wrong = EnvironmentInstance(env2, Interval(135, 150))
+        env_instance2_wrong = EnvironmentInstance(
+            env2, Interval(135, 150), range_x, range_y
+        )
         assert len(env_instance2_wrong.static_obstacles) == 0
         assert len(env_instance2_wrong.dynamic_obstacles) == 0
-        env_instance2 = EnvironmentInstance(env2, Interval(7215, 7230))
+        env_instance2 = EnvironmentInstance(
+            env2, Interval(7215, 7230), range_x, range_y
+        )
         assert len(env_instance2.static_obstacles) == 0
         assert len(env_instance2.dynamic_obstacles) == 1
         saved_obstacle = env_instance2.dynamic_obstacles[1]
@@ -269,10 +277,14 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 4.0
 
         env3 = Environment(obstacles=[pt_day])
-        env_instance3_wrong = EnvironmentInstance(env2, Interval(135, 150))
+        env_instance3_wrong = EnvironmentInstance(
+            env2, Interval(135, 150), range_x, range_y
+        )
         assert len(env_instance3_wrong.static_obstacles) == 0
         assert len(env_instance3_wrong.dynamic_obstacles) == 0
-        env_instance3 = EnvironmentInstance(env3, Interval(172815, 172830))
+        env_instance3 = EnvironmentInstance(
+            env3, Interval(172815, 172830), range_x, range_y
+        )
         assert len(env_instance3.static_obstacles) == 0
         assert len(env_instance3.dynamic_obstacles) == 1
         saved_obstacle = env_instance3.dynamic_obstacles[1]
@@ -284,7 +296,7 @@ class TestEnvironmentInstance:
         # Test case 11: recurring obstacle with third occurrence lying inside query interval
         # should be added to dynamic obstacles
         env1 = Environment(obstacles=[pt_minute])
-        env_instance1 = EnvironmentInstance(env1, Interval(125, 150))
+        env_instance1 = EnvironmentInstance(env1, Interval(125, 150), range_x, range_y)
         assert len(env_instance1.static_obstacles) == 0
         assert len(env_instance1.dynamic_obstacles) == 1
         saved_obstacle = env_instance1.dynamic_obstacles[1]
@@ -294,7 +306,9 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 3.0
 
         env2 = Environment(obstacles=[pt_hour])
-        env_instance2 = EnvironmentInstance(env2, Interval(7205, 7230))
+        env_instance2 = EnvironmentInstance(
+            env2, Interval(7205, 7230), range_x, range_y
+        )
         assert len(env_instance2.static_obstacles) == 0
         assert len(env_instance2.dynamic_obstacles) == 1
         saved_obstacle = env_instance2.dynamic_obstacles[1]
@@ -304,7 +318,9 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 4.0
 
         env3 = Environment(obstacles=[pt_day])
-        env_instance3 = EnvironmentInstance(env3, Interval(172805, 172830))
+        env_instance3 = EnvironmentInstance(
+            env3, Interval(172805, 172830), range_x, range_y
+        )
         assert len(env_instance3.static_obstacles) == 0
         assert len(env_instance3.dynamic_obstacles) == 1
         saved_obstacle = env_instance3.dynamic_obstacles[1]
@@ -316,7 +332,7 @@ class TestEnvironmentInstance:
         # Test case 12: recurring obstacle with third occurrence overlapping with end of query interval
         # should be added to dynamic obstacles
         env1 = Environment(obstacles=[pt_minute])
-        env_instance1 = EnvironmentInstance(env1, Interval(125, 135))
+        env_instance1 = EnvironmentInstance(env1, Interval(125, 135), range_x, range_y)
         assert len(env_instance1.static_obstacles) == 0
         assert len(env_instance1.dynamic_obstacles) == 1
         saved_obstacle = env_instance1.dynamic_obstacles[1]
@@ -326,7 +342,9 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 3.0
 
         env2 = Environment(obstacles=[pt_hour])
-        env_instance2 = EnvironmentInstance(env2, Interval(7205, 7215))
+        env_instance2 = EnvironmentInstance(
+            env2, Interval(7205, 7215), range_x, range_y
+        )
         assert len(env_instance2.static_obstacles) == 0
         assert len(env_instance2.dynamic_obstacles) == 1
         saved_obstacle = env_instance2.dynamic_obstacles[1]
@@ -336,7 +354,9 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 4.0
 
         env3 = Environment(obstacles=[pt_day])
-        env_instance3 = EnvironmentInstance(env3, Interval(172805, 172815))
+        env_instance3 = EnvironmentInstance(
+            env3, Interval(172805, 172815), range_x, range_y
+        )
         assert len(env_instance3.static_obstacles) == 0
         assert len(env_instance3.dynamic_obstacles) == 1
         saved_obstacle = env_instance3.dynamic_obstacles[1]
@@ -348,7 +368,7 @@ class TestEnvironmentInstance:
         # Test case 13: recurring obstacle with third occurrence overlapping with start and end of query interval
         # should be added to static obstacles
         env1 = Environment(obstacles=[pt_minute])
-        env_instance1 = EnvironmentInstance(env1, Interval(132, 135))
+        env_instance1 = EnvironmentInstance(env1, Interval(132, 135), range_x, range_y)
         assert len(env_instance1.static_obstacles) == 1
         assert len(env_instance1.dynamic_obstacles) == 0
         saved_obstacle = env_instance1.static_obstacles[1]
@@ -358,7 +378,9 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 3.0
 
         env2 = Environment(obstacles=[pt_hour])
-        env_instance2 = EnvironmentInstance(env2, Interval(7212, 7215))
+        env_instance2 = EnvironmentInstance(
+            env2, Interval(7212, 7215), range_x, range_y
+        )
         assert len(env_instance2.static_obstacles) == 1
         assert len(env_instance2.dynamic_obstacles) == 0
         saved_obstacle = env_instance2.static_obstacles[1]
@@ -368,7 +390,9 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 4.0
 
         env3 = Environment(obstacles=[pt_day])
-        env_instance3 = EnvironmentInstance(env3, Interval(172812, 172815))
+        env_instance3 = EnvironmentInstance(
+            env3, Interval(172812, 172815), range_x, range_y
+        )
         assert len(env_instance3.static_obstacles) == 1
         assert len(env_instance3.dynamic_obstacles) == 0
         saved_obstacle = env_instance3.static_obstacles[1]
@@ -380,7 +404,7 @@ class TestEnvironmentInstance:
         # Test cast 14: Query interval spanning over multiple occurences
         # obstacle should be added to dynamic obstacles
         env1 = Environment(obstacles=[pt_minute])
-        env_instance1 = EnvironmentInstance(env1, Interval(5, 145))
+        env_instance1 = EnvironmentInstance(env1, Interval(5, 145), range_x, range_y)
         assert len(env_instance1.static_obstacles) == 0
         assert len(env_instance1.dynamic_obstacles) == 1
         saved_obstacle = env_instance1.dynamic_obstacles[1]
@@ -390,7 +414,7 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 3.0
 
         env2 = Environment(obstacles=[pt_minute])
-        env_instance2 = EnvironmentInstance(env2, Interval(125, 265))
+        env_instance2 = EnvironmentInstance(env2, Interval(125, 265), range_x, range_y)
         assert len(env_instance2.static_obstacles) == 0
         assert len(env_instance2.dynamic_obstacles) == 1
         saved_obstacle1 = env_instance2.dynamic_obstacles[1]
@@ -400,7 +424,7 @@ class TestEnvironmentInstance:
         assert saved_obstacle1.radius == 3.0
 
         env3 = Environment(obstacles=[pt_hour])
-        env_instance3 = EnvironmentInstance(env3, Interval(5, 7225))
+        env_instance3 = EnvironmentInstance(env3, Interval(5, 7225), range_x, range_y)
         assert len(env_instance3.static_obstacles) == 0
         assert len(env_instance3.dynamic_obstacles) == 1
         saved_obstacle = env_instance3.dynamic_obstacles[1]
@@ -410,7 +434,9 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 4.0
 
         env4 = Environment(obstacles=[pt_hour])
-        env_instance4 = EnvironmentInstance(env4, Interval(7205, 14425))
+        env_instance4 = EnvironmentInstance(
+            env4, Interval(7205, 14425), range_x, range_y
+        )
         assert len(env_instance4.static_obstacles) == 0
         assert len(env_instance4.dynamic_obstacles) == 1
         saved_obstacle1 = env_instance4.dynamic_obstacles[1]
@@ -420,7 +446,7 @@ class TestEnvironmentInstance:
         assert saved_obstacle1.radius == 4.0
 
         env5 = Environment(obstacles=[pt_day])
-        env_instance5 = EnvironmentInstance(env5, Interval(5, 172825))
+        env_instance5 = EnvironmentInstance(env5, Interval(5, 172825), range_x, range_y)
         assert len(env_instance5.static_obstacles) == 0
         assert len(env_instance5.dynamic_obstacles) == 1
         saved_obstacle = env_instance5.dynamic_obstacles[1]
@@ -430,7 +456,9 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 5.0
 
         env6 = Environment(obstacles=[pt_day])
-        env_instance6 = EnvironmentInstance(env6, Interval(172805, 345625))
+        env_instance6 = EnvironmentInstance(
+            env6, Interval(172805, 345625), range_x, range_y
+        )
         assert len(env_instance6.static_obstacles) == 0
         assert len(env_instance6.dynamic_obstacles) == 1
         saved_obstacle1 = env_instance6.dynamic_obstacles[1]
@@ -441,57 +469,65 @@ class TestEnvironmentInstance:
 
         # Test case 15: Test that obstacles starting after query interval should not be added
         env = Environment(obstacles=[pt_limited, pt_minute, pt_hour, pt_day])
-        env_instance = EnvironmentInstance(env, Interval(5, 9))
+        env_instance = EnvironmentInstance(env, Interval(5, 9), range_x, range_y)
         assert len(env_instance.static_obstacles) == 0
         assert len(env_instance.dynamic_obstacles) == 0
 
         # Test case 16: Test that obstacle ending before query interval should not be added
         env = Environment(obstacles=[pt_limited])
-        env_instance = EnvironmentInstance(env, Interval(25, 30))
+        env_instance = EnvironmentInstance(env, Interval(25, 30), range_x, range_y)
         assert len(env_instance.static_obstacles) == 0
         assert len(env_instance.dynamic_obstacles) == 0
 
         # Test case 17: Test that query intervals falling in between obstacles should cause obstacles to be added
         env = Environment(obstacles=[pt_minute, pt_hour, pt_day])
-        env_instance = EnvironmentInstance(env, Interval(25, 40))
+        env_instance = EnvironmentInstance(env, Interval(25, 40), range_x, range_y)
         assert len(env_instance.static_obstacles) == 0
         assert len(env_instance.dynamic_obstacles) == 0
 
         # Test case 18: Test that query intervals falling in between repetitions of obstacles
         # should cause obstacles to be added
         env1 = Environment(obstacles=[pt_minute])
-        env_instance1 = EnvironmentInstance(env1, Interval(145, 160))
+        env_instance1 = EnvironmentInstance(env1, Interval(145, 160), range_x, range_y)
         assert len(env_instance1.static_obstacles) == 0
         assert len(env_instance1.dynamic_obstacles) == 0
 
         env2 = Environment(obstacles=[pt_hour])
-        env_instance2 = EnvironmentInstance(env2, Interval(7225, 7240))
+        env_instance2 = EnvironmentInstance(
+            env2, Interval(7225, 7240), range_x, range_y
+        )
         assert len(env_instance2.static_obstacles) == 0
         assert len(env_instance2.dynamic_obstacles) == 0
 
         env3 = Environment(obstacles=[pt_day])
-        env_instance3 = EnvironmentInstance(env3, Interval(172825, 172840))
+        env_instance3 = EnvironmentInstance(
+            env3, Interval(172825, 172840), range_x, range_y
+        )
         assert len(env_instance3.static_obstacles) == 0
         assert len(env_instance3.dynamic_obstacles) == 0
 
         # Test case 19: add multiple objects and check if they are all added correctly
         env1 = Environment(obstacles=[pt_minute, pt_hour, pt_day])
-        env_instance1 = EnvironmentInstance(env1, Interval(172805, 172815))
+        env_instance1 = EnvironmentInstance(
+            env1, Interval(172805, 172815), range_x, range_y
+        )
         assert len(env_instance1.static_obstacles) == 0
         assert len(env_instance1.dynamic_obstacles) == 3
 
         env2 = Environment(obstacles=[pt_minute, pt_hour, pt_day])
-        env_instance2 = EnvironmentInstance(env2, Interval(172815, 172817))
+        env_instance2 = EnvironmentInstance(
+            env2, Interval(172815, 172817), range_x, range_y
+        )
         assert len(env_instance2.static_obstacles) == 3
         assert len(env_instance2.dynamic_obstacles) == 0
 
         env3 = Environment(obstacles=[pt_limited, pt_minute, pt_hour, pt_day])
-        env_instance3 = EnvironmentInstance(env3, Interval(5, 15))
+        env_instance3 = EnvironmentInstance(env3, Interval(5, 15), range_x, range_y)
         assert len(env_instance3.static_obstacles) == 0
         assert len(env_instance3.dynamic_obstacles) == 4
 
         env4 = Environment(obstacles=[pt_limited, pt_minute, pt_hour, pt_day])
-        env_instance4 = EnvironmentInstance(env4, Interval(15, 17))
+        env_instance4 = EnvironmentInstance(env4, Interval(15, 17), range_x, range_y)
         assert len(env_instance4.static_obstacles) == 4
         assert len(env_instance4.dynamic_obstacles) == 0
 
@@ -517,7 +553,7 @@ class TestEnvironmentInstance:
         )
 
         env = Environment(obstacles=[pt_dynamic_obs, pt_static_obs])
-        env_instance = EnvironmentInstance(env, Interval(5, 25))
+        env_instance = EnvironmentInstance(env, Interval(5, 25), range_x, range_y)
         assert len(env_instance.static_obstacles) == 1
         assert len(env_instance.dynamic_obstacles) == 1
 
@@ -536,6 +572,10 @@ class TestEnvironmentInstance:
 
     def test_create_environment_instance_overloads(self):
         ## Re-reun test cases 1-6 for line and polygon obstacles again to ensure that overloads work the same
+        # specify scenario dimensions, which include all points
+        range_x = (-100, 100)
+        range_y = (-100, 100)
+
         # create shapely lines and copies for later comparison
         sln_static = ShapelyLine([(1, 1), (2, 2)])
         sln_static_copy = ShapelyLine([(1, 1), (2, 2)])
@@ -607,7 +647,7 @@ class TestEnvironmentInstance:
 
         # Test case 1: single static obstacle - should be added to static obstacles
         env = Environment(obstacles=[ln_static])
-        env_instance = EnvironmentInstance(env, Interval(10, 30))
+        env_instance = EnvironmentInstance(env, Interval(10, 30), range_x, range_y)
         assert len(env_instance.static_obstacles) == 1
         assert len(env_instance.dynamic_obstacles) == 0
         saved_obstacle = env_instance.static_obstacles[1]
@@ -617,7 +657,7 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 1.0
 
         env = Environment(obstacles=[poly_static])
-        env_instance = EnvironmentInstance(env, Interval(10, 30))
+        env_instance = EnvironmentInstance(env, Interval(10, 30), range_x, range_y)
         assert len(env_instance.static_obstacles) == 1
         assert len(env_instance.dynamic_obstacles) == 0
         saved_obstacle = env_instance.static_obstacles[1]
@@ -629,7 +669,7 @@ class TestEnvironmentInstance:
         # Test case 2: single static limited obstacle, overlapping with start of query interval
         # should be added to dynamic obstacles
         env = Environment(obstacles=[ln_limited])
-        env_instance = EnvironmentInstance(env, Interval(15, 30))
+        env_instance = EnvironmentInstance(env, Interval(15, 30), range_x, range_y)
         assert len(env_instance.static_obstacles) == 0
         assert len(env_instance.dynamic_obstacles) == 1
         saved_obstacle = env_instance.dynamic_obstacles[1]
@@ -639,7 +679,7 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 2.0
 
         env = Environment(obstacles=[poly_limited])
-        env_instance = EnvironmentInstance(env, Interval(15, 30))
+        env_instance = EnvironmentInstance(env, Interval(15, 30), range_x, range_y)
         assert len(env_instance.static_obstacles) == 0
         assert len(env_instance.dynamic_obstacles) == 1
         saved_obstacle = env_instance.dynamic_obstacles[1]
@@ -651,7 +691,7 @@ class TestEnvironmentInstance:
         # Test case 3: single static limited obstacle, lying inside query interval
         # should be added to dynamic obstacles
         env = Environment(obstacles=[ln_limited])
-        env_instance = EnvironmentInstance(env, Interval(5, 30))
+        env_instance = EnvironmentInstance(env, Interval(5, 30), range_x, range_y)
         assert len(env_instance.static_obstacles) == 0
         assert len(env_instance.dynamic_obstacles) == 1
         saved_obstacle = env_instance.dynamic_obstacles[1]
@@ -661,7 +701,7 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 2.0
 
         env = Environment(obstacles=[poly_limited])
-        env_instance = EnvironmentInstance(env, Interval(5, 30))
+        env_instance = EnvironmentInstance(env, Interval(5, 30), range_x, range_y)
         assert len(env_instance.static_obstacles) == 0
         assert len(env_instance.dynamic_obstacles) == 1
         saved_obstacle = env_instance.dynamic_obstacles[1]
@@ -673,7 +713,7 @@ class TestEnvironmentInstance:
         # Test case 4: single static limited obstacle, overlapping with end of query interval
         # should be added to dynamic obstacles
         env = Environment(obstacles=[ln_limited])
-        env_instance = EnvironmentInstance(env, Interval(5, 15))
+        env_instance = EnvironmentInstance(env, Interval(5, 15), range_x, range_y)
         assert len(env_instance.static_obstacles) == 0
         assert len(env_instance.dynamic_obstacles) == 1
         saved_obstacle = env_instance.dynamic_obstacles[1]
@@ -683,7 +723,7 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 2.0
 
         env = Environment(obstacles=[poly_limited])
-        env_instance = EnvironmentInstance(env, Interval(5, 15))
+        env_instance = EnvironmentInstance(env, Interval(5, 15), range_x, range_y)
         assert len(env_instance.static_obstacles) == 0
         assert len(env_instance.dynamic_obstacles) == 1
         saved_obstacle = env_instance.dynamic_obstacles[1]
@@ -695,7 +735,7 @@ class TestEnvironmentInstance:
         # Test case 5: single static limited obstacle, overlapping with start and end of query interval
         # should be added to static obstacles
         env = Environment(obstacles=[ln_limited])
-        env_instance = EnvironmentInstance(env, Interval(12, 15))
+        env_instance = EnvironmentInstance(env, Interval(12, 15), range_x, range_y)
         assert len(env_instance.static_obstacles) == 1
         assert len(env_instance.dynamic_obstacles) == 0
         saved_obstacle = env_instance.static_obstacles[1]
@@ -705,7 +745,7 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 2.0
 
         env = Environment(obstacles=[poly_limited])
-        env_instance = EnvironmentInstance(env, Interval(12, 15))
+        env_instance = EnvironmentInstance(env, Interval(12, 15), range_x, range_y)
         assert len(env_instance.static_obstacles) == 1
         assert len(env_instance.dynamic_obstacles) == 0
         saved_obstacle = env_instance.static_obstacles[1]
@@ -717,7 +757,7 @@ class TestEnvironmentInstance:
         # Test case 6: recurring obstacle with first occurence overlapping with start of query interval
         # should be added to dynamic obstacles
         env1 = Environment(obstacles=[ln_minute])
-        env_instance1 = EnvironmentInstance(env1, Interval(15, 30))
+        env_instance1 = EnvironmentInstance(env1, Interval(15, 30), range_x, range_y)
         assert len(env_instance1.static_obstacles) == 0
         assert len(env_instance1.dynamic_obstacles) == 1
         saved_obstacle = env_instance1.dynamic_obstacles[1]
@@ -727,7 +767,7 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 3.0
 
         env2 = Environment(obstacles=[ln_hour])
-        env_instance2 = EnvironmentInstance(env2, Interval(15, 30))
+        env_instance2 = EnvironmentInstance(env2, Interval(15, 30), range_x, range_y)
         assert len(env_instance2.static_obstacles) == 0
         assert len(env_instance2.dynamic_obstacles) == 1
         saved_obstacle = env_instance2.dynamic_obstacles[1]
@@ -737,7 +777,7 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 4.0
 
         env3 = Environment(obstacles=[ln_day])
-        env_instance3 = EnvironmentInstance(env3, Interval(15, 30))
+        env_instance3 = EnvironmentInstance(env3, Interval(15, 30), range_x, range_y)
         assert len(env_instance3.static_obstacles) == 0
         assert len(env_instance3.dynamic_obstacles) == 1
         saved_obstacle = env_instance3.dynamic_obstacles[1]
@@ -747,7 +787,7 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 5.0
 
         env1 = Environment(obstacles=[poly_minute])
-        env_instance1 = EnvironmentInstance(env1, Interval(15, 30))
+        env_instance1 = EnvironmentInstance(env1, Interval(15, 30), range_x, range_y)
         assert len(env_instance1.static_obstacles) == 0
         assert len(env_instance1.dynamic_obstacles) == 1
         saved_obstacle = env_instance1.dynamic_obstacles[1]
@@ -757,7 +797,7 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 3.0
 
         env2 = Environment(obstacles=[poly_hour])
-        env_instance2 = EnvironmentInstance(env2, Interval(15, 30))
+        env_instance2 = EnvironmentInstance(env2, Interval(15, 30), range_x, range_y)
         assert len(env_instance2.static_obstacles) == 0
         assert len(env_instance2.dynamic_obstacles) == 1
         saved_obstacle = env_instance2.dynamic_obstacles[1]
@@ -767,7 +807,7 @@ class TestEnvironmentInstance:
         assert saved_obstacle.radius == 4.0
 
         env3 = Environment(obstacles=[poly_day])
-        env_instance3 = EnvironmentInstance(env3, Interval(15, 30))
+        env_instance3 = EnvironmentInstance(env3, Interval(15, 30), range_x, range_y)
         assert len(env_instance3.static_obstacles) == 0
         assert len(env_instance3.dynamic_obstacles) == 1
         saved_obstacle = env_instance3.dynamic_obstacles[1]
@@ -816,12 +856,15 @@ class TestEnvironmentInstance:
                 pt3_match,
                 pt4_mismatch,
             ],
-            dimension_x=(0, 10),
-            dimension_y=(0, 10),
         )
 
         # create environment instance and check that only matching obstacles are added
-        env_instance = EnvironmentInstance(env, query_interval)
+        env_instance = EnvironmentInstance(
+            environment=env,
+            query_interval=query_interval,
+            scenario_range_x=(0, 10),
+            scenario_range_y=(0, 10),
+        )
         assert len(env_instance.static_obstacles) == 2
         assert len(env_instance.dynamic_obstacles) == 1
 
