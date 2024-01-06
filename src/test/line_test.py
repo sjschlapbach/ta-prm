@@ -10,7 +10,11 @@ from src.obstacles.line import Line
 
 class TestLine:
     def setup_method(self):
-        line = Line(ShapelyLine([(0, 0), (1, 1)]), Interval(0, 10, closed="both"), 1.0)
+        line = Line(
+            geometry=ShapelyLine([(0, 0), (1, 1)]),
+            time_interval=Interval(0, 10, closed="both"),
+            radius=1.0,
+        )
         return line
 
     def test_setup(self):

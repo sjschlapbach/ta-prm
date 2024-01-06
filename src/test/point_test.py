@@ -14,7 +14,11 @@ from src.obstacles.point import Point
 
 class TestPoint:
     def setup_method(self):
-        point = Point(ShapelyPoint(0, 0), Interval(0, 10, closed="both"), 1.0)
+        point = Point(
+            geometry=ShapelyPoint(0, 0),
+            time_interval=Interval(0, 10, closed="both"),
+            radius=1.0,
+        )
         return point
 
     def test_setup(self):
