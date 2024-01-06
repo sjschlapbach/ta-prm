@@ -92,7 +92,7 @@ class Environment:
             fig = plt.figure(figsize=(8, 8))
 
         for obstacle in self.obstacles:
-            obstacle[1].plot(query_time=query_time, fig=fig)
+            obstacle.plot(query_time=query_time, fig=fig)
 
     def add_obstacles(self, new_obstacles: List[Union[Point, Line, Polygon]]):
         """
