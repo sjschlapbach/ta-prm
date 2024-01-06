@@ -147,24 +147,3 @@ class EnvironmentInstance:
             the distance between the line and the closest polygon in the environment
         """
         return min([line.distance(polygon) for polygon in self.polygons])
-
-    def __compute_intersection_interval(first: Interval, second: Interval):
-        """
-        Helper function to compute the intersection interval between two intervals.
-
-        Parameters
-        ----------
-        first : Interval
-            the first interval
-        second : Interval
-            the second interval
-
-        Returns
-        -------
-        Interval
-            the intersection interval between the two intervals
-        """
-        intersection_start = max(first.left, second.left)
-        intersection_end = min(first.right, second.right)
-        interval = Interval(intersection_start, intersection_end, closed="both")
-        return interval

@@ -496,8 +496,246 @@ class TestEnvironmentInstance:
         assert len(env_instance4.dynamic_obstacles) == 0
 
     def test_create_environment_instance_overloads(self):
-        # TODO - test also line and polygon obstacles with certain cases (not all)
-        pass
+        ## Re-reun test cases 1-6 for line and polygon obstacles again to ensure that overloads work the same
+        # create shapely lines and copies for later comparison
+        sln_static = ShapelyLine([(1, 1), (2, 2)])
+        sln_static_copy = ShapelyLine([(1, 1), (2, 2)])
+        sln_limited = ShapelyLine([(3, 3), (4, 4)])
+        sln_limited_copy = ShapelyLine([(3, 3), (4, 4)])
+        sln_minute = ShapelyLine([(5, 5), (6, 6)])
+        sln_minute_copy = ShapelyLine([(5, 5), (6, 6)])
+        sln_hour = ShapelyLine([(7, 7), (8, 8)])
+        sln_hour_copy = ShapelyLine([(7, 7), (8, 8)])
+        sln_day = ShapelyLine([(9, 9), (10, 10)])
+        sln_day_copy = ShapelyLine([(9, 9), (10, 10)])
+
+        # create shapely polygons and copies for later comparison
+        spoly_static = ShapelyPolygon([(1, 1), (2, 2), (3, 3)])
+        spoly_static_copy = ShapelyPolygon([(1, 1), (2, 2), (3, 3)])
+        spoly_limited = ShapelyPolygon([(4, 4), (5, 5), (6, 6)])
+        spoly_limited_copy = ShapelyPolygon([(4, 4), (5, 5), (6, 6)])
+        spoly_minute = ShapelyPolygon([(7, 7), (8, 8), (9, 9)])
+        spoly_minute_copy = ShapelyPolygon([(7, 7), (8, 8), (9, 9)])
+        spoly_hour = ShapelyPolygon([(10, 10), (11, 11), (12, 12)])
+        spoly_hour_copy = ShapelyPolygon([(10, 10), (11, 11), (12, 12)])
+        spoly_day = ShapelyPolygon([(13, 13), (14, 14), (15, 15)])
+        spoly_day_copy = ShapelyPolygon([(13, 13), (14, 14), (15, 15)])
+
+        # create line obstacles with different recurrence and intervals
+        interval = Interval(10, 20, closed="both")
+        ln_static = Line(geometry=sln_static, radius=1.0)
+        ln_limited = Line(
+            geometry=sln_limited,
+            time_interval=interval,
+            radius=2.0,
+        )
+        ln_minute = Line(
+            geometry=sln_minute,
+            time_interval=interval,
+            recurrence=Rec.MINUTELY,
+            radius=3.0,
+        )
+        ln_hour = Line(
+            geometry=sln_hour, time_interval=interval, recurrence=Rec.HOURLY, radius=4.0
+        )
+        ln_day = Line(
+            geometry=sln_day, time_interval=interval, recurrence=Rec.DAILY, radius=5.0
+        )
+
+        # create polygon obstacles with different recurrence and intervals
+        interval = Interval(10, 20, closed="both")
+        poly_static = Polygon(geometry=spoly_static, radius=1.0)
+        poly_limited = Polygon(
+            geometry=spoly_limited,
+            time_interval=interval,
+            radius=2.0,
+        )
+        poly_minute = Polygon(
+            geometry=spoly_minute,
+            time_interval=interval,
+            recurrence=Rec.MINUTELY,
+            radius=3.0,
+        )
+        poly_hour = Polygon(
+            geometry=spoly_hour,
+            time_interval=interval,
+            recurrence=Rec.HOURLY,
+            radius=4.0,
+        )
+        poly_day = Polygon(
+            geometry=spoly_day, time_interval=interval, recurrence=Rec.DAILY, radius=5.0
+        )
+
+        # Test case 1: single static obstacle - should be added to static obstacles
+        env = Environment(obstacles=[ln_static])
+        env_instance = EnvironmentInstance(env, Interval(10, 30))
+        assert len(env_instance.static_obstacles) == 1
+        assert len(env_instance.dynamic_obstacles) == 0
+        saved_obstacle = env_instance.static_obstacles[1]
+        assert saved_obstacle.geometry == sln_static_copy
+        assert saved_obstacle.time_interval is None
+        assert saved_obstacle.recurrence == Rec.NONE
+        assert saved_obstacle.radius == 1.0
+
+        env = Environment(obstacles=[poly_static])
+        env_instance = EnvironmentInstance(env, Interval(10, 30))
+        assert len(env_instance.static_obstacles) == 1
+        assert len(env_instance.dynamic_obstacles) == 0
+        saved_obstacle = env_instance.static_obstacles[1]
+        assert saved_obstacle.geometry == spoly_static_copy
+        assert saved_obstacle.time_interval is None
+        assert saved_obstacle.recurrence == Rec.NONE
+        assert saved_obstacle.radius == 1.0
+
+        # Test case 2: single static limited obstacle, overlapping with start of query interval
+        # should be added to dynamic obstacles
+        env = Environment(obstacles=[ln_limited])
+        env_instance = EnvironmentInstance(env, Interval(15, 30))
+        assert len(env_instance.static_obstacles) == 0
+        assert len(env_instance.dynamic_obstacles) == 1
+        saved_obstacle = env_instance.dynamic_obstacles[1]
+        assert saved_obstacle.geometry == sln_limited_copy
+        assert saved_obstacle.time_interval == interval
+        assert saved_obstacle.recurrence == Rec.NONE
+        assert saved_obstacle.radius == 2.0
+
+        env = Environment(obstacles=[poly_limited])
+        env_instance = EnvironmentInstance(env, Interval(15, 30))
+        assert len(env_instance.static_obstacles) == 0
+        assert len(env_instance.dynamic_obstacles) == 1
+        saved_obstacle = env_instance.dynamic_obstacles[1]
+        assert saved_obstacle.geometry == spoly_limited_copy
+        assert saved_obstacle.time_interval == interval
+        assert saved_obstacle.recurrence == Rec.NONE
+        assert saved_obstacle.radius == 2.0
+
+        # Test case 3: single static limited obstacle, lying inside query interval
+        # should be added to dynamic obstacles
+        env = Environment(obstacles=[ln_limited])
+        env_instance = EnvironmentInstance(env, Interval(5, 30))
+        assert len(env_instance.static_obstacles) == 0
+        assert len(env_instance.dynamic_obstacles) == 1
+        saved_obstacle = env_instance.dynamic_obstacles[1]
+        assert saved_obstacle.geometry == sln_limited_copy
+        assert saved_obstacle.time_interval == interval
+        assert saved_obstacle.recurrence == Rec.NONE
+        assert saved_obstacle.radius == 2.0
+
+        env = Environment(obstacles=[poly_limited])
+        env_instance = EnvironmentInstance(env, Interval(5, 30))
+        assert len(env_instance.static_obstacles) == 0
+        assert len(env_instance.dynamic_obstacles) == 1
+        saved_obstacle = env_instance.dynamic_obstacles[1]
+        assert saved_obstacle.geometry == spoly_limited_copy
+        assert saved_obstacle.time_interval == interval
+        assert saved_obstacle.recurrence == Rec.NONE
+        assert saved_obstacle.radius == 2.0
+
+        # Test case 4: single static limited obstacle, overlapping with end of query interval
+        # should be added to dynamic obstacles
+        env = Environment(obstacles=[ln_limited])
+        env_instance = EnvironmentInstance(env, Interval(5, 15))
+        assert len(env_instance.static_obstacles) == 0
+        assert len(env_instance.dynamic_obstacles) == 1
+        saved_obstacle = env_instance.dynamic_obstacles[1]
+        assert saved_obstacle.geometry == sln_limited_copy
+        assert saved_obstacle.time_interval == interval
+        assert saved_obstacle.recurrence == Rec.NONE
+        assert saved_obstacle.radius == 2.0
+
+        env = Environment(obstacles=[poly_limited])
+        env_instance = EnvironmentInstance(env, Interval(5, 15))
+        assert len(env_instance.static_obstacles) == 0
+        assert len(env_instance.dynamic_obstacles) == 1
+        saved_obstacle = env_instance.dynamic_obstacles[1]
+        assert saved_obstacle.geometry == spoly_limited_copy
+        assert saved_obstacle.time_interval == interval
+        assert saved_obstacle.recurrence == Rec.NONE
+        assert saved_obstacle.radius == 2.0
+
+        # Test case 5: single static limited obstacle, overlapping with start and end of query interval
+        # should be added to static obstacles
+        env = Environment(obstacles=[ln_limited])
+        env_instance = EnvironmentInstance(env, Interval(12, 15))
+        assert len(env_instance.static_obstacles) == 1
+        assert len(env_instance.dynamic_obstacles) == 0
+        saved_obstacle = env_instance.static_obstacles[1]
+        assert saved_obstacle.geometry == sln_limited_copy
+        assert saved_obstacle.time_interval is None
+        assert saved_obstacle.recurrence == Rec.NONE
+        assert saved_obstacle.radius == 2.0
+
+        env = Environment(obstacles=[poly_limited])
+        env_instance = EnvironmentInstance(env, Interval(12, 15))
+        assert len(env_instance.static_obstacles) == 1
+        assert len(env_instance.dynamic_obstacles) == 0
+        saved_obstacle = env_instance.static_obstacles[1]
+        assert saved_obstacle.geometry == spoly_limited_copy
+        assert saved_obstacle.time_interval is None
+        assert saved_obstacle.recurrence == Rec.NONE
+        assert saved_obstacle.radius == 2.0
+
+        # Test case 6: recurring obstacle with first occurence overlapping with start of query interval
+        # should be added to dynamic obstacles
+        env1 = Environment(obstacles=[ln_minute])
+        env_instance1 = EnvironmentInstance(env1, Interval(15, 30))
+        assert len(env_instance1.static_obstacles) == 0
+        assert len(env_instance1.dynamic_obstacles) == 1
+        saved_obstacle = env_instance1.dynamic_obstacles[1]
+        assert saved_obstacle.geometry == sln_minute_copy
+        assert saved_obstacle.time_interval == interval
+        assert saved_obstacle.recurrence == Rec.MINUTELY
+        assert saved_obstacle.radius == 3.0
+
+        env2 = Environment(obstacles=[ln_hour])
+        env_instance2 = EnvironmentInstance(env2, Interval(15, 30))
+        assert len(env_instance2.static_obstacles) == 0
+        assert len(env_instance2.dynamic_obstacles) == 1
+        saved_obstacle = env_instance2.dynamic_obstacles[1]
+        assert saved_obstacle.geometry == sln_hour_copy
+        assert saved_obstacle.time_interval == interval
+        assert saved_obstacle.recurrence == Rec.HOURLY
+        assert saved_obstacle.radius == 4.0
+
+        env3 = Environment(obstacles=[ln_day])
+        env_instance3 = EnvironmentInstance(env3, Interval(15, 30))
+        assert len(env_instance3.static_obstacles) == 0
+        assert len(env_instance3.dynamic_obstacles) == 1
+        saved_obstacle = env_instance3.dynamic_obstacles[1]
+        assert saved_obstacle.geometry == sln_day_copy
+        assert saved_obstacle.time_interval == interval
+        assert saved_obstacle.recurrence == Rec.DAILY
+        assert saved_obstacle.radius == 5.0
+
+        env1 = Environment(obstacles=[poly_minute])
+        env_instance1 = EnvironmentInstance(env1, Interval(15, 30))
+        assert len(env_instance1.static_obstacles) == 0
+        assert len(env_instance1.dynamic_obstacles) == 1
+        saved_obstacle = env_instance1.dynamic_obstacles[1]
+        assert saved_obstacle.geometry == spoly_minute_copy
+        assert saved_obstacle.time_interval == interval
+        assert saved_obstacle.recurrence == Rec.MINUTELY
+        assert saved_obstacle.radius == 3.0
+
+        env2 = Environment(obstacles=[poly_hour])
+        env_instance2 = EnvironmentInstance(env2, Interval(15, 30))
+        assert len(env_instance2.static_obstacles) == 0
+        assert len(env_instance2.dynamic_obstacles) == 1
+        saved_obstacle = env_instance2.dynamic_obstacles[1]
+        assert saved_obstacle.geometry == spoly_hour_copy
+        assert saved_obstacle.time_interval == interval
+        assert saved_obstacle.recurrence == Rec.HOURLY
+        assert saved_obstacle.radius == 4.0
+
+        env3 = Environment(obstacles=[poly_day])
+        env_instance3 = EnvironmentInstance(env3, Interval(15, 30))
+        assert len(env_instance3.static_obstacles) == 0
+        assert len(env_instance3.dynamic_obstacles) == 1
+        saved_obstacle = env_instance3.dynamic_obstacles[1]
+        assert saved_obstacle.geometry == spoly_day_copy
+        assert saved_obstacle.time_interval == interval
+        assert saved_obstacle.recurrence == Rec.DAILY
+        assert saved_obstacle.radius == 5.0
 
     # TODO - implement once spatial index is available
     def test_create_environment_instance_idx(self):
