@@ -17,21 +17,31 @@ def plot_geometries(plotting: bool = True, query_time: float = None):
         query_time = float(input("Enter a query time: "))
 
     # create a point and a line
-    pt1 = Point(ShapelyPoint(-3, 0), Interval(0, 10, closed="both"), 0.5)
-    ln1 = Line(ShapelyLine([(-2, -2), (-1, -1)]), Interval(0, 10, closed="both"), 1.0)
+    pt1 = Point(
+        geometry=ShapelyPoint(-3, 0),
+        time_interval=Interval(0, 10, closed="both"),
+        radius=0.5,
+    )
+    ln1 = Line(
+        geometry=ShapelyLine([(-2, -2), (-1, -1)]),
+        time_interval=Interval(0, 10, closed="both"),
+        radius=1.0,
+    )
     pg1 = Polygon(
-        ShapelyPolygon([(1, 0), (1, 1), (2, 1)]), Interval(0, 10, closed="both"), 0.5
+        geometry=ShapelyPolygon([(1, 0), (1, 1), (2, 1)]),
+        time_interval=Interval(0, 10, closed="both"),
+        radius=0.5,
     )
 
     # create a point and line without temporal constraints and no padding
-    pt2 = Point(ShapelyPoint(2, 2))
-    ln2 = Line(ShapelyLine([(2, -1), (3, 1), (4, 3)]))
-    pg2 = Polygon(ShapelyPolygon([(6, 0), (7, 1), (8, 0)]))
+    pt2 = Point(geometry=ShapelyPoint(2, 2))
+    ln2 = Line(geometry=ShapelyLine([(2, -1), (3, 1), (4, 3)]))
+    pg2 = Polygon(geometry=ShapelyPolygon([(6, 0), (7, 1), (8, 0)]))
 
     # create a point and line without temporal constraints padding
-    pt3 = Point(ShapelyPoint(1, 7), radius=1.0)
-    ln3 = Line(ShapelyLine([(4, 7), (7, 6), (7, 3)]), radius=0.5)
-    pg3 = Polygon(ShapelyPolygon([(5, -2), (6, -3), (7, -1)]), radius=0.5)
+    pt3 = Point(geometry=ShapelyPoint(1, 7), radius=1.0)
+    ln3 = Line(geometry=ShapelyLine([(4, 7), (7, 6), (7, 3)]), radius=0.5)
+    pg3 = Polygon(geometry=ShapelyPolygon([(5, -2), (6, -3), (7, -1)]), radius=0.5)
 
     # create a figure from (-5, -5) to (10, 10)
     fig = plt.figure(figsize=(8, 8))

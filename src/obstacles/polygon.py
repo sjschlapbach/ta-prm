@@ -6,6 +6,7 @@ from typing import Union
 import matplotlib.pyplot as plt
 
 from .geometry import Geometry
+from src.util.recurrence import Recurrence
 
 
 class Polygon(Geometry):
@@ -36,6 +37,7 @@ class Polygon(Geometry):
         self,
         geometry: ShapelyPolygon = None,
         time_interval: Interval = None,
+        recurrence: Recurrence = None,
         radius: float = 0,
         json_data: dict = None,
     ):
@@ -45,6 +47,7 @@ class Polygon(Geometry):
         Args:
             geometry (Polygon, optional): The shapely polygon representing the geometry.
             time_interval (Interval, optional): The pandas interval representing the time interval.
+            recurrence (Recurrence, optional): The recurrence parameter for the polygon.
             radius (float, optional): The radius around the polygon, considered to be in collision.
             json_data (dict, optional): Optional JSON data to load the polygon from.
         """
@@ -52,7 +55,7 @@ class Polygon(Geometry):
             self.load_from_json(json_data)
             return
 
-        super().__init__(radius, time_interval)
+        super().__init__(radius=radius, interval=time_interval, recurrence=recurrence)
         self.geometry = geometry
 
     def set_geometry(self, points: list[tuple[float, float]]):
@@ -81,18 +84,18 @@ class Polygon(Geometry):
         Returns:
             bool: True if collision occurs, False otherwise. Objects without a time interval are considered to be always active.
         """
-        if isinstance(shape, Point):
-            distance = self.geometry.distance(shape)
-        elif isinstance(shape, LineString):
-            distance = self.geometry.distance(shape)
-        elif isinstance(shape, ShapelyPolygon):
-            distance = self.geometry.distance(shape)
-        else:
-            raise ValueError(
-                "Invalid shape type. Only Point, LineString, or Polygon are supported."
-            )
-
         if self.is_active(query_time, query_interval):
+            if isinstance(shape, Point):
+                distance = self.geometry.distance(shape)
+            elif isinstance(shape, LineString):
+                distance = self.geometry.distance(shape)
+            elif isinstance(shape, ShapelyPolygon):
+                distance = self.geometry.distance(shape)
+            else:
+                raise ValueError(
+                    "Invalid shape type. Only Point, LineString, or Polygon are supported."
+                )
+
             return distance <= self.radius
         else:
             return False

@@ -6,6 +6,7 @@ from typing import Union
 import matplotlib.pyplot as plt
 
 from .geometry import Geometry
+from src.util.recurrence import Recurrence
 
 
 class Point(Geometry):
@@ -14,8 +15,9 @@ class Point(Geometry):
 
     Attributes:
         geometry (ShapelyPoint): The shapely point representing the geometry.
-        time_interval (Interval): The pandas interval representing the time interval.
-        radius (float): The radius around the point, considered to be in collision.
+        time_interval (Interval, inherited): The pandas interval representing the time interval.
+        recurrence (Recurrence, inherited): The recurrence parameter for the point.
+        radius (float, inherited): The radius around the point, considered to be in collision.
 
     Methods:
         __init__(self, geometry=None, time_interval=None, radius=0):
@@ -30,12 +32,19 @@ class Point(Geometry):
         plot(self, query_time=None, query_interval=None, fig=None):
             Plots the point with a circle of the corresponding radius around it.
             Optionally, only shows the point with the circle if it is active.
+
+        export_to_json(self):
+            Returns a JSON representation of the point object.
+
+        load_from_json(self, json_object):
+            Loads the point object from a JSON representation.
     """
 
     def __init__(
         self,
         geometry: ShapelyPoint = None,
         time_interval: Interval = None,
+        recurrence: Recurrence = None,
         radius: float = 0,
         json_data: dict = None,
     ):
@@ -45,6 +54,7 @@ class Point(Geometry):
         Args:
             geometry (ShapelyPoint, optional): The shapely point representing the geometry.
             time_interval (Interval, optional): The pandas interval representing the time interval.
+            recurrence (Recurrence, optional): The recurrence parameter for the point.
             radius (float, optional): The radius around the point, considered to be in collision.
             json_data (dict, optional): JSON data to load the point from.
         """
@@ -52,7 +62,7 @@ class Point(Geometry):
             self.load_from_json(json_data)
             return
 
-        super().__init__(radius, time_interval)
+        super().__init__(radius=radius, interval=time_interval, recurrence=recurrence)
         self.geometry = geometry
 
     def set_geometry(self, x: float, y: float):
@@ -82,18 +92,18 @@ class Point(Geometry):
         Returns:
             bool: True if collision occurs, False otherwise. Objects without a time interval are considered to be always active.
         """
-        if isinstance(shape, ShapelyPoint):
-            distance = self.geometry.distance(shape)
-        elif isinstance(shape, LineString):
-            distance = self.geometry.distance(shape)
-        elif isinstance(shape, Polygon):
-            distance = self.geometry.distance(shape.exterior)
-        else:
-            raise ValueError(
-                "Invalid shape type. Only Point, LineString, or Polygon are supported."
-            )
-
         if self.is_active(query_time, query_interval):
+            if isinstance(shape, ShapelyPoint):
+                distance = self.geometry.distance(shape)
+            elif isinstance(shape, LineString):
+                distance = self.geometry.distance(shape)
+            elif isinstance(shape, Polygon):
+                distance = self.geometry.distance(shape.exterior)
+            else:
+                raise ValueError(
+                    "Invalid shape type. Only Point, LineString, or Polygon are supported."
+                )
+
             return distance <= self.radius
         else:
             return False

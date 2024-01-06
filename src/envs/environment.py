@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 from src.obstacles.point import Point
 from src.obstacles.line import Line
 from src.obstacles.polygon import Polygon
-from src.util.recurrence import Recurrence
 
 
 class Environment:
@@ -22,20 +21,20 @@ class Environment:
 
     Attributes
     ----------
-    obstacles : List[Tuple[Recurrence, Union[Point, Line, Polygon]]]
+    obstacles : List[Union[Point, Line, Polygon]]
         A list of obstacles representing the environment.
-        Each obstacle is a tuple consisting of the obstacle recurrence parameter and its object data.
+        Each obstacle is an instance of Point, Line, or Polygon.
 
     Methods
     -------
-    __init__(obstacles: List[Tuple[Recurrence, Union[Point, Line, Polygon]]] = None, filepath: str = None)
+    __init__(obstacles: List[Union[Point, Line, Polygon]] = None, filepath: str = None)
         Initialize the Environment object.
 
     plot(query_time: float = None, fig=None)
         Plots the obstacles in the environment using matplotlib.
         Recurrence parameters are not considered when plotting environments.
 
-    add_obstacles(new_obstacles: List[Tuple[Recurrence, Union[Point, Line, Polygon]]])
+    add_obstacles(new_obstacles: List[Union[Point, Line, Polygon]])
         Adds new obstacles to the environment.
 
     reset()
@@ -46,9 +45,9 @@ class Environment:
 
     Parameters
     ----------
-    obstacles : List[Tuple[Recurrence, Union[Point, Line, Polygon]]], optional
+    obstacles : List[Union[Point, Line, Polygon]], optional
         A list of obstacles to be added to the environment.
-        Each obstacle is a tuple consisting of the obstacle recurrence parameter and its object data.
+        Each obstacle is an instance of Point, Line, or Polygon.
     filepath : str, optional
         The path to the file where the obstacles are stored. If provided, the obstacles will be loaded from the file.
 
@@ -60,7 +59,7 @@ class Environment:
 
     def __init__(
         self,
-        obstacles: List[Tuple[Recurrence, Union[Point, Line, Polygon]]] = None,
+        obstacles: List[Union[Point, Line, Polygon]] = None,
         filepath: str = None,
     ):
         """
@@ -68,9 +67,9 @@ class Environment:
 
         Parameters
         ----------
-        obstacles : List[Tuple[Recurrence, Union[Point, Line, Polygon]]], optional
+        obstacles : List[Union[Point, Line, Polygon]], optional
             A list of obstacles to be added to the environment.
-            Each obstacle is a tuple consisting of the obstacle recurrence parameter and its object data.
+            Each obstacle is an instance of Point, Line, or Polygon.
         filepath : str, optional
             The path to the file where the obstacles are stored. If provided, the obstacles will be loaded from the file.
         """
@@ -95,17 +94,15 @@ class Environment:
         for obstacle in self.obstacles:
             obstacle[1].plot(query_time=query_time, fig=fig)
 
-    def add_obstacles(
-        self, new_obstacles: List[Tuple[Recurrence, Union[Point, Line, Polygon]]]
-    ):
+    def add_obstacles(self, new_obstacles: List[Union[Point, Line, Polygon]]):
         """
         Adds new obstacles to the environment.
 
         Parameters
         ----------
-        new_obstacles : List[Tuple[Recurrence, Union[Point, Line, Polygon]]]
+        new_obstacles : List[Union[Point, Line, Polygon]]
             A list of obstacles to be added to the environment.
-            Each obstacle is a tuple consisting of the obstacle recurrence parameter and its object data.
+            Each obstacle can be a Point, Line, or Polygon object.
         """
         self.obstacles += new_obstacles
 
@@ -132,15 +129,14 @@ class Environment:
         output = {"points": [], "lines": [], "polygons": []}
 
         for obstacle in self.obstacles:
-            recurrence_value = obstacle[0].value
-            json_data = obstacle[1].export_to_json()
+            json_data = obstacle.export_to_json()
 
-            if isinstance(obstacle[1], Point):
-                output["points"].append((recurrence_value, json_data))
-            elif isinstance(obstacle[1], Line):
-                output["lines"].append((recurrence_value, json_data))
-            elif isinstance(obstacle[1], Polygon):
-                output["polygons"].append((recurrence_value, json_data))
+            if isinstance(obstacle, Point):
+                output["points"].append(json_data)
+            elif isinstance(obstacle, Line):
+                output["lines"].append(json_data)
+            elif isinstance(obstacle, Polygon):
+                output["polygons"].append(json_data)
             else:
                 raise ValueError(
                     "Invalid obstacle type. Only Point, Line, or Polygon are supported."
@@ -178,12 +174,10 @@ class Environment:
 
         # convert obstacles to custom class objects and store them in class variable
         for pt_obj in obstacles["points"]:
-            self.obstacles.append((Recurrence(pt_obj[0]), Point(json_data=pt_obj[1])))
+            self.obstacles.append(Point(json_data=pt_obj))
 
         for ln_obj in obstacles["lines"]:
-            self.obstacles.append((Recurrence(ln_obj[0]), Line(json_data=ln_obj[1])))
+            self.obstacles.append(Line(json_data=ln_obj))
 
         for poly_obj in obstacles["polygons"]:
-            self.obstacles.append(
-                (Recurrence(poly_obj[0]), Polygon(json_data=poly_obj[1]))
-            )
+            self.obstacles.append(Polygon(json_data=poly_obj))
