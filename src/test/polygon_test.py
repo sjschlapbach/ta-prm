@@ -83,6 +83,10 @@ class TestPolygon:
         point = ShapelyPoint(0.5, 0.5)
         assert polygon.check_collision(point) == True
 
+        # collision check with point inside
+        point = ShapelyPoint(0.75, 0.5)
+        assert polygon.check_collision(point) == True
+
         # collision check with point on the edge
         point = ShapelyPoint(1, 1)
         assert polygon.check_collision(point) == True

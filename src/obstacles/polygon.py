@@ -19,7 +19,7 @@ class Polygon(Geometry):
         radius (float): The radius around the polygon, considered to be in collision.
 
     Methods:
-        __init__(self, geometry=None, time_interval=None, radius=0):
+        __init__(self, geometry=None, time_interval=None, radius=0, json_data=None):
             Initializes a new instance of the Polygon class.
 
         set_geometry(self, points):
@@ -31,6 +31,15 @@ class Polygon(Geometry):
         plot(self, query_time=None, query_interval=None, fig=None):
             Plots the polygon with a circle of the corresponding radius around it.
             Optionally, only shows the polygon with the circle if it is active.
+
+        copy(self):
+            Creates a copy of the Polygon object.
+
+        save_to_json(self, filepath):
+            Saves the polygon to a JSON file.
+
+        load_from_json(self, json_data):
+            Loads the polygon from JSON data.
     """
 
     def __init__(
@@ -123,6 +132,20 @@ class Polygon(Geometry):
             plt.plot(*poly.exterior.xy, color="red")
         else:
             plt.plot(*self.geometry.exterior.xy, color="red")
+
+    def copy(self):
+        """
+        Creates a copy of the polygon object.
+
+        Returns:
+            Polygon: A copy of the polygon object.
+        """
+        return Polygon(
+            geometry=self.geometry,
+            time_interval=self.time_interval,
+            recurrence=self.recurrence,
+            radius=self.radius,
+        )
 
     def export_to_json(self):
         """

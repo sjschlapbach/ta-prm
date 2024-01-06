@@ -37,6 +37,9 @@ class Line(Geometry):
 
         load_from_json(self, json_data: dict):
             Loads the line object from a JSON representation.
+
+        copy(self) -> 'Line':
+            Create a copy of the Line object.
     """
 
     def __init__(
@@ -99,7 +102,7 @@ class Line(Geometry):
             elif isinstance(shape, LineString):
                 distance = self.geometry.distance(shape)
             elif isinstance(shape, Polygon):
-                distance = self.geometry.distance(shape.exterior)
+                distance = self.geometry.distance(shape)
             else:
                 raise ValueError(
                     "Invalid shape type. Only LineString or Polygon are supported."
@@ -131,6 +134,20 @@ class Line(Geometry):
             plt.plot(*poly.exterior.xy, color="blue")
         else:
             plt.plot(*self.geometry.xy, color="blue")
+
+    def copy(self):
+        """
+        Create a copy of the line object.
+
+        Returns:
+            Line: A copy of the line object.
+        """
+        return Line(
+            geometry=self.geometry,
+            time_interval=self.time_interval,
+            recurrence=self.recurrence,
+            radius=self.radius,
+        )
 
     def export_to_json(self):
         """

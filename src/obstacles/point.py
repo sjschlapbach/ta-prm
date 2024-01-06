@@ -38,6 +38,9 @@ class Point(Geometry):
 
         load_from_json(self, json_object):
             Loads the point object from a JSON representation.
+
+        copy(self):
+            Creates a copy of the Point object.
     """
 
     def __init__(
@@ -98,7 +101,7 @@ class Point(Geometry):
             elif isinstance(shape, LineString):
                 distance = self.geometry.distance(shape)
             elif isinstance(shape, Polygon):
-                distance = self.geometry.distance(shape.exterior)
+                distance = self.geometry.distance(shape)
             else:
                 raise ValueError(
                     "Invalid shape type. Only Point, LineString, or Polygon are supported."
@@ -131,6 +134,20 @@ class Point(Geometry):
             plt.plot(*poly.exterior.xy, color="black")
         else:
             plt.plot(*self.geometry.xy, color="black", marker="o")
+
+    def copy(self):
+        """
+        Returns a copy of the point object.
+
+        Returns:
+            Point: A copy of the point object.
+        """
+        return Point(
+            geometry=self.geometry,
+            time_interval=self.time_interval,
+            recurrence=self.recurrence,
+            radius=self.radius,
+        )
 
     def export_to_json(self):
         """

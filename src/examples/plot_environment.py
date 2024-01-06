@@ -1,7 +1,7 @@
 from src.obstacles.line import Line
 from src.obstacles.point import Point
 from src.obstacles.polygon import Polygon
-from src.environment import Environment
+from src.envs.environment import Environment
 from src.util.recurrence import Recurrence
 
 from pandas import Interval
@@ -35,11 +35,7 @@ def plot_environment(plotting: bool = True):
     )
 
     # create an environment with all types of obstacles
-    env = Environment(
-        obstacles=[pt1, line1, poly1, pt2, line2, poly2],
-        dimension_x=(-1, 15),
-        dimension_y=(-1, 15),
-    )
+    env = Environment(obstacles=[pt1, line1, poly1, pt2, line2, poly2])
 
     # initialize a figure
     fig = plt.figure(figsize=(8, 8))
@@ -48,8 +44,8 @@ def plot_environment(plotting: bool = True):
     for query_time in range(1, 90):
         env.plot(query_time=query_time, fig=fig)
         plt.title(f"Query Time: {query_time}")
-        plt.xlim(env.dim_x)
-        plt.ylim(env.dim_y)
+        plt.xlim([-1, 15])
+        plt.ylim([-1, 15])
 
         if plotting:
             plt.draw()
