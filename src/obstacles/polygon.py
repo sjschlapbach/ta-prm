@@ -4,6 +4,7 @@ from pandas import Interval
 from matplotlib.patches import Circle
 from typing import Union
 import matplotlib.pyplot as plt
+import numpy as np
 
 from .geometry import Geometry
 from src.util.recurrence import Recurrence
@@ -146,6 +147,108 @@ class Polygon(Geometry):
             recurrence=self.recurrence,
             radius=self.radius,
         )
+
+    def random(
+        min_x: float,
+        max_x: float,
+        min_y: float,
+        max_y: float,
+        max_size: float,
+        min_radius: float,
+        max_radius: float,
+        min_points: int = 3,
+        max_points: int = 7,
+        min_interval: float = 0,
+        max_interval: float = 100,
+        only_static: bool = False,
+        only_dynamic: bool = False,
+        random_recurrence: bool = False,
+    ):
+        """
+        Creates a random polygon.
+
+        Args:
+            min_points (int): The minimum number of points on the polygon edge.
+            max_points (int): The maximum number of points on the polygon edge.
+            min_x (float): The minimum x coordinate.
+            max_x (float): The maximum x coordinate.
+            min_y (float): The minimum y coordinate.
+            max_y (float): The maximum y coordinate.
+            max_size (float): The maximum size of the polygon (without radius).
+            min_radius (float): The minimum radius of the polygon.
+            max_radius (float): The maximum radius of the polygon.
+            min_interval (float, optional): The minimum time interval.
+            max_interval (float, optional): The maximum time interval.
+            only_static (bool, optional): Whether to generate only static polygons.
+            only_dynamic (bool, optional): Whether to generate only dynamic polygons.
+            random_recurrence (bool, optional): Whether to generate a random recurrence.
+
+        Returns:
+            Polygon: A random polygon.
+        """
+
+        # generate a random number of points
+        num_points = np.random.randint(min_points, max_points)
+
+        # generate first point
+        pt1 = (np.random.uniform(min_x, max_x), np.random.uniform(min_y, max_y))
+        points = [pt1]
+
+        # generate the rest of the points at a maximum distance of max_size / 2 from pt1
+        size_sqrt = np.sqrt(max_size / 2)
+        min_x_rel = max(pt1[0] - size_sqrt, min_x)
+        max_x_rel = min(pt1[0] + size_sqrt, max_x)
+        min_y_rel = max(pt1[1] - size_sqrt, min_y)
+        max_y_rel = min(pt1[1] + size_sqrt, max_y)
+
+        for _ in range(num_points - 1):
+            pt = (
+                np.random.uniform(min_x_rel, max_x_rel),
+                np.random.uniform(min_y_rel, max_y_rel),
+            )
+            points.append(pt)
+
+        # create the polygon
+        poly = ShapelyPolygon(points)
+        poly = ShapelyPolygon(poly.convex_hull)
+
+        # generate a random radius
+        radius = np.random.uniform(min_radius, max_radius)
+
+        # determine if polygon to be created should be static - 50/50 chance if only_static is False
+        if only_static:
+            static = True
+        elif only_dynamic:
+            static = False
+        else:
+            static = np.random.choice([True, False])
+
+        # if only static lines should be created, do not consider recurrence of time interval
+        if static:
+            return Polygon(
+                geometry=poly,
+                radius=radius,
+            )
+
+        else:
+            # create random time interval
+            interval_start = np.random.uniform(min_interval, max_interval)
+            interval_end = np.random.uniform(interval_start, max_interval)
+            time_interval = Interval(interval_start, interval_end, closed="both")
+
+            # choose random recurrence, if not disabled
+            recurrence = (
+                Recurrence.random(min_duration=time_interval.length)
+                if random_recurrence
+                else None
+            )
+
+            return Polygon(
+                geometry=poly,
+                time_interval=time_interval,
+                recurrence=recurrence,
+                radius=radius,
+            )
 
     def export_to_json(self):
         """

@@ -490,3 +490,391 @@ class TestLine:
         assert line_copy.time_interval == line.time_interval
         assert line_copy.radius == line.radius
         assert line_copy.recurrence == line.recurrence
+
+    def test_random(self):
+        ## Test random line generation with different inputs.
+        ## For each combination of inputs, multiple lines are generated and tested for correct parameters.
+
+        # Function default values
+        min_interval_default = 0
+        max_interval_default = 100
+
+        # Test case 1 - default function
+        min_x = 0
+        max_x = 100
+        min_y = 0
+        max_y = 100
+        min_radius = 0.1
+        max_radius = 10
+        max_size = 10
+
+        ln1 = Line.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            max_size=max_size,
+        )
+
+        coords = ln1.geometry.coords
+        assert coords[0][0] >= min_x and coords[0][0] <= max_x
+        assert coords[0][1] >= min_y and coords[0][1] <= max_y
+        assert coords[1][0] >= min_x and coords[1][0] <= max_x
+        assert coords[1][1] >= min_y and coords[1][1] <= max_y
+        assert ln1.time_interval == None or (
+            ln1.time_interval.left >= min_interval_default
+            and ln1.time_interval.right <= max_interval_default
+        )
+        assert ln1.radius >= min_radius and ln1.radius <= max_radius
+        assert ln1.recurrence == Recurrence.NONE
+
+        min_x = -100
+        max_x = 100
+        min_y = -100
+        max_y = 100
+        min_radius = 10
+        max_radius = 20
+        ln2 = Line.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            max_size=max_size,
+        )
+        coords = ln2.geometry.coords
+        assert coords[0][0] >= min_x and coords[0][0] <= max_x
+        assert coords[0][1] >= min_y and coords[0][1] <= max_y
+        assert coords[1][0] >= min_x and coords[1][0] <= max_x
+        assert coords[1][1] >= min_y and coords[1][1] <= max_y
+        assert ln2.time_interval == None or (
+            ln2.time_interval.left >= min_interval_default
+            and ln2.time_interval.right <= max_interval_default
+        )
+        assert ln2.radius >= min_radius and ln2.radius <= max_radius
+        assert ln2.recurrence == Recurrence.NONE
+
+        # Test case 2 - only static lines without recurrence
+        ln3 = Line.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            max_size=max_size,
+            only_static=True,
+        )
+        coords = ln3.geometry.coords
+        assert coords[0][0] >= min_x and coords[0][0] <= max_x
+        assert coords[0][1] >= min_y and coords[0][1] <= max_y
+        assert coords[1][0] >= min_x and coords[1][0] <= max_x
+        assert coords[1][1] >= min_y and coords[1][1] <= max_y
+        assert ln3.time_interval == None
+        assert ln3.radius >= min_radius and ln3.radius <= max_radius
+        assert ln3.recurrence == Recurrence.NONE
+
+        min_x = -200
+        max_x = 0
+        min_y = -100
+        max_y = 100
+        min_radius = 20
+        max_radius = 30
+        ln4 = Line.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            max_size=max_size,
+            only_static=True,
+        )
+        coords = ln4.geometry.coords
+        assert coords[0][0] >= min_x and coords[0][0] <= max_x
+        assert coords[0][1] >= min_y and coords[0][1] <= max_y
+        assert coords[1][0] >= min_x and coords[1][0] <= max_x
+        assert coords[1][1] >= min_y and coords[1][1] <= max_y
+        assert ln4.time_interval == None
+        assert ln4.radius >= min_radius and ln4.radius <= max_radius
+        assert ln4.recurrence == Recurrence.NONE
+
+        # Test case 3 - random dynamic lines with recurrence
+        min_x = 0
+        max_x = 100
+        min_y = 0
+        max_y = 100
+        min_radius = 0.1
+        max_radius = 10
+
+        ln5 = Line.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            max_size=max_size,
+            only_dynamic=True,
+            random_recurrence=True,
+        )
+        coords = ln5.geometry.coords
+        assert coords[0][0] >= min_x and coords[0][0] <= max_x
+        assert coords[0][1] >= min_y and coords[0][1] <= max_y
+        assert coords[1][0] >= min_x and coords[1][0] <= max_x
+        assert coords[1][1] >= min_y and coords[1][1] <= max_y
+        assert ln5.time_interval.left >= min_interval_default
+        assert ln5.time_interval.right <= max_interval_default
+        assert ln5.radius >= min_radius and ln5.radius <= max_radius
+        assert ln5.recurrence in [
+            Recurrence.NONE,
+            Recurrence.MINUTELY,
+            Recurrence.HOURLY,
+            Recurrence.DAILY,
+        ]
+
+        ln6 = Line.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            max_size=max_size,
+            only_dynamic=True,
+            random_recurrence=True,
+        )
+        coords = ln6.geometry.coords
+        assert coords[0][0] >= min_x and coords[0][0] <= max_x
+        assert coords[0][1] >= min_y and coords[0][1] <= max_y
+        assert coords[1][0] >= min_x and coords[1][0] <= max_x
+        assert coords[1][1] >= min_y and coords[1][1] <= max_y
+        assert ln6.time_interval.left >= min_interval_default
+        assert ln6.time_interval.right <= max_interval_default
+        assert ln6.radius >= min_radius and ln6.radius <= max_radius
+        assert ln6.recurrence in [
+            Recurrence.NONE,
+            Recurrence.MINUTELY,
+            Recurrence.HOURLY,
+            Recurrence.DAILY,
+        ]
+
+        ln7 = Line.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            max_size=max_size,
+            only_dynamic=True,
+            random_recurrence=True,
+        )
+        coords = ln7.geometry.coords
+        assert coords[0][0] >= min_x and coords[0][0] <= max_x
+        assert coords[0][1] >= min_y and coords[0][1] <= max_y
+        assert coords[1][0] >= min_x and coords[1][0] <= max_x
+        assert coords[1][1] >= min_y and coords[1][1] <= max_y
+        assert ln7.time_interval.left >= min_interval_default
+        assert ln7.time_interval.right <= max_interval_default
+        assert ln7.radius >= min_radius and ln7.radius <= max_radius
+        assert ln7.recurrence in [
+            Recurrence.NONE,
+            Recurrence.MINUTELY,
+            Recurrence.HOURLY,
+            Recurrence.DAILY,
+        ]
+
+        # Test case 4 - dynamic lines with custom time interval
+        min_interval = 100
+        max_interval = 200
+
+        ln8 = Line.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            min_interval=min_interval,
+            max_interval=max_interval,
+            max_size=max_size,
+            only_dynamic=True,
+            random_recurrence=True,
+        )
+        coords = ln8.geometry.coords
+        assert coords[0][0] >= min_x and coords[0][0] <= max_x
+        assert coords[0][1] >= min_y and coords[0][1] <= max_y
+        assert coords[1][0] >= min_x and coords[1][0] <= max_x
+        assert coords[1][1] >= min_y and coords[1][1] <= max_y
+        assert ln8.time_interval.left >= min_interval
+        assert ln8.time_interval.right <= max_interval
+        assert ln8.radius >= min_radius and ln8.radius <= max_radius
+        assert ln8.recurrence in [
+            Recurrence.NONE,
+            Recurrence.MINUTELY,
+            Recurrence.HOURLY,
+            Recurrence.DAILY,
+        ]
+
+        ln9 = Line.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            min_interval=min_interval,
+            max_interval=max_interval,
+            max_size=max_size,
+            only_dynamic=True,
+            random_recurrence=True,
+        )
+        coords = ln9.geometry.coords
+        assert coords[0][0] >= min_x and coords[0][0] <= max_x
+        assert coords[0][1] >= min_y and coords[0][1] <= max_y
+        assert coords[1][0] >= min_x and coords[1][0] <= max_x
+        assert coords[1][1] >= min_y and coords[1][1] <= max_y
+        assert ln9.time_interval.left >= min_interval
+        assert ln9.time_interval.right <= max_interval
+        assert ln9.radius >= min_radius and ln9.radius <= max_radius
+        assert ln9.recurrence in [
+            Recurrence.NONE,
+            Recurrence.MINUTELY,
+            Recurrence.HOURLY,
+            Recurrence.DAILY,
+        ]
+
+        ln10 = Line.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            min_interval=min_interval,
+            max_interval=max_interval,
+            max_size=max_size,
+            only_dynamic=True,
+        )
+        coords = ln10.geometry.coords
+        assert coords[0][0] >= min_x and coords[0][0] <= max_x
+        assert coords[0][1] >= min_y and coords[0][1] <= max_y
+        assert coords[1][0] >= min_x and coords[1][0] <= max_x
+        assert coords[1][1] >= min_y and coords[1][1] <= max_y
+        assert ln10.time_interval.left >= min_interval
+        assert ln10.time_interval.right <= max_interval
+        assert ln10.radius >= min_radius and ln10.radius <= max_radius
+        assert ln10.recurrence == Recurrence.NONE
+
+        # Test case 5 - dynamic lines with custom time interval, radius and random recurrence
+        min_x = 1000
+        max_x = 2000
+        min_y = 3000
+        max_y = 4000
+        min_radius = 3
+        max_radius = 40
+        min_interval = 100
+        max_interval = 200
+
+        ln11 = Line.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            min_interval=min_interval,
+            max_interval=max_interval,
+            max_size=max_size,
+            only_dynamic=True,
+            random_recurrence=True,
+        )
+        coords = ln11.geometry.coords
+        assert coords[0][0] >= min_x and coords[0][0] <= max_x
+        assert coords[0][1] >= min_y and coords[0][1] <= max_y
+        assert coords[1][0] >= min_x and coords[1][0] <= max_x
+        assert coords[1][1] >= min_y and coords[1][1] <= max_y
+        assert ln11.radius >= min_radius and ln11.radius <= max_radius
+
+        # check if line is static or not and test accordingly
+        if ln11.time_interval == None:
+            assert ln11.recurrence == Recurrence.NONE
+        else:
+            assert ln11.time_interval.left >= min_interval
+            assert ln11.time_interval.right <= max_interval
+            assert ln11.recurrence in [
+                Recurrence.NONE,
+                Recurrence.MINUTELY,
+                Recurrence.HOURLY,
+                Recurrence.DAILY,
+            ]
+
+        ln12 = Line.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            min_interval=min_interval,
+            max_interval=max_interval,
+            max_size=max_size,
+            random_recurrence=True,
+        )
+
+        coords = ln12.geometry.coords
+        assert coords[0][0] >= min_x and coords[0][0] <= max_x
+        assert coords[0][1] >= min_y and coords[0][1] <= max_y
+        assert coords[1][0] >= min_x and coords[1][0] <= max_x
+        assert coords[1][1] >= min_y and coords[1][1] <= max_y
+        assert ln12.radius >= min_radius and ln12.radius <= max_radius
+
+        # check if line is static or not and test accordingly
+        if ln12.time_interval == None:
+            assert ln12.recurrence == Recurrence.NONE
+        else:
+            assert ln12.time_interval.left >= min_interval
+            assert ln12.time_interval.right <= max_interval
+            assert ln12.recurrence in [
+                Recurrence.NONE,
+                Recurrence.MINUTELY,
+                Recurrence.HOURLY,
+                Recurrence.DAILY,
+            ]
+
+        ln13 = Line.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            min_interval=min_interval,
+            max_interval=max_interval,
+            max_size=max_size,
+            random_recurrence=True,
+        )
+
+        coords = ln13.geometry.coords
+        assert coords[0][0] >= min_x and coords[0][0] <= max_x
+        assert coords[0][1] >= min_y and coords[0][1] <= max_y
+        assert coords[1][0] >= min_x and coords[1][0] <= max_x
+        assert coords[1][1] >= min_y and coords[1][1] <= max_y
+        assert ln13.radius >= min_radius and ln13.radius <= max_radius
+
+        # check if line is static or not and test accordingly
+        if ln13.time_interval == None:
+            assert ln13.recurrence == Recurrence.NONE
+        else:
+            assert ln13.time_interval.left >= min_interval
+            assert ln13.time_interval.right <= max_interval
+            assert ln13.recurrence in [
+                Recurrence.NONE,
+                Recurrence.MINUTELY,
+                Recurrence.HOURLY,
+                Recurrence.DAILY,
+            ]

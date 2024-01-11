@@ -503,3 +503,337 @@ class TestPoint:
         assert copy.radius == point.radius
         assert copy.recurrence == point.recurrence
         assert copy != point
+
+    def test_random_generation(self):
+        ## Test random point generation with different inputs.
+        ## For each combination of inputs, multiple points are generated and tested for correct parameters.
+
+        # Function default values
+        min_interval_default = 0
+        max_interval_default = 100
+
+        # Test case 1 - default function
+        min_x = 0
+        max_x = 100
+        min_y = 0
+        max_y = 100
+        min_radius = 0.1
+        max_radius = 10
+
+        pt1 = Point.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+        )
+        assert pt1.geometry.x >= min_x and pt1.geometry.x <= max_x
+        assert pt1.geometry.y >= min_y and pt1.geometry.y <= max_y
+        assert pt1.time_interval == None or (
+            pt1.time_interval.left >= min_interval_default
+            and pt1.time_interval.right <= max_interval_default
+        )
+        assert pt1.radius >= min_radius and pt1.radius <= max_radius
+        assert pt1.recurrence == Recurrence.NONE
+
+        min_x = -100
+        max_x = 100
+        min_y = -100
+        max_y = 100
+        min_radius = 10
+        max_radius = 20
+        pt2 = Point.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+        )
+        assert pt2.geometry.x >= min_x and pt2.geometry.x <= max_x
+        assert pt2.geometry.y >= min_y and pt2.geometry.y <= max_y
+        assert pt2.time_interval == None or (
+            pt2.time_interval.left >= min_interval_default
+            and pt2.time_interval.right <= max_interval_default
+        )
+        assert pt2.radius >= min_radius and pt2.radius <= max_radius
+        assert pt2.recurrence == Recurrence.NONE
+
+        # Test case 2 - only static points without recurrence
+        pt3 = Point.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            only_static=True,
+        )
+        assert pt3.geometry.x >= min_x and pt3.geometry.x <= max_x
+        assert pt3.geometry.y >= min_y and pt3.geometry.y <= max_y
+        assert pt3.time_interval == None
+        assert pt3.radius >= min_radius and pt3.radius <= max_radius
+        assert pt3.recurrence == Recurrence.NONE
+
+        min_x = -200
+        max_x = 0
+        min_y = -100
+        max_y = 100
+        min_radius = 20
+        max_radius = 30
+        pt4 = Point.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            only_static=True,
+        )
+        assert pt4.geometry.x >= min_x and pt4.geometry.x <= max_x
+        assert pt4.geometry.y >= min_y and pt4.geometry.y <= max_y
+        assert pt4.time_interval == None
+        assert pt4.radius >= min_radius and pt4.radius <= max_radius
+        assert pt4.recurrence == Recurrence.NONE
+
+        # Test case 3 - random dynamic points with recurrence
+        min_x = 0
+        max_x = 100
+        min_y = 0
+        max_y = 100
+        min_radius = 0.1
+        max_radius = 10
+
+        pt5 = Point.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            only_dynamic=True,
+            random_recurrence=True,
+        )
+        assert pt5.geometry.x >= min_x and pt5.geometry.x <= max_x
+        assert pt5.geometry.y >= min_y and pt5.geometry.y <= max_y
+        assert pt5.time_interval.left >= min_interval_default
+        assert pt5.time_interval.right <= max_interval_default
+        assert pt5.radius >= min_radius and pt5.radius <= max_radius
+        assert pt5.recurrence in [
+            Recurrence.NONE,
+            Recurrence.MINUTELY,
+            Recurrence.HOURLY,
+            Recurrence.DAILY,
+        ]
+
+        pt6 = Point.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            only_dynamic=True,
+            random_recurrence=True,
+        )
+        assert pt6.geometry.x >= min_x and pt6.geometry.x <= max_x
+        assert pt6.geometry.y >= min_y and pt6.geometry.y <= max_y
+        assert pt6.time_interval.left >= min_interval_default
+        assert pt6.time_interval.right <= max_interval_default
+        assert pt6.radius >= min_radius and pt6.radius <= max_radius
+        assert pt6.recurrence in [
+            Recurrence.NONE,
+            Recurrence.MINUTELY,
+            Recurrence.HOURLY,
+            Recurrence.DAILY,
+        ]
+
+        pt7 = Point.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            only_dynamic=True,
+            random_recurrence=True,
+        )
+        assert pt7.geometry.x >= min_x and pt7.geometry.x <= max_x
+        assert pt7.geometry.y >= min_y and pt7.geometry.y <= max_y
+        assert pt7.time_interval.left >= min_interval_default
+        assert pt7.time_interval.right <= max_interval_default
+        assert pt7.radius >= min_radius and pt7.radius <= max_radius
+        assert pt7.recurrence in [
+            Recurrence.NONE,
+            Recurrence.MINUTELY,
+            Recurrence.HOURLY,
+            Recurrence.DAILY,
+        ]
+
+        # Test case 4 - dynamic points with custom time interval
+        min_interval = 100
+        max_interval = 200
+
+        pt8 = Point.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            min_interval=min_interval,
+            max_interval=max_interval,
+            only_dynamic=True,
+            random_recurrence=True,
+        )
+        assert pt8.geometry.x >= min_x and pt8.geometry.x <= max_x
+        assert pt8.geometry.y >= min_y and pt8.geometry.y <= max_y
+        assert pt8.time_interval.left >= min_interval
+        assert pt8.time_interval.right <= max_interval
+        assert pt8.radius >= min_radius and pt8.radius <= max_radius
+        assert pt8.recurrence in [
+            Recurrence.NONE,
+            Recurrence.MINUTELY,
+            Recurrence.HOURLY,
+            Recurrence.DAILY,
+        ]
+
+        pt9 = Point.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            min_interval=min_interval,
+            max_interval=max_interval,
+            only_dynamic=True,
+            random_recurrence=True,
+        )
+        assert pt9.geometry.x >= min_x and pt9.geometry.x <= max_x
+        assert pt9.geometry.y >= min_y and pt9.geometry.y <= max_y
+        assert pt9.time_interval.left >= min_interval
+        assert pt9.time_interval.right <= max_interval
+        assert pt9.radius >= min_radius and pt9.radius <= max_radius
+        assert pt9.recurrence in [
+            Recurrence.NONE,
+            Recurrence.MINUTELY,
+            Recurrence.HOURLY,
+            Recurrence.DAILY,
+        ]
+
+        pt10 = Point.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            min_interval=min_interval,
+            max_interval=max_interval,
+            only_dynamic=True,
+        )
+        assert pt10.geometry.x >= min_x and pt10.geometry.x <= max_x
+        assert pt10.geometry.y >= min_y and pt10.geometry.y <= max_y
+        assert pt10.time_interval.left >= min_interval
+        assert pt10.time_interval.right <= max_interval
+        assert pt10.radius >= min_radius and pt10.radius <= max_radius
+        assert pt10.recurrence == Recurrence.NONE
+
+        # Test case 5 - dynamic points with custom time interval, radius and random recurrence
+        min_x = 1000
+        max_x = 2000
+        min_y = 3000
+        max_y = 4000
+        min_radius = 3
+        max_radius = 40
+        min_interval = 100
+        max_interval = 200
+
+        pt11 = Point.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            min_interval=min_interval,
+            max_interval=max_interval,
+            random_recurrence=True,
+        )
+
+        assert pt11.geometry.x >= min_x and pt11.geometry.x <= max_x
+        assert pt11.geometry.y >= min_y and pt11.geometry.y <= max_y
+        assert pt11.radius >= min_radius and pt11.radius <= max_radius
+
+        # check if point is static or not and test accordingly
+        if pt11.time_interval == None:
+            assert pt11.recurrence == Recurrence.NONE
+        else:
+            assert pt11.time_interval.left >= min_interval
+            assert pt11.time_interval.right <= max_interval
+            assert pt11.recurrence in [
+                Recurrence.NONE,
+                Recurrence.MINUTELY,
+                Recurrence.HOURLY,
+                Recurrence.DAILY,
+            ]
+
+        pt12 = Point.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            min_interval=min_interval,
+            max_interval=max_interval,
+            random_recurrence=True,
+        )
+
+        assert pt12.geometry.x >= min_x and pt12.geometry.x <= max_x
+        assert pt12.geometry.y >= min_y and pt12.geometry.y <= max_y
+        assert pt12.radius >= min_radius and pt12.radius <= max_radius
+
+        # check if point is static or not and test accordingly
+        if pt12.time_interval == None:
+            assert pt12.recurrence == Recurrence.NONE
+        else:
+            assert pt12.time_interval.left >= min_interval
+            assert pt12.time_interval.right <= max_interval
+            assert pt12.recurrence in [
+                Recurrence.NONE,
+                Recurrence.MINUTELY,
+                Recurrence.HOURLY,
+                Recurrence.DAILY,
+            ]
+
+        pt13 = Point.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            min_interval=min_interval,
+            max_interval=max_interval,
+            random_recurrence=True,
+        )
+
+        assert pt13.geometry.x >= min_x and pt13.geometry.x <= max_x
+        assert pt13.geometry.y >= min_y and pt13.geometry.y <= max_y
+        assert pt13.radius >= min_radius and pt13.radius <= max_radius
+
+        # check if point is static or not and test accordingly
+        if pt13.time_interval == None:
+            assert pt13.recurrence == Recurrence.NONE
+        else:
+            assert pt13.time_interval.left >= min_interval
+            assert pt13.time_interval.right <= max_interval
+            assert pt13.recurrence in [
+                Recurrence.NONE,
+                Recurrence.MINUTELY,
+                Recurrence.HOURLY,
+                Recurrence.DAILY,
+            ]

@@ -463,3 +463,403 @@ class TestPolygon:
         assert polygon_copy.time_interval == polygon.time_interval
         assert polygon_copy.radius == polygon.radius
         assert polygon_copy.recurrence == polygon.recurrence
+
+    def test_random(self):
+        ## Test random polygon generation with different inputs.
+        ## For each combination of inputs, multiple polygons are generated and tested for correct parameters.
+
+        # Function default values
+        min_interval_default = 0
+        max_interval_default = 100
+
+        # Test case 1 - default function
+        min_x = 0
+        max_x = 100
+        min_y = 0
+        max_y = 100
+        min_radius = 0.1
+        max_radius = 10
+        max_size = 5
+
+        poly1 = Polygon.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            max_size=max_size,
+        )
+
+        coords = poly1.geometry.exterior.coords
+        for coord in coords:
+            assert coord[0] >= min_x and coord[0] <= max_x
+            assert coord[1] >= min_y and coord[1] <= max_y
+
+        assert poly1.time_interval == None or (
+            poly1.time_interval.left >= min_interval_default
+            and poly1.time_interval.right <= max_interval_default
+        )
+        assert poly1.radius >= min_radius and poly1.radius <= max_radius
+        assert poly1.recurrence == Recurrence.NONE
+
+        min_x = -100
+        max_x = 100
+        min_y = -100
+        max_y = 100
+        min_radius = 10
+        max_radius = 20
+
+        poly2 = Polygon.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            max_size=max_size,
+        )
+
+        coords = poly2.geometry.exterior.coords
+        for coord in coords:
+            assert coord[0] >= min_x and coord[0] <= max_x
+            assert coord[1] >= min_y and coord[1] <= max_y
+
+        assert poly2.time_interval == None or (
+            poly2.time_interval.left >= min_interval_default
+            and poly2.time_interval.right <= max_interval_default
+        )
+        assert poly2.radius >= min_radius and poly2.radius <= max_radius
+        assert poly2.recurrence == Recurrence.NONE
+
+        # Test case 2 - only static polygons without recurrence
+        poly3 = Polygon.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            max_size=max_size,
+            only_static=True,
+        )
+
+        coords = poly3.geometry.exterior.coords
+        for coord in coords:
+            assert coord[0] >= min_x and coord[0] <= max_x
+            assert coord[1] >= min_y and coord[1] <= max_y
+
+        assert poly3.time_interval == None
+        assert poly3.radius >= min_radius and poly3.radius <= max_radius
+        assert poly3.recurrence == Recurrence.NONE
+
+        min_x = -200
+        max_x = 0
+        min_y = -100
+        max_y = 100
+        min_radius = 20
+        max_radius = 30
+
+        poly4 = Polygon.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            max_size=max_size,
+            only_static=True,
+        )
+
+        coords = poly4.geometry.exterior.coords
+        for coord in coords:
+            assert coord[0] >= min_x and coord[0] <= max_x
+            assert coord[1] >= min_y and coord[1] <= max_y
+
+        assert poly4.time_interval == None
+        assert poly4.radius >= min_radius and poly4.radius <= max_radius
+        assert poly4.recurrence == Recurrence.NONE
+
+        # Test case 3 - random dynamic polygons with recurrence
+        min_x = 0
+        max_x = 100
+        min_y = 0
+        max_y = 100
+        min_radius = 0.1
+        max_radius = 10
+
+        poly5 = Polygon.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            max_size=max_size,
+            only_dynamic=True,
+            random_recurrence=True,
+        )
+
+        coords = poly5.geometry.exterior.coords
+        for coord in coords:
+            assert coord[0] >= min_x and coord[0] <= max_x
+            assert coord[1] >= min_y and coord[1] <= max_y
+
+        assert poly5.time_interval.left >= min_interval_default
+        assert poly5.time_interval.right <= max_interval_default
+        assert poly5.radius >= min_radius and poly5.radius <= max_radius
+        assert poly5.recurrence in [
+            Recurrence.NONE,
+            Recurrence.MINUTELY,
+            Recurrence.HOURLY,
+            Recurrence.DAILY,
+        ]
+
+        poly6 = Polygon.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            max_size=max_size,
+            only_dynamic=True,
+            random_recurrence=True,
+        )
+
+        coords = poly6.geometry.exterior.coords
+        for coord in coords:
+            assert coord[0] >= min_x and coord[0] <= max_x
+            assert coord[1] >= min_y and coord[1] <= max_y
+
+        assert poly6.time_interval.left >= min_interval_default
+        assert poly6.time_interval.right <= max_interval_default
+        assert poly6.radius >= min_radius and poly6.radius <= max_radius
+        assert poly6.recurrence in [
+            Recurrence.NONE,
+            Recurrence.MINUTELY,
+            Recurrence.HOURLY,
+            Recurrence.DAILY,
+        ]
+
+        poly7 = Polygon.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            max_size=max_size,
+            only_dynamic=True,
+            random_recurrence=True,
+        )
+
+        coords = poly7.geometry.exterior.coords
+        for coord in coords:
+            assert coord[0] >= min_x and coord[0] <= max_x
+            assert coord[1] >= min_y and coord[1] <= max_y
+
+        assert poly7.time_interval.left >= min_interval_default
+        assert poly7.time_interval.right <= max_interval_default
+        assert poly7.radius >= min_radius and poly7.radius <= max_radius
+        assert poly7.recurrence in [
+            Recurrence.NONE,
+            Recurrence.MINUTELY,
+            Recurrence.HOURLY,
+            Recurrence.DAILY,
+        ]
+
+        # Test case 4 - dynamic polygons with custom time interval
+        min_interval = 100
+        max_interval = 200
+
+        poly8 = Polygon.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            min_interval=min_interval,
+            max_interval=max_interval,
+            max_size=max_size,
+            only_dynamic=True,
+            random_recurrence=True,
+        )
+
+        coords = poly8.geometry.exterior.coords
+        for coord in coords:
+            assert coord[0] >= min_x and coord[0] <= max_x
+            assert coord[1] >= min_y and coord[1] <= max_y
+
+        assert poly8.time_interval.left >= min_interval
+        assert poly8.time_interval.right <= max_interval
+        assert poly8.radius >= min_radius and poly8.radius <= max_radius
+        assert poly8.recurrence in [
+            Recurrence.NONE,
+            Recurrence.MINUTELY,
+            Recurrence.HOURLY,
+            Recurrence.DAILY,
+        ]
+
+        poly9 = Polygon.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            min_interval=min_interval,
+            max_interval=max_interval,
+            max_size=max_size,
+            only_dynamic=True,
+            random_recurrence=True,
+        )
+
+        coords = poly9.geometry.exterior.coords
+        for coord in coords:
+            assert coord[0] >= min_x and coord[0] <= max_x
+            assert coord[1] >= min_y and coord[1] <= max_y
+
+        assert poly9.time_interval.left >= min_interval
+        assert poly9.time_interval.right <= max_interval
+        assert poly9.radius >= min_radius and poly9.radius <= max_radius
+        assert poly9.recurrence in [
+            Recurrence.NONE,
+            Recurrence.MINUTELY,
+            Recurrence.HOURLY,
+            Recurrence.DAILY,
+        ]
+
+        poly10 = Polygon.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            min_interval=min_interval,
+            max_interval=max_interval,
+            max_size=max_size,
+            only_dynamic=True,
+        )
+
+        coords = poly10.geometry.exterior.coords
+        for coord in coords:
+            assert coord[0] >= min_x and coord[0] <= max_x
+            assert coord[1] >= min_y and coord[1] <= max_y
+
+        assert poly10.time_interval.left >= min_interval
+        assert poly10.time_interval.right <= max_interval
+        assert poly10.radius >= min_radius and poly10.radius <= max_radius
+        assert poly10.recurrence == Recurrence.NONE
+
+        # Test case 5 - dynamic polygons with custom time interval, radius and random recurrence
+        min_x = 1000
+        max_x = 2000
+        min_y = 3000
+        max_y = 4000
+        min_radius = 3
+        max_radius = 40
+        min_interval = 100
+        max_interval = 200
+
+        poly11 = Polygon.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            min_interval=min_interval,
+            max_interval=max_interval,
+            max_size=max_size,
+            only_dynamic=True,
+            random_recurrence=True,
+        )
+
+        coords = poly11.geometry.exterior.coords
+        for coord in coords:
+            assert coord[0] >= min_x and coord[0] <= max_x
+            assert coord[1] >= min_y and coord[1] <= max_y
+
+        assert poly11.radius >= min_radius and poly11.radius <= max_radius
+
+        # check if polygon is static or not and test accordingly
+        if poly11.time_interval == None:
+            assert poly11.recurrence == Recurrence.NONE
+        else:
+            assert poly11.time_interval.left >= min_interval
+            assert poly11.time_interval.right <= max_interval
+            assert poly11.recurrence in [
+                Recurrence.NONE,
+                Recurrence.MINUTELY,
+                Recurrence.HOURLY,
+                Recurrence.DAILY,
+            ]
+
+        poly12 = Polygon.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            min_interval=min_interval,
+            max_interval=max_interval,
+            max_size=max_size,
+            random_recurrence=True,
+        )
+
+        coords = poly12.geometry.exterior.coords
+        for coord in coords:
+            assert coord[0] >= min_x and coord[0] <= max_x
+            assert coord[1] >= min_y and coord[1] <= max_y
+
+        assert poly12.radius >= min_radius and poly12.radius <= max_radius
+
+        # check if polygon is static or not and test accordingly
+        if poly12.time_interval == None:
+            assert poly12.recurrence == Recurrence.NONE
+        else:
+            assert poly12.time_interval.left >= min_interval
+            assert poly12.time_interval.right <= max_interval
+            assert poly12.recurrence in [
+                Recurrence.NONE,
+                Recurrence.MINUTELY,
+                Recurrence.HOURLY,
+                Recurrence.DAILY,
+            ]
+
+        poly13 = Polygon.random(
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            min_interval=min_interval,
+            max_interval=max_interval,
+            max_size=max_size,
+            random_recurrence=True,
+        )
+
+        coords = poly13.geometry.exterior.coords
+        for coord in coords:
+            assert coord[0] >= min_x and coord[0] <= max_x
+            assert coord[1] >= min_y and coord[1] <= max_y
+
+        assert poly13.radius >= min_radius and poly13.radius <= max_radius
+
+        # check if polygon is static or not and test accordingly
+        if poly13.time_interval == None:
+            assert poly13.recurrence == Recurrence.NONE
+        else:
+            assert poly13.time_interval.left >= min_interval
+            assert poly13.time_interval.right <= max_interval
+            assert poly13.recurrence in [
+                Recurrence.NONE,
+                Recurrence.MINUTELY,
+                Recurrence.HOURLY,
+                Recurrence.DAILY,
+            ]

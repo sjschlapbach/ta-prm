@@ -118,6 +118,137 @@ class Environment:
         """
         self.obstacles += new_obstacles
 
+    def add_random_obstacles(
+        self,
+        num_points: int,
+        num_lines: int,
+        num_polygons: int,
+        min_x: float,
+        max_x: float,
+        min_y: float,
+        max_y: float,
+        min_poly_points: int = 3,
+        max_poly_points: int = 7,
+        max_size: float = 5,
+        min_radius: float = 0.1,
+        max_radius: float = 10,
+        min_interval: float = 0,
+        max_interval: float = 100,
+        only_static: bool = False,
+        only_dynamic: bool = False,
+        random_recurrence: bool = False,
+    ):
+        """
+        Adds random obstacles to the environment.
+
+        Parameters
+        ----------
+        num_points : int, optional
+            The number of random points to be added to the environment.
+
+        num_lines : int, optional
+            The number of random lines to be added to the environment.
+
+        num_polygons : int, optional
+            The number of random polygons to be added to the environment.
+
+        min_x : float, optional
+            The minimum x-coordinate of the environment.
+
+        max_x : float, optional
+            The maximum x-coordinate of the environment.
+
+        min_y : float, optional
+            The minimum y-coordinate of the environment.
+
+        max_y : float, optional
+            The maximum y-coordinate of the environment.
+
+        min_poly_points : int, optional
+            The minimum number of points on the random polygons.
+
+        max_poly_points : int, optional
+            The maximum number of points on the random polygons.
+
+        max_size : float, optional
+            The maximum size of the random polygons (without radius).
+
+        min_radius : float, optional
+            The minimum radius of the random circles.
+
+        max_radius : float, optional
+            The maximum radius of the random circles.
+
+        min_interval : float, optional
+            The earliest start time of a random obstacle.
+
+        max_interval : float, optional
+            The latest end time of a random obstacle.
+
+        only_static : bool, optional
+            Whether to only generate static obstacles.
+
+        only_dynamic : bool, optional
+            Whether to only generate dynamic obstacles.
+
+        random_recurrence : bool, optional
+            Whether to generate a random recurrence.
+        """
+        # add random points
+        for _ in range(num_points):
+            point = Point.random(
+                min_x=min_x,
+                max_x=max_x,
+                min_y=min_y,
+                max_y=max_y,
+                min_radius=min_radius,
+                max_radius=max_radius,
+                min_interval=min_interval,
+                max_interval=max_interval,
+                only_static=only_static,
+                only_dynamic=only_dynamic,
+                random_recurrence=random_recurrence,
+            )
+            self.obstacles.append(point)
+
+        # add random lines
+        for _ in range(num_lines):
+            line = Line.random(
+                min_x=min_x,
+                max_x=max_x,
+                min_y=min_y,
+                max_y=max_y,
+                min_radius=min_radius,
+                max_radius=max_radius,
+                min_interval=min_interval,
+                max_interval=max_interval,
+                max_size=max_size,
+                only_static=only_static,
+                only_dynamic=only_dynamic,
+                random_recurrence=random_recurrence,
+            )
+            self.obstacles.append(line)
+
+        # add random polygons
+        for _ in range(num_polygons):
+            polygon = Polygon.random(
+                min_points=min_poly_points,
+                max_points=max_poly_points,
+                min_x=min_x,
+                max_x=max_x,
+                min_y=min_y,
+                max_y=max_y,
+                max_size=max_size,
+                min_radius=min_radius,
+                max_radius=max_radius,
+                min_interval=min_interval,
+                max_interval=max_interval,
+                only_static=only_static,
+                only_dynamic=only_dynamic,
+                random_recurrence=random_recurrence,
+            )
+            self.obstacles.append(polygon)
+
     def reset(self):
         """
         Resets the environment by removing all obstacles.
