@@ -4,6 +4,7 @@ from pandas import Interval
 from matplotlib.patches import Circle
 from typing import Union
 import matplotlib.pyplot as plt
+import numpy as np
 
 from .geometry import Geometry
 from src.util.recurrence import Recurrence
@@ -41,6 +42,21 @@ class Point(Geometry):
 
         copy(self):
             Creates a copy of the Point object.
+
+        random(
+            min_x,
+            max_x,
+            min_y,
+            max_y,
+            min_radius=0.1,
+            max_radius=10,
+            min_interval=0,
+            max_interval=100,
+            only_static=False,
+            only_dynamic=False,
+            random_recurrence=False,
+        ):
+            Generate a random Point object within the specified range.
     """
 
     def __init__(
@@ -148,6 +164,74 @@ class Point(Geometry):
             recurrence=self.recurrence,
             radius=self.radius,
         )
+
+    def random(
+        min_x: float,
+        max_x: float,
+        min_y: float,
+        max_y: float,
+        min_radius: float,
+        max_radius: float,
+        min_interval: float = 0,
+        max_interval: float = 100,
+        only_static: bool = False,
+        only_dynamic: bool = False,
+        random_recurrence: bool = False,
+    ):
+        """
+        Generate a random Point object within the specified range.
+
+        Args:
+            min_x (float): The minimum x-coordinate value.
+            max_x (float): The maximum x-coordinate value.
+            min_y (float): The minimum y-coordinate value.
+            max_y (float): The maximum y-coordinate value.
+            min_radius (float, optional): The minimum radius value. Defaults to 0.1.
+            max_radius (float, optional): The maximum radius value. Defaults to 10.
+            min_interval (float, optional): The minimum interval value. Defaults to 0.
+            max_interval (float, optional): The maximum interval value. Defaults to 100.
+            only_static (bool, optional): If True, only static points will be created. Defaults to False.
+            only_dynamic (bool, optional): If True, only dynamic points will be created. Defaults to False.
+            random_recurrence (bool, optional): If True, a random recurrence will be chosen. Defaults to False.
+
+        Returns:
+            Point: A randomly generated Point object with the specified parameters.
+        """
+
+        x_coord = np.random.uniform(min_x, max_x)
+        y_coord = np.random.uniform(min_y, max_y)
+        radius = np.random.uniform(min_radius, max_radius)
+
+        # determine if point to be created should be static - 50/50 chance if only_static is False
+        if only_static:
+            static = True
+        elif only_dynamic:
+            static = False
+        else:
+            static = np.random.choice([True, False])
+
+        # if only static points should be created, do not consider recurrence of time interval
+        if static:
+            return Point(
+                geometry=ShapelyPoint(x_coord, y_coord),
+                radius=radius,
+            )
+
+        else:
+            # create random time interval
+            interval_start = np.random.uniform(min_interval, max_interval)
+            interval_end = np.random.uniform(interval_start, max_interval)
+            time_interval = Interval(interval_start, interval_end, closed="both")
+
+            # choose random recurrence, if not disabled
+            recurrence = Recurrence.random() if random_recurrence else None
+
+            return Point(
+                geometry=ShapelyPoint(x_coord, y_coord),
+                time_interval=time_interval,
+                recurrence=recurrence,
+                radius=radius,
+            )
 
     def export_to_json(self):
         """
