@@ -211,7 +211,7 @@ class Line(Geometry):
         else:
             static = np.random.choice([True, False])
 
-        # if only static points should be created, do not consider recurrence of time interval
+        # if only static lines should be created, do not consider recurrence of time interval
         if static:
             return Line(
                 geometry=LineString([(x1, y1), (x2, y2)]),

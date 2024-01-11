@@ -554,7 +554,7 @@ class TestLine:
         assert ln2.radius >= min_radius and ln2.radius <= max_radius
         assert ln2.recurrence == Recurrence.NONE
 
-        # Test case 2 - only static points without recurrence
+        # Test case 2 - only static lines without recurrence
         ln3 = Line.random(
             min_x=min_x,
             max_x=max_x,
@@ -597,7 +597,7 @@ class TestLine:
         assert ln4.radius >= min_radius and ln4.radius <= max_radius
         assert ln4.recurrence == Recurrence.NONE
 
-        # Test case 3 - random dynamic points with recurrence
+        # Test case 3 - random dynamic lines with recurrence
         min_x = 0
         max_x = 100
         min_y = 0
@@ -680,7 +680,7 @@ class TestLine:
             Recurrence.DAILY,
         ]
 
-        # Test case 4 - dynamic points with custom time interval
+        # Test case 4 - dynamic lines with custom time interval
         min_interval = 100
         max_interval = 200
 
@@ -759,7 +759,7 @@ class TestLine:
         assert ln10.radius >= min_radius and ln10.radius <= max_radius
         assert ln10.recurrence == Recurrence.NONE
 
-        # Test case 5 - dynamic points with custom time interval, radius and random recurrence
+        # Test case 5 - dynamic lines with custom time interval, radius and random recurrence
         min_x = 1000
         max_x = 2000
         min_y = 3000
