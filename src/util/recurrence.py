@@ -1,3 +1,4 @@
+import random
 from enum import Enum
 
 
@@ -62,3 +63,11 @@ class Recurrence(Enum):
             return Recurrence.DAILY
         else:
             raise ValueError("Invalid recurrence string.")
+
+    def random():
+        """
+        Returns a random recurrence.
+        """
+        return random.choice(
+            [Recurrence.NONE, Recurrence.MINUTELY, Recurrence.HOURLY, Recurrence.DAILY]
+        )
