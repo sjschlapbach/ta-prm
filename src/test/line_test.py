@@ -506,6 +506,7 @@ class TestLine:
         max_y = 100
         min_radius = 0.1
         max_radius = 10
+        max_size = 10
 
         ln1 = Line.random(
             min_x=min_x,
@@ -514,6 +515,7 @@ class TestLine:
             max_y=max_y,
             min_radius=min_radius,
             max_radius=max_radius,
+            max_size=max_size,
         )
 
         coords = ln1.geometry.coords
@@ -541,6 +543,7 @@ class TestLine:
             max_y=max_y,
             min_radius=min_radius,
             max_radius=max_radius,
+            max_size=max_size,
         )
         coords = ln2.geometry.coords
         assert coords[0][0] >= min_x and coords[0][0] <= max_x
@@ -562,6 +565,7 @@ class TestLine:
             max_y=max_y,
             min_radius=min_radius,
             max_radius=max_radius,
+            max_size=max_size,
             only_static=True,
         )
         coords = ln3.geometry.coords
@@ -586,6 +590,7 @@ class TestLine:
             max_y=max_y,
             min_radius=min_radius,
             max_radius=max_radius,
+            max_size=max_size,
             only_static=True,
         )
         coords = ln4.geometry.coords
@@ -612,6 +617,7 @@ class TestLine:
             max_y=max_y,
             min_radius=min_radius,
             max_radius=max_radius,
+            max_size=max_size,
             only_dynamic=True,
             random_recurrence=True,
         )
@@ -637,6 +643,7 @@ class TestLine:
             max_y=max_y,
             min_radius=min_radius,
             max_radius=max_radius,
+            max_size=max_size,
             only_dynamic=True,
             random_recurrence=True,
         )
@@ -662,6 +669,7 @@ class TestLine:
             max_y=max_y,
             min_radius=min_radius,
             max_radius=max_radius,
+            max_size=max_size,
             only_dynamic=True,
             random_recurrence=True,
         )
@@ -693,6 +701,7 @@ class TestLine:
             max_radius=max_radius,
             min_interval=min_interval,
             max_interval=max_interval,
+            max_size=max_size,
             only_dynamic=True,
             random_recurrence=True,
         )
@@ -720,6 +729,7 @@ class TestLine:
             max_radius=max_radius,
             min_interval=min_interval,
             max_interval=max_interval,
+            max_size=max_size,
             only_dynamic=True,
             random_recurrence=True,
         )
@@ -747,6 +757,7 @@ class TestLine:
             max_radius=max_radius,
             min_interval=min_interval,
             max_interval=max_interval,
+            max_size=max_size,
             only_dynamic=True,
         )
         coords = ln10.geometry.coords
@@ -778,6 +789,7 @@ class TestLine:
             max_radius=max_radius,
             min_interval=min_interval,
             max_interval=max_interval,
+            max_size=max_size,
             only_dynamic=True,
             random_recurrence=True,
         )
@@ -810,6 +822,7 @@ class TestLine:
             max_radius=max_radius,
             min_interval=min_interval,
             max_interval=max_interval,
+            max_size=max_size,
             random_recurrence=True,
         )
 
@@ -842,6 +855,7 @@ class TestLine:
             max_radius=max_radius,
             min_interval=min_interval,
             max_interval=max_interval,
+            max_size=max_size,
             random_recurrence=True,
         )
 

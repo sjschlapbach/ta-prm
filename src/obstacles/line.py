@@ -172,6 +172,7 @@ class Line(Geometry):
         max_y: float,
         min_radius: float,
         max_radius: float,
+        max_size: float,
         min_interval: float = 0,
         max_interval: float = 100,
         only_static: bool = False,
@@ -182,12 +183,13 @@ class Line(Geometry):
         Creates a random line.
 
         Args:
-            min_x (float, optional): The minimum x-coordinate of the line. Defaults to 0.
-            max_x (float, optional): The maximum x-coordinate of the line. Defaults to 100.
-            min_y (float, optional): The minimum y-coordinate of the line. Defaults to 0.
-            max_y (float, optional): The maximum y-coordinate of the line. Defaults to 100.
-            min_radius (float, optional): The minimum radius of the line. Defaults to 0.1.
-            max_radius (float, optional): The maximum radius of the line. Defaults to 10.
+            min_x (float, optional): The minimum x-coordinate of the line.
+            max_x (float, optional): The maximum x-coordinate of the line.
+            min_y (float, optional): The minimum y-coordinate of the line.
+            max_y (float, optional): The maximum y-coordinate of the line.
+            min_radius (float, optional): The minimum radius of the line.
+            max_radius (float, optional): The maximum radius of the line.
+            max_size (float, optional): The maximum size of the line.
             min_interval (float, optional): The minimum time interval of the line. Defaults to 0.
             max_interval (float, optional): The maximum time interval of the line. Defaults to 100.
             only_static (bool, optional): Whether to only generate static lines. Defaults to False.
@@ -199,8 +201,19 @@ class Line(Geometry):
 
         x1 = np.random.uniform(min_x, max_x)
         y1 = np.random.uniform(min_y, max_y)
-        x2 = np.random.uniform(min_x, max_x)
-        y2 = np.random.uniform(min_y, max_y)
+
+        # compute range for second point for maximum distance
+        size_sqrt = np.sqrt(max_size / 2)
+        min_x_rel = max(min_x, x1 - size_sqrt)
+        max_x_rel = min(max_x, x1 + size_sqrt)
+        min_y_rel = max(min_y, y1 - size_sqrt)
+        max_y_rel = min(max_y, y1 + size_sqrt)
+
+        # generate second end point
+        x2 = np.random.uniform(min_x_rel, max_x_rel)
+        y2 = np.random.uniform(min_y_rel, max_y_rel)
+
+        # generate random radius
         radius = np.random.uniform(min_radius, max_radius)
 
         # determine if point to be created should be static - 50/50 chance if only_static is False
