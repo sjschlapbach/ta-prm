@@ -565,3 +565,28 @@ class TestEnvironment:
             scenario_range_y=range_y13_smaller,
         )
         assert len(env13_instance.static_obstacles) < 3000
+
+        # Test remaining input arguments
+        env14 = Environment()
+        interval14 = Interval(0, 100)
+        range_x14 = (0, 600)
+        range_y14 = (0, 600)
+
+        env14.add_random_obstacles(
+            num_points=100,
+            num_lines=100,
+            num_polygons=100,
+            min_x=range_x14[0],
+            max_x=range_x14[1],
+            min_y=range_y14[0],
+            max_y=range_y14[1],
+            min_radius=0,
+            max_radius=4,
+            min_interval=interval14.left,
+            max_interval=interval14.right,
+            min_poly_points=3,
+            max_poly_points=25,
+            max_size=20,
+            only_dynamic=True,
+            random_recurrence=True,
+        )
