@@ -2,6 +2,7 @@ from typing import List, Union, Dict, Tuple
 from pandas import Interval
 from tqdm import tqdm
 import math
+import matplotlib.pyplot as plt
 
 from shapely.geometry import (
     Polygon as ShapelyPolygon,
@@ -207,6 +208,28 @@ class EnvironmentInstance:
                 dynamic_arr[kx][ky] = dynamic_ids
 
         return static_arr, dynamic_arr, spacing_x, spacing_y
+
+    def plot(self, query_time: float = None, fig=None):
+        """
+        Plots the obstacles in the environment instance using matplotlib.
+
+        Parameters:
+        - query_time (float): The time at which the query is made (optional).
+        """
+        if fig is None:
+            fig = plt.figure(figsize=(8, 8))
+
+        # set the scenario boundaries as plotting boundaries
+        plt.xlim(self.dim_x)
+        plt.ylim(self.dim_y)
+
+        # plot static obstacles independent of query time
+        for obstacle_stat in self.static_obstacles.values():
+            obstacle_stat.plot(fig=fig)
+
+        # plot dynamic obstacles at the query time
+        for obstacle_dyn in self.dynamic_obstacles.values():
+            obstacle_dyn.plot(query_time=query_time, fig=fig)
 
     # TODO - add functions to compute the temporal availability of points and edges for PRM roadmap
 

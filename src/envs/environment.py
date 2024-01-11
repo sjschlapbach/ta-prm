@@ -32,7 +32,6 @@ class Environment:
 
     plot(query_time: float = None, fig=None)
         Plots the obstacles in the environment using matplotlib.
-        Recurrence parameters are not considered when plotting environments.
 
     add_obstacles(new_obstacles: List[Union[Point, Line, Polygon]])
         Adds new obstacles to the environment.
@@ -97,7 +96,6 @@ class Environment:
     def plot(self, query_time: float = None, fig=None):
         """
         Plots the obstacles in the environment using matplotlib.
-        Recurrence parameters are not considered when plotting environments.
 
         Parameters:
         - query_time (float): The time at which the query is made (optional).

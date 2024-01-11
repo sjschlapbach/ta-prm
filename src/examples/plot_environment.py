@@ -13,7 +13,7 @@ from shapely.geometry import (
 )
 
 
-def plot_environment(plotting: bool = True):
+def create_environment():
     # initialize point objects
     sh_pt1 = ShapelyPoint(0, 0)
     sh_pt2 = ShapelyPoint(8, 3)
@@ -36,6 +36,13 @@ def plot_environment(plotting: bool = True):
 
     # create an environment with all types of obstacles
     env = Environment(obstacles=[pt1, line1, poly1, pt2, line2, poly2])
+
+    return env
+
+
+def plot_environment(plotting: bool = True):
+    # create an environment with all types of obstacles (static and continuous)
+    env = create_environment()
 
     # initialize a figure
     fig = plt.figure(figsize=(8, 8))
