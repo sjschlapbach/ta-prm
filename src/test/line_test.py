@@ -476,3 +476,17 @@ class TestLine:
         assert loaded_8.recurrence == Recurrence.DAILY
 
         os.remove("test_line_saving.txt")
+
+    def test_copy(self):
+        line = Line(
+            geometry=ShapelyLine([(0, 0), (1, 1)]),
+            time_interval=Interval(0, 10, closed="both"),
+            radius=1.0,
+            recurrence=Recurrence.MINUTELY,
+        )
+        line_copy = line.copy()
+
+        assert line_copy.geometry == line.geometry
+        assert line_copy.time_interval == line.time_interval
+        assert line_copy.radius == line.radius
+        assert line_copy.recurrence == line.recurrence

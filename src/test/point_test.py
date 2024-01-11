@@ -488,3 +488,18 @@ class TestPoint:
         assert loaded_8.recurrence == Recurrence.HOURLY
 
         os.remove("test_point_saving.txt")
+
+    def test_copy(self):
+        point = Point(
+            geometry=ShapelyPoint(0, 0),
+            time_interval=Interval(0, 10, closed="both"),
+            radius=1.0,
+            recurrence=Recurrence.MINUTELY,
+        )
+        copy = point.copy()
+
+        assert copy.geometry == point.geometry
+        assert copy.time_interval == point.time_interval
+        assert copy.radius == point.radius
+        assert copy.recurrence == point.recurrence
+        assert copy != point

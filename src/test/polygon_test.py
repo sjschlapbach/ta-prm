@@ -454,3 +454,12 @@ class TestPolygon:
         assert loaded_8.recurrence == Recurrence.HOURLY
 
         os.remove("test_polygon_saving.txt")
+
+    def test_copy(self):
+        polygon = self.setup_method()
+        polygon_copy = polygon.copy()
+
+        assert polygon_copy.geometry == polygon.geometry
+        assert polygon_copy.time_interval == polygon.time_interval
+        assert polygon_copy.radius == polygon.radius
+        assert polygon_copy.recurrence == polygon.recurrence
