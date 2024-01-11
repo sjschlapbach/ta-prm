@@ -4,6 +4,7 @@ from pandas import Interval
 from matplotlib.patches import Circle
 from typing import Union
 import matplotlib.pyplot as plt
+import numpy as np
 
 from .geometry import Geometry
 from src.util.recurrence import Recurrence
@@ -40,6 +41,21 @@ class Line(Geometry):
 
         copy(self) -> 'Line':
             Create a copy of the Line object.
+
+        random(
+            min_x: float,
+            max_x: float,
+            min_y: float,
+            max_y: float,
+            min_radius: float,
+            max_radius: float,
+            min_interval: float = 0,
+            max_interval: float = 100,
+            only_static: bool = False,
+            only_dynamic: bool = False,
+            random_recurrence: bool = False,
+        ):
+            Creates a random line.
     """
 
     def __init__(
@@ -148,6 +164,75 @@ class Line(Geometry):
             recurrence=self.recurrence,
             radius=self.radius,
         )
+
+    def random(
+        min_x: float,
+        max_x: float,
+        min_y: float,
+        max_y: float,
+        min_radius: float,
+        max_radius: float,
+        min_interval: float = 0,
+        max_interval: float = 100,
+        only_static: bool = False,
+        only_dynamic: bool = False,
+        random_recurrence: bool = False,
+    ):
+        """
+        Creates a random line.
+
+        Args:
+            min_x (float, optional): The minimum x-coordinate of the line. Defaults to 0.
+            max_x (float, optional): The maximum x-coordinate of the line. Defaults to 100.
+            min_y (float, optional): The minimum y-coordinate of the line. Defaults to 0.
+            max_y (float, optional): The maximum y-coordinate of the line. Defaults to 100.
+            min_radius (float, optional): The minimum radius of the line. Defaults to 0.1.
+            max_radius (float, optional): The maximum radius of the line. Defaults to 10.
+            min_interval (float, optional): The minimum time interval of the line. Defaults to 0.
+            max_interval (float, optional): The maximum time interval of the line. Defaults to 100.
+            only_static (bool, optional): Whether to only generate static lines. Defaults to False.
+            random_recurrence (bool, optional): Whether to generate a random recurrence. Defaults to False.
+
+        Returns:
+            Line: A random line.
+        """
+
+        x1 = np.random.uniform(min_x, max_x)
+        y1 = np.random.uniform(min_y, max_y)
+        x2 = np.random.uniform(min_x, max_x)
+        y2 = np.random.uniform(min_y, max_y)
+        radius = np.random.uniform(min_radius, max_radius)
+
+        # determine if point to be created should be static - 50/50 chance if only_static is False
+        if only_static:
+            static = True
+        elif only_dynamic:
+            static = False
+        else:
+            static = np.random.choice([True, False])
+
+        # if only static points should be created, do not consider recurrence of time interval
+        if static:
+            return Line(
+                geometry=LineString([(x1, y1), (x2, y2)]),
+                radius=radius,
+            )
+
+        else:
+            # create random time interval
+            interval_start = np.random.uniform(min_interval, max_interval)
+            interval_end = np.random.uniform(interval_start, max_interval)
+            time_interval = Interval(interval_start, interval_end, closed="both")
+
+            # choose random recurrence, if not disabled
+            recurrence = Recurrence.random() if random_recurrence else None
+
+            return Line(
+                geometry=LineString([(x1, y1), (x2, y2)]),
+                time_interval=time_interval,
+                recurrence=recurrence,
+                radius=radius,
+            )
 
     def export_to_json(self):
         """
