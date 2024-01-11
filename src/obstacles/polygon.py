@@ -237,7 +237,11 @@ class Polygon(Geometry):
             time_interval = Interval(interval_start, interval_end, closed="both")
 
             # choose random recurrence, if not disabled
-            recurrence = Recurrence.random() if random_recurrence else None
+            recurrence = (
+                Recurrence.random(min_duration=time_interval.length)
+                if random_recurrence
+                else None
+            )
 
             return Polygon(
                 geometry=poly,

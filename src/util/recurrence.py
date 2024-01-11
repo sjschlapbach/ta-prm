@@ -64,10 +64,28 @@ class Recurrence(Enum):
         else:
             raise ValueError("Invalid recurrence string.")
 
-    def random():
+    def random(min_duration: float = None):
         """
         Returns a random recurrence.
+
+        Args:
+            min_duration (float): The minimum duration for the recurrence.
+
+        Returns:
+            Recurrence: A randomly selected recurrence from the available options.
         """
-        return random.choice(
-            [Recurrence.NONE, Recurrence.MINUTELY, Recurrence.HOURLY, Recurrence.DAILY]
-        )
+        if min_duration is None or min_duration < 60:
+            return random.choice(
+                [
+                    Recurrence.NONE,
+                    Recurrence.MINUTELY,
+                    Recurrence.HOURLY,
+                    Recurrence.DAILY,
+                ]
+            )
+        elif min_duration < 3600:
+            return random.choice([Recurrence.NONE, Recurrence.HOURLY, Recurrence.DAILY])
+        elif min_duration < 86400:
+            return random.choice([Recurrence.NONE, Recurrence.DAILY])
+        else:
+            return Recurrence.NONE

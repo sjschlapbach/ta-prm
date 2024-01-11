@@ -38,9 +38,103 @@ class TestGeometry:
         assert Recurrence.from_string("daily") == rec_day
 
     def test_recurrence_random(self):
+        # test random recurrence without minimum duration
         assert Recurrence.random() in [
             Recurrence.NONE,
             Recurrence.MINUTELY,
             Recurrence.HOURLY,
             Recurrence.DAILY,
         ]
+        assert Recurrence.random() in [
+            Recurrence.NONE,
+            Recurrence.MINUTELY,
+            Recurrence.HOURLY,
+            Recurrence.DAILY,
+        ]
+        assert Recurrence.random() in [
+            Recurrence.NONE,
+            Recurrence.MINUTELY,
+            Recurrence.HOURLY,
+            Recurrence.DAILY,
+        ]
+
+        # test random recurrence with minimum duration below one minute
+        assert Recurrence.random(min_duration=0) in [
+            Recurrence.NONE,
+            Recurrence.MINUTELY,
+            Recurrence.HOURLY,
+            Recurrence.DAILY,
+        ]
+        assert Recurrence.random(min_duration=20) in [
+            Recurrence.NONE,
+            Recurrence.MINUTELY,
+            Recurrence.HOURLY,
+            Recurrence.DAILY,
+        ]
+        assert Recurrence.random(min_duration=40) in [
+            Recurrence.NONE,
+            Recurrence.MINUTELY,
+            Recurrence.HOURLY,
+            Recurrence.DAILY,
+        ]
+        assert Recurrence.random(min_duration=59) in [
+            Recurrence.NONE,
+            Recurrence.MINUTELY,
+            Recurrence.HOURLY,
+            Recurrence.DAILY,
+        ]
+
+        # test random recurrence with minimum duration below one hour
+        assert Recurrence.random(min_duration=60) in [
+            Recurrence.NONE,
+            Recurrence.HOURLY,
+            Recurrence.DAILY,
+        ]
+        assert Recurrence.random(min_duration=60) in [
+            Recurrence.NONE,
+            Recurrence.HOURLY,
+            Recurrence.DAILY,
+        ]
+        assert Recurrence.random(min_duration=120) in [
+            Recurrence.NONE,
+            Recurrence.HOURLY,
+            Recurrence.DAILY,
+        ]
+        assert Recurrence.random(min_duration=240) in [
+            Recurrence.NONE,
+            Recurrence.HOURLY,
+            Recurrence.DAILY,
+        ]
+        assert Recurrence.random(min_duration=3599) in [
+            Recurrence.NONE,
+            Recurrence.HOURLY,
+            Recurrence.DAILY,
+        ]
+
+        # test random recurrence with minimum duration below one day
+        assert Recurrence.random(min_duration=3600) in [
+            Recurrence.NONE,
+            Recurrence.DAILY,
+        ]
+        assert Recurrence.random(min_duration=3600) in [
+            Recurrence.NONE,
+            Recurrence.DAILY,
+        ]
+        assert Recurrence.random(min_duration=7200) in [
+            Recurrence.NONE,
+            Recurrence.DAILY,
+        ]
+        assert Recurrence.random(min_duration=14400) in [
+            Recurrence.NONE,
+            Recurrence.DAILY,
+        ]
+        assert Recurrence.random(min_duration=86399) in [
+            Recurrence.NONE,
+            Recurrence.DAILY,
+        ]
+
+        # test random recurrence with minimum duration above one day
+        assert Recurrence.random(min_duration=86400) == Recurrence.NONE
+        assert Recurrence.random(min_duration=86400) == Recurrence.NONE
+        assert Recurrence.random(min_duration=172800) == Recurrence.NONE
+        assert Recurrence.random(min_duration=345600) == Recurrence.NONE
