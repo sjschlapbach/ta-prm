@@ -3,6 +3,7 @@ from pandas import Interval
 from tqdm import tqdm
 import math
 import matplotlib.pyplot as plt
+import numpy as np
 
 from shapely.geometry import (
     Polygon as ShapelyPolygon,
@@ -231,33 +232,43 @@ class EnvironmentInstance:
         for obstacle_dyn in self.dynamic_obstacles.values():
             obstacle_dyn.plot(query_time=query_time, fig=fig)
 
+    def sample_point(self) -> ShapelyPoint:
+        """
+        Generates a random point within the specified x and y dimensions.
+
+        Returns:
+            ShapelyPoint: A randomly generated point within the specified dimensions.
+        """
+        x_sample = np.random.uniform(self.dim_x[0], self.dim_x[1])
+        y_sample = np.random.uniform(self.dim_y[0], self.dim_y[1])
+
+        return ShapelyPoint(x_sample, y_sample)
+
+    def static_collision_free(self, shape: ShapelyPoint) -> bool:
+        """
+        Check if a given point is in collision with any static obstacle in the environment.
+
+        Args:
+            shape (ShapelyPoint): The point to check for collision.
+
+        Returns:
+            bool: False if the point is in collision with any obstacle, True otherwise.
+        """
+        cell_x = math.floor((shape.x - self.dim_x[0]) / self.spacing_x)
+        cell_y = math.floor((shape.y - self.dim_y[0]) / self.spacing_y)
+        static_ids = self.static_idx[cell_x][cell_y]
+
+        for key in static_ids:
+            obstacle = self.static_obstacles[key]
+
+            # if the point is in collision with any obstacle, return False
+            if obstacle.check_collision(shape=shape):
+                return False
+
+        # return True if no collision was found
+        return True
+
     # TODO - add functions to compute the temporal availability of points and edges for PRM roadmap
-
-    # def check_collision_static_pt(self, point: ShapelyPoint) -> bool:
-    #     """
-    #     Check if a given point is in collision with any static obstacle in the environment.
-
-    #     Args:
-    #         point (ShapelyPoint): The point to check for collision.
-
-    #     Returns:
-    #         bool: True if the point is in collision with any obstacle, False otherwise.
-    #     """
-
-    #     cell_x = math.floor((point.x - self.dim_x[0]) / sim.spacing_x)
-    #     cell_y = math.floor((point.y - self.dim_y[0]) / sim.spacing_y)
-    #     static_ids = self.static_idx[cell_x][cell_y]
-
-    #     for key in static_ids:
-    #         obstacle = self.static_obstacles[key]
-
-    #         # if the point is in collision with any obstacle, return True
-    #         if obstacle.check_collision(shape=point):
-    #             return True
-
-    #     # return False if no collision was found
-    #     return False
-
     # def check_collision_dynamic_pt(
     #     self,
     #     point: ShapelyPoint,

@@ -1029,3 +1029,100 @@ class TestEnvironmentInstance:
         assert len(dynamic_index[4][2]) == 0
         assert len(dynamic_index[4][3]) == 0
         assert len(dynamic_index[4][4]) == 0
+
+    def test_sample(self):
+        # create environment with random obstacles
+        min_x = 0
+        max_x = 200
+        min_y = 0
+        max_y = 300
+        env = Environment()
+        env.add_random_obstacles(
+            num_points=100,
+            num_lines=100,
+            num_polygons=100,
+            min_x=min_x,
+            max_x=max_x,
+            min_y=min_y,
+            max_y=max_y,
+            min_radius=0,
+            max_radius=4,
+        )
+
+        # create environment instance
+        env_instance = EnvironmentInstance(
+            environment=env,
+            query_interval=Interval(0, 100, closed="both"),
+            scenario_range_x=(0, 10),
+            scenario_range_y=(0, 10),
+        )
+
+        # check that the random sample generation creates different points within the environment range
+        sample = env_instance.sample_point()
+        assert sample.x >= min_x and sample.x <= max_x
+        assert sample.y >= min_y and sample.y <= max_y
+
+        sample2 = env_instance.sample_point()
+        assert sample.x != sample2.x and sample.y != sample2.y
+        assert sample.x >= min_x and sample.x <= max_x
+        assert sample.y >= min_y and sample.y <= max_y
+
+        sample3 = env_instance.sample_point()
+        assert (
+            sample.x != sample3.x
+            and sample.y != sample3.y
+            and sample2.x != sample3.x
+            and sample2.y != sample3.y
+        )
+        assert sample.x >= min_x and sample.x <= max_x
+        assert sample.y >= min_y and sample.y <= max_y
+
+    def test_static_collision(self):
+        # create first static obstacle
+        sh_poly1 = ShapelyPolygon([(0, 0), (1, 0), (1, 1), (0, 1)])
+        poly1 = Polygon(geometry=sh_poly1, radius=0.0)
+
+        # create second static obstacle
+        sh_poly2 = ShapelyPolygon([(3, 3), (5, 3), (5, 5), (3, 5)])
+        poly2 = Polygon(geometry=sh_poly2, radius=0.0)
+
+        # create first dynamic obstacle
+        sh_poly3 = ShapelyPolygon([(1, 1), (4, 1), (4, 4), (1, 4)])
+        poly3 = Polygon(
+            geometry=sh_poly3, radius=0.0, time_interval=Interval(0, 10, closed="both")
+        )
+
+        # create second dynamic obstacle
+        sh_poly4 = ShapelyPolygon([(4, 4), (6, 4), (6, 6), (4, 6)])
+        poly4 = Polygon(
+            geometry=sh_poly4, radius=0.0, time_interval=Interval(0, 10, closed="both")
+        )
+
+        # create point in static collision
+        pt1 = ShapelyPoint(0.5, 0.5)
+
+        # create second point in static collision (and dynamic collision)
+        pt2 = ShapelyPoint(3.5, 3.5)
+
+        # create point in dynamic collision only
+        pt3 = ShapelyPoint(1.5, 1.5)
+
+        # create second point in dynamic collision only
+        pt4 = ShapelyPoint(5.5, 5.5)
+
+        # create environment with all obstacles
+        env = Environment(obstacles=[poly1, poly2, poly3, poly4])
+
+        # create environment instance
+        env_instance = EnvironmentInstance(
+            environment=env,
+            query_interval=Interval(0, 100, closed="both"),
+            scenario_range_x=(0, 10),
+            scenario_range_y=(0, 10),
+        )
+
+        # test static obstacle collision test function
+        assert env_instance.static_collision_free(pt1) == False
+        assert env_instance.static_collision_free(pt2) == False
+        assert env_instance.static_collision_free(pt3) == True
+        assert env_instance.static_collision_free(pt4) == True
