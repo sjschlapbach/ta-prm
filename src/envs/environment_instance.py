@@ -216,6 +216,7 @@ class EnvironmentInstance:
 
         Parameters:
         - query_time (float): The time at which the query is made (optional).
+        - fig (matplotlib.pyplot.figure): The figure to plot the obstacles on (optional).
         """
         if fig is None:
             fig = plt.figure(figsize=(8, 8))

@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 from src.envs.environment_instance import EnvironmentInstance
 
 
@@ -37,6 +39,9 @@ class Graph:
             neighbour_distance (float): The maximum distance between neighboring vertices.
             env (EnvironmentInstance): The environment instance to use for sampling and collision checking.
         """
+        # save the environment instance
+        self.env = env
+
         # sample random vertices
         self.__sample_nodes(num_samples, env)
 
@@ -64,3 +69,25 @@ class Graph:
             else:
                 self.vertices[vertex_idx] = pt
                 vertex_idx += 1
+
+    # TODO - add plotting functions and save and load from file
+
+    def plot(self, query_time: float = None, fig=None):
+        """
+        Plots the graph, including all vertices and edges.
+
+        Parameters:
+        - query_time (float): The time at which the query is made (optional).
+        - fig (matplotlib.pyplot.figure): The figure to plot the obstacles on (optional).
+        """
+        if fig is None:
+            fig = plt.figure(figsize=(8, 8))
+
+        # plot the environment instance
+        self.env.plot(query_time=query_time, fig=fig)
+
+        # plot vertices
+        for vertex in self.vertices.values():
+            plt.plot(vertex.x, vertex.y, color="blue", marker="o", markersize=1)
+
+        # TODO - add plotting of the edges once implemented

@@ -147,9 +147,9 @@ class Line(Geometry):
 
         if self.radius is not None and self.radius > 0:
             poly = self.geometry.buffer(self.radius)
-            plt.plot(*poly.exterior.xy, color="blue")
+            plt.plot(*poly.exterior.xy, color="black")
         else:
-            plt.plot(*self.geometry.xy, color="blue")
+            plt.plot(*self.geometry.xy, color="black")
 
     def copy(self):
         """

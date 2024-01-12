@@ -130,9 +130,9 @@ class Polygon(Geometry):
 
         if self.radius is not None and self.radius > 0:
             poly = self.geometry.buffer(self.radius)
-            plt.plot(*poly.exterior.xy, color="red")
+            plt.plot(*poly.exterior.xy, color="black")
         else:
-            plt.plot(*self.geometry.exterior.xy, color="red")
+            plt.plot(*self.geometry.exterior.xy, color="black")
 
     def copy(self):
         """

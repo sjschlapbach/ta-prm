@@ -20,7 +20,7 @@ def plot_environment_instance(plotting: bool = True):
     # initialize a figure
     fig = plt.figure(figsize=(8, 8))
 
-    # run the query time from 1 to 30 in increments of 1 and plot the corresponding result and write the current time to the figure
+    # run the query time from 20 to 100 in increments of 1 and plot the corresponding result and write the current time to the figure
     for query_time in range(20, 100):
         env_instance.plot(query_time=query_time, fig=fig)
         plt.title(f"Query Time: {query_time}")
