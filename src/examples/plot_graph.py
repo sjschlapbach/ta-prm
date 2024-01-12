@@ -39,8 +39,8 @@ def plot_graph(plotting: bool = True):
 
     # create graph
     graph = Graph(
-        num_samples=100,
-        neighbour_distance=15.0,
+        num_samples=200,
+        neighbour_distance=20.0,
         env=env_instance,
     )
 
