@@ -1126,3 +1126,109 @@ class TestEnvironmentInstance:
         assert env_instance.static_collision_free(pt2) == False
         assert env_instance.static_collision_free(pt3) == True
         assert env_instance.static_collision_free(pt4) == True
+
+    def test_static_collision_ln(self):
+        # set time interval parameters and scenario size
+        interval_min = 0
+        interval_max = 100
+        range_x = (0, 9)
+        range_y = (0, 6)
+        resolution = 3
+
+        # create environment for all test cases
+        env = Environment()
+
+        # create first static obstacle
+        sh_poly1 = ShapelyPolygon([(2, 1), (4, 1), (4, 3), (2, 3)])
+        poly1 = Polygon(geometry=sh_poly1, radius=0.0)
+
+        # create second static obstacle
+        sh_poly2 = ShapelyPolygon([(3, 4), (6, 4), (6, 6), (3, 6)])
+        poly2 = Polygon(geometry=sh_poly2, radius=0.0)
+
+        # create third static obstacle
+        sh_poly3 = ShapelyPolygon([(7, 3), (8, 3), (8, 5), (7, 5)])
+        poly3 = Polygon(geometry=sh_poly3, radius=0.0)
+
+        # add static obstacle to environment
+        env.add_obstacles([poly1, poly2, poly3])
+
+        # add 15 random dynamic obstacles to environment
+        env.add_random_obstacles(
+            num_points=5,
+            num_lines=5,
+            num_polygons=5,
+            min_x=range_x[0],
+            max_x=range_x[1],
+            min_y=range_y[0],
+            max_y=range_y[1],
+            min_radius=0,
+            max_radius=4,
+            min_interval=interval_min,
+            max_interval=interval_max,
+            only_dynamic=True,
+            random_recurrence=True,
+        )
+
+        # create environment instance from environment
+        env_inst = EnvironmentInstance(
+            environment=env,
+            query_interval=Interval(interval_min, interval_max, closed="both"),
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+
+        # check that the number of obstalces is correct
+        assert len(env_inst.static_obstacles) == 3
+        assert len(env_inst.dynamic_obstacles) == 15
+
+        # Test case 1 - test line in empty cell
+        sh_line = ShapelyLine([(7, 1), (8, 1)])
+        free1, cells1 = env_inst.static_collision_free_ln(sh_line)
+        assert free1 == True
+        assert len(cells1) == 1
+        assert cells1[0] == (2, 0)
+
+        # Test case 2 - test line in cell with static obstacle
+        sh_line = ShapelyLine([(5, 3), (5.5, 3.5)])
+        free2, cells2 = env_inst.static_collision_free_ln(sh_line)
+        assert free2 == True
+        assert len(cells2) == 1
+        assert cells2[0] == (1, 1)
+
+        # Test case 3 - test line in collision with obstacle in cell
+        sh_line = ShapelyLine([(4, 5), (5, 5)])
+        free3, cells3 = env_inst.static_collision_free_ln(sh_line)
+        assert free3 == False
+        assert len(cells3) == 0
+
+        # Test case 4 - test line over multiple cells with no collision
+        sh_line = ShapelyLine([(1, 3.5), (5, 3.5)])
+        free4, cells4 = env_inst.static_collision_free_ln(sh_line)
+        assert free4 == True
+        assert len(cells4) == 2
+        assert (0, 1) in cells4
+        assert (1, 1) in cells4
+
+        # Test case 5 - test line over multiple cells with close collision
+        sh_line = ShapelyLine([(1.5, 0.5), (7.5, 2.5)])
+        free5, cells5 = env_inst.static_collision_free_ln(sh_line)
+        assert free5 == False
+        assert len(cells5) == 0
+
+        # Test case 6 - test line over multiple cells with collision
+        sh_line = ShapelyLine([(2, 5), (8.5, 3.5)])
+        free6, cells6 = env_inst.static_collision_free_ln(sh_line)
+        assert free6 == False
+        assert len(cells6) == 0
+
+        # Test case 7 - test line over multiple cells without collision
+        sh_line = ShapelyLine([(0.5, 4.5), (6.5, 2.5)])
+        free7, cells7 = env_inst.static_collision_free_ln(sh_line)
+        assert free7 == True
+        assert len(cells7) == 4
+        assert (0, 1) in cells7
+        assert (0, 2) in cells7
+        assert (1, 1) in cells7
+        assert (2, 1) in cells7

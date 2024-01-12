@@ -162,6 +162,7 @@ class EnvironmentInstance:
             self.spacing_x,
             self.spacing_y,
         ) = self.compute_spatial_indices(resolution)
+        print("Environment instance created successfully!")
 
     def compute_spatial_indices(self, resolution: int):
         """
@@ -245,7 +246,7 @@ class EnvironmentInstance:
 
         return ShapelyPoint(x_sample, y_sample)
 
-    def static_collision_free(self, shape: ShapelyPoint) -> bool:
+    def static_collision_free(self, point: ShapelyPoint) -> bool:
         """
         Check if a given point is in collision with any static obstacle in the environment.
 
@@ -255,50 +256,75 @@ class EnvironmentInstance:
         Returns:
             bool: False if the point is in collision with any obstacle, True otherwise.
         """
-        cell_x = math.floor((shape.x - self.dim_x[0]) / self.spacing_x)
-        cell_y = math.floor((shape.y - self.dim_y[0]) / self.spacing_y)
+        cell_x = math.floor((point.x - self.dim_x[0]) / self.spacing_x)
+        cell_y = math.floor((point.y - self.dim_y[0]) / self.spacing_y)
         static_ids = self.static_idx[cell_x][cell_y]
 
         for key in static_ids:
             obstacle = self.static_obstacles[key]
 
             # if the point is in collision with any obstacle, return False
-            if obstacle.check_collision(shape=shape):
+            if obstacle.check_collision(shape=point):
                 return False
 
         # return True if no collision was found
         return True
 
-    # TODO - add functions to compute the temporal availability of points and edges for PRM roadmap
-    # def check_collision_dynamic_pt(
-    #     self,
-    #     point: ShapelyPoint,
-    #     query_interval: Interval = None,
-    #     query_time: float = None,
-    # ) -> bool:
-    #     """
-    #     Check if a given point is in collision with any dynamic obstacle in the environment.
+    def static_collision_free_ln(self, line: ShapelyLine):
+        """
+        Checks if a line is collision-free with respect to the static obstacles in the environment.
 
-    #     Args:
-    #         point (ShapelyPoint): The point to check for collision.
-    #         query_interval (Interval, optional): The time interval for the collision query. Defaults to None.
-    #         query_time (float, optional): The time for the collision query. Defaults to None.
+        Args:
+            line (ShapelyLine): The line to check for collision.
 
-    #     Returns:
-    #         bool: True if the point is in collision with any dynamic obstacle, False otherwise.
-    #     """
-    #     cell_x = math.floor((point.x - self.dim_x[0]) / sim.spacing_x)
-    #     cell_y = math.floor((point.y - self.dim_y[0]) / sim.spacing_y)
-    #     dynamic_ids = self.dynamic_idx[cell_x][cell_y]
+        Returns:
+            tuple: A tuple containing a boolean value indicating if the line is collision-free,
+                   and a list of index cells, where potential obstacles should be considered.
+        """
 
-    #     for key in dynamic_ids:
-    #         obstacle = self.dynamic_obstacles[key]
+        line_coords = list(line.coords)
+        cell_x1 = math.floor((line_coords[0][0] - self.dim_x[0]) / self.spacing_x)
+        cell_y1 = math.floor((line_coords[0][1] - self.dim_y[0]) / self.spacing_y)
+        cell_x2 = math.floor((line_coords[1][0] - self.dim_x[0]) / self.spacing_x)
+        cell_y2 = math.floor((line_coords[1][1] - self.dim_y[0]) / self.spacing_y)
 
-    #         # if the point is in collision with any obstacle, return True
-    #         if obstacle.check_collision(
-    #             shape=point, query_time=query_time, query_interval=query_interval
-    #         ):
-    #             return True
+        # find the cells, the line is actually in collision with
+        collision_cells = []
+        cells_minx = min(cell_x1, cell_x2)
+        cells_maxx = max(cell_x1, cell_x2)
+        cells_miny = min(cell_y1, cell_y2)
+        cells_maxy = max(cell_y1, cell_y2)
 
-    #     # return False if no collision was found
-    #     return False
+        for kx in range(cells_minx, cells_maxx + 1):
+            for ky in range(cells_miny, cells_maxy + 1):
+                # create a polygon for the current cell
+                x1 = self.dim_x[0] + kx * self.spacing_x
+                x2 = self.dim_x[0] + (kx + 1) * self.spacing_x
+                y1 = self.dim_y[0] + ky * self.spacing_y
+                y2 = self.dim_y[0] + (ky + 1) * self.spacing_y
+                cell_poly = ShapelyPolygon([(x1, y1), (x1, y2), (x2, y2), (x2, y1)])
+
+                # check if the line is in collision with the cell
+                if cell_poly.intersects(line):
+                    # print(line.length)
+                    collision_cells.append((kx, ky))
+
+        # find all ids of static obstacles in the collision_cells
+        static_ids = set()
+        for cell in collision_cells:
+            static_ids.update(self.static_idx[cell[0]][cell[1]])
+
+        # if no static obstacles were found in the considered cells, return True
+        if len(static_ids) == 0:
+            return True, collision_cells
+
+        # if static obstacles were found, check if the line is in collision with any of them
+        for key in static_ids:
+            obstacle = self.static_obstacles[key]
+
+            # if the line is in collision with any obstacle, return False
+            if obstacle.check_collision(shape=line):
+                return False, []
+
+        # return True if no collision was found
+        return True, collision_cells
