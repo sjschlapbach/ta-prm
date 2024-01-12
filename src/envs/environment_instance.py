@@ -328,3 +328,150 @@ class EnvironmentInstance:
 
         # return True if no collision was found
         return True, collision_cells
+
+    def collision_free_intervals_ln(
+        self, line: ShapelyLine, cells: List[Tuple[int, int]]
+    ) -> List[Interval]:
+        """
+        Calculates the collision-free intervals along a given line segment within the specified cells.
+
+        Args:
+            line (ShapelyLine): The line segment to check for collisions.
+            cells (List[Tuple[int, int]]): The cells to consider for dynamic obstacles.
+
+        Returns:
+            List[Interval]: A list of collision-free intervals along the line segment.
+        """
+
+        # if the environment constains no dynamic obstacles or no cells were specified, return the entire query interval
+        if len(self.dynamic_obstacles) == 0 or len(cells) == 0:
+            return [
+                Interval(
+                    self.query_interval.left, self.query_interval.right, closed="both"
+                )
+            ]
+
+        query_start = self.query_interval.left
+        query_end = self.query_interval.right
+
+        # collect all dynamic obstacle ids in the selected cells
+        dyn_ids = set()
+        for cell in cells:
+            dyn_ids.update(self.dynamic_idx[cell[0]][cell[1]])
+
+        # if no dynamic obstacles were found, return the entire query interval
+        if len(dyn_ids) == 0:
+            return [Interval(query_start, query_end, closed="both")]
+
+        # collect all start and end times of the dynamic obstacles
+        start_times = []
+        end_times = []
+
+        # iterate over all active dynamic obstacles
+        for dyn_id in dyn_ids:
+            obstacle = self.dynamic_obstacles[dyn_id]
+
+            # check if the obstacle is spatially in collision with the line
+            if not obstacle.check_collision(shape=line):
+                continue
+
+            if obstacle.recurrence == Recurrence.NONE:
+                start_times.append(obstacle.time_interval.left)
+                end_times.append(obstacle.time_interval.right)
+            else:
+                # find the occurence covered by the query_interval
+                delta_start = self.query_interval.left - obstacle.time_interval.left
+                delta_end = self.query_interval.right - obstacle.time_interval.left
+                recurrence_length = obstacle.recurrence.get_seconds()
+                start_k = int(delta_start // recurrence_length)
+                end_k = int(delta_end // recurrence_length)
+
+                # if only one occurence intersects with the query interval, append its start and end times
+                if end_k - start_k == 0:
+                    start_times.append(
+                        obstacle.time_interval.left + start_k * recurrence_length
+                    )
+                    end_times.append(
+                        obstacle.time_interval.right + end_k * recurrence_length
+                    )
+
+                else:
+                    # check if the first occurence intersects with the query interval
+                    if self.query_interval.overlaps(
+                        Interval(
+                            obstacle.time_interval.left + start_k * recurrence_length,
+                            obstacle.time_interval.right + start_k * recurrence_length,
+                            closed="both",
+                        )
+                    ):
+                        start_times.append(
+                            obstacle.time_interval.left + start_k * recurrence_length
+                        )
+                        end_times.append(
+                            obstacle.time_interval.right + start_k * recurrence_length
+                        )
+
+                    # add the remaining intersecting occurences to the start and end times
+                    for k in range(start_k + 1, end_k + 1):
+                        start_times.append(
+                            obstacle.time_interval.left + k * recurrence_length
+                        )
+                        end_times.append(
+                            obstacle.time_interval.right + k * recurrence_length
+                        )
+
+        # sort start and end times of intersecting obstacle occurences in ascending order
+        start_times.sort()
+
+        # counters to keep track of
+        start_idx = 0
+        end_idx = 0
+        active_count = 0
+
+        # count obstacles, which are active at the start of the query interval
+        for time in start_times:
+            if time <= query_start:
+                active_count += 1
+                start_idx += 1
+            else:
+                break
+
+        # set the first free interval start to the query start if no obstacles are active
+        interval_start = query_start if active_count == 0 else -1
+
+        # combine start and end times into a single list and sort it
+        start_times = [(time, "start") for time in start_times[start_idx:]]
+        end_times = [(time, "end") for time in end_times]
+        time_list = start_times + end_times
+        time_list.sort(key=lambda tup: tup[0])
+
+        # iterate over the remaining start and end times and find the collision free intervals
+        intervals = []
+
+        for time in time_list:
+            # if the current time is after the query interval, stop the iteration
+            if time[0] > query_end:
+                break
+
+            if time[1] == "start":
+                # if no obstacle was active before, end the free interval
+                if active_count == 0 and interval_start < time[0]:
+                    intervals.append(Interval(interval_start, time[0], closed="both"))
+                    interval_start = -1
+
+                # increment the count of active obstacles
+                active_count += 1
+
+            else:
+                # decrement the count of active obstacles
+                active_count -= 1
+
+                # if no obstacle is active after, start a new free interval
+                if active_count == 0:
+                    interval_start = time[0]
+
+        # if no obstacle was active after the query interval, end the last free interval
+        if active_count == 0 and interval_start != -1 and interval_start < query_end:
+            intervals.append(Interval(interval_start, query_end, closed="both"))
+
+        return intervals

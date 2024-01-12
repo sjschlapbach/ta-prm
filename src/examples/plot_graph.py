@@ -32,7 +32,7 @@ def plot_graph(plotting: bool = True):
     # create an environment from it
     env_instance = EnvironmentInstance(
         environment=env,
-        query_interval=Interval(20, 100),
+        query_interval=Interval(20, 100, closed="both"),
         scenario_range_x=x_range,
         scenario_range_y=y_range,
     )

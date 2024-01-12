@@ -18,20 +18,28 @@ def create_environment():
     sh_pt1 = ShapelyPoint(0, 0)
     sh_pt2 = ShapelyPoint(8, 3)
     pt1 = Point(sh_pt1)
-    pt2 = Point(sh_pt2, Interval(5, 20), recurrence=Recurrence.MINUTELY)
+    pt2 = Point(sh_pt2, Interval(5, 20, closed="both"), recurrence=Recurrence.MINUTELY)
 
     # initialize line objects
     sh_line1 = ShapelyLine([(2, 2), (1, 3)])
     sh_line2 = ShapelyLine([(5, 4), (2, 5)])
     line1 = Line(sh_line1)
-    line2 = Line(sh_line2, Interval(10, 40), radius=0.5, recurrence=Recurrence.MINUTELY)
+    line2 = Line(
+        sh_line2,
+        Interval(10, 40, closed="both"),
+        radius=0.5,
+        recurrence=Recurrence.MINUTELY,
+    )
 
     # initialize polygon objects
     sh_poly1 = ShapelyPolygon([(6, 6), (7, 7), (6, 8)])
     sh_poly2 = ShapelyPolygon([(9, 9), (10, 10), (11, 11)])
     poly1 = Polygon(sh_poly1)
     poly2 = Polygon(
-        sh_poly2, Interval(15, 40), radius=1.5, recurrence=Recurrence.HOURLY
+        sh_poly2,
+        Interval(15, 40, closed="both"),
+        radius=1.5,
+        recurrence=Recurrence.HOURLY,
     )
 
     # create an environment with all types of obstacles
