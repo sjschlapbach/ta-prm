@@ -30,6 +30,7 @@ class Graph:
         self,
         num_samples: int = 1000,
         neighbour_distance: float = 10.0,
+        max_connections: int = 10,
         env: EnvironmentInstance = None,
     ):
         """
@@ -46,6 +47,7 @@ class Graph:
         # save other parameters
         self.num_vertices = num_samples
         self.neighbour_distance = neighbour_distance
+        self.max_connections = max_connections
 
         # sample random vertices
         self.__sample_nodes(num_samples)
@@ -103,6 +105,10 @@ class Graph:
             # initialize neighbours list
             neighbours = []
 
+            # if the maximum number of connections is reached, skip
+            if len(self.connections[key]) >= self.max_connections:
+                continue
+
             # find all neighbours within the specified distance
             for other_key in self.vertices:
                 other_vertex = self.vertices[other_key]
@@ -113,6 +119,13 @@ class Graph:
             for nkey in neighbours:
                 # skip if the neighbour is the same as the current vertex
                 if nkey == key:
+                    continue
+
+                # if either one of the vertices has reached the maximum number of connections, skip
+                if (
+                    len(self.connections[key]) >= self.max_connections
+                    or len(self.connections[nkey]) >= self.max_connections
+                ):
                     continue
 
                 # extract neighbour key and shapely coordinates
