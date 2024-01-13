@@ -162,6 +162,7 @@ class EnvironmentInstance:
             self.spacing_x,
             self.spacing_y,
         ) = self.compute_spatial_indices(resolution)
+        print("Environment instance created successfully!")
 
     def compute_spatial_indices(self, resolution: int):
         """
@@ -245,7 +246,7 @@ class EnvironmentInstance:
 
         return ShapelyPoint(x_sample, y_sample)
 
-    def static_collision_free(self, shape: ShapelyPoint) -> bool:
+    def static_collision_free(self, point: ShapelyPoint) -> bool:
         """
         Check if a given point is in collision with any static obstacle in the environment.
 
@@ -255,50 +256,222 @@ class EnvironmentInstance:
         Returns:
             bool: False if the point is in collision with any obstacle, True otherwise.
         """
-        cell_x = math.floor((shape.x - self.dim_x[0]) / self.spacing_x)
-        cell_y = math.floor((shape.y - self.dim_y[0]) / self.spacing_y)
+        cell_x = math.floor((point.x - self.dim_x[0]) / self.spacing_x)
+        cell_y = math.floor((point.y - self.dim_y[0]) / self.spacing_y)
         static_ids = self.static_idx[cell_x][cell_y]
 
         for key in static_ids:
             obstacle = self.static_obstacles[key]
 
             # if the point is in collision with any obstacle, return False
-            if obstacle.check_collision(shape=shape):
+            if obstacle.check_collision(shape=point):
                 return False
 
         # return True if no collision was found
         return True
 
-    # TODO - add functions to compute the temporal availability of points and edges for PRM roadmap
-    # def check_collision_dynamic_pt(
-    #     self,
-    #     point: ShapelyPoint,
-    #     query_interval: Interval = None,
-    #     query_time: float = None,
-    # ) -> bool:
-    #     """
-    #     Check if a given point is in collision with any dynamic obstacle in the environment.
+    def static_collision_free_ln(self, line: ShapelyLine):
+        """
+        Checks if a line is collision-free with respect to the static obstacles in the environment.
 
-    #     Args:
-    #         point (ShapelyPoint): The point to check for collision.
-    #         query_interval (Interval, optional): The time interval for the collision query. Defaults to None.
-    #         query_time (float, optional): The time for the collision query. Defaults to None.
+        Args:
+            line (ShapelyLine): The line to check for collision.
 
-    #     Returns:
-    #         bool: True if the point is in collision with any dynamic obstacle, False otherwise.
-    #     """
-    #     cell_x = math.floor((point.x - self.dim_x[0]) / sim.spacing_x)
-    #     cell_y = math.floor((point.y - self.dim_y[0]) / sim.spacing_y)
-    #     dynamic_ids = self.dynamic_idx[cell_x][cell_y]
+        Returns:
+            tuple: A tuple containing a boolean value indicating if the line is collision-free,
+                   and a list of index cells, where potential obstacles should be considered.
+        """
 
-    #     for key in dynamic_ids:
-    #         obstacle = self.dynamic_obstacles[key]
+        line_coords = list(line.coords)
+        cell_x1 = math.floor((line_coords[0][0] - self.dim_x[0]) / self.spacing_x)
+        cell_y1 = math.floor((line_coords[0][1] - self.dim_y[0]) / self.spacing_y)
+        cell_x2 = math.floor((line_coords[1][0] - self.dim_x[0]) / self.spacing_x)
+        cell_y2 = math.floor((line_coords[1][1] - self.dim_y[0]) / self.spacing_y)
 
-    #         # if the point is in collision with any obstacle, return True
-    #         if obstacle.check_collision(
-    #             shape=point, query_time=query_time, query_interval=query_interval
-    #         ):
-    #             return True
+        # find the cells, the line is actually in collision with
+        collision_cells = []
+        cells_minx = min(cell_x1, cell_x2)
+        cells_maxx = max(cell_x1, cell_x2)
+        cells_miny = min(cell_y1, cell_y2)
+        cells_maxy = max(cell_y1, cell_y2)
 
-    #     # return False if no collision was found
-    #     return False
+        for kx in range(cells_minx, cells_maxx + 1):
+            for ky in range(cells_miny, cells_maxy + 1):
+                # create a polygon for the current cell
+                x1 = self.dim_x[0] + kx * self.spacing_x
+                x2 = self.dim_x[0] + (kx + 1) * self.spacing_x
+                y1 = self.dim_y[0] + ky * self.spacing_y
+                y2 = self.dim_y[0] + (ky + 1) * self.spacing_y
+                cell_poly = ShapelyPolygon([(x1, y1), (x1, y2), (x2, y2), (x2, y1)])
+
+                # check if the line is in collision with the cell
+                if cell_poly.intersects(line):
+                    # print(line.length)
+                    collision_cells.append((kx, ky))
+
+        # find all ids of static obstacles in the collision_cells
+        static_ids = set()
+        for cell in collision_cells:
+            static_ids.update(self.static_idx[cell[0]][cell[1]])
+
+        # if no static obstacles were found in the considered cells, return True
+        if len(static_ids) == 0:
+            return True, collision_cells
+
+        # if static obstacles were found, check if the line is in collision with any of them
+        for key in static_ids:
+            obstacle = self.static_obstacles[key]
+
+            # if the line is in collision with any obstacle, return False
+            if obstacle.check_collision(shape=line):
+                return False, []
+
+        # return True if no collision was found
+        return True, collision_cells
+
+    def collision_free_intervals_ln(
+        self, line: ShapelyLine, cells: List[Tuple[int, int]]
+    ) -> List[Interval]:
+        """
+        Calculates the collision-free intervals along a given line segment within the specified cells.
+
+        Args:
+            line (ShapelyLine): The line segment to check for collisions.
+            cells (List[Tuple[int, int]]): The cells to consider for dynamic obstacles.
+
+        Returns:
+            List[Interval]: A list of collision-free intervals along the line segment.
+        """
+
+        # if the environment constains no dynamic obstacles or no cells were specified, return the entire query interval
+        if len(self.dynamic_obstacles) == 0 or len(cells) == 0:
+            return [
+                Interval(
+                    self.query_interval.left, self.query_interval.right, closed="both"
+                )
+            ]
+
+        query_start = self.query_interval.left
+        query_end = self.query_interval.right
+
+        # collect all dynamic obstacle ids in the selected cells
+        dyn_ids = set()
+        for cell in cells:
+            dyn_ids.update(self.dynamic_idx[cell[0]][cell[1]])
+
+        # if no dynamic obstacles were found, return the entire query interval
+        if len(dyn_ids) == 0:
+            return [Interval(query_start, query_end, closed="both")]
+
+        # collect all start and end times of the dynamic obstacles
+        start_times = []
+        end_times = []
+
+        # iterate over all active dynamic obstacles
+        for dyn_id in dyn_ids:
+            obstacle = self.dynamic_obstacles[dyn_id]
+
+            # check if the obstacle is spatially in collision with the line
+            if not obstacle.check_collision(shape=line):
+                continue
+
+            if obstacle.recurrence == Recurrence.NONE:
+                start_times.append(obstacle.time_interval.left)
+                end_times.append(obstacle.time_interval.right)
+            else:
+                # find the occurence covered by the query_interval
+                delta_start = self.query_interval.left - obstacle.time_interval.left
+                delta_end = self.query_interval.right - obstacle.time_interval.left
+                recurrence_length = obstacle.recurrence.get_seconds()
+                start_k = int(delta_start // recurrence_length)
+                end_k = int(delta_end // recurrence_length)
+
+                # if only one occurence intersects with the query interval, append its start and end times
+                if end_k - start_k == 0:
+                    start_times.append(
+                        obstacle.time_interval.left + start_k * recurrence_length
+                    )
+                    end_times.append(
+                        obstacle.time_interval.right + end_k * recurrence_length
+                    )
+
+                else:
+                    # check if the first occurence intersects with the query interval
+                    if self.query_interval.overlaps(
+                        Interval(
+                            obstacle.time_interval.left + start_k * recurrence_length,
+                            obstacle.time_interval.right + start_k * recurrence_length,
+                            closed="both",
+                        )
+                    ):
+                        start_times.append(
+                            obstacle.time_interval.left + start_k * recurrence_length
+                        )
+                        end_times.append(
+                            obstacle.time_interval.right + start_k * recurrence_length
+                        )
+
+                    # add the remaining intersecting occurences to the start and end times
+                    for k in range(start_k + 1, end_k + 1):
+                        start_times.append(
+                            obstacle.time_interval.left + k * recurrence_length
+                        )
+                        end_times.append(
+                            obstacle.time_interval.right + k * recurrence_length
+                        )
+
+        # sort start and end times of intersecting obstacle occurences in ascending order
+        start_times.sort()
+
+        # counters to keep track of
+        start_idx = 0
+        end_idx = 0
+        active_count = 0
+
+        # count obstacles, which are active at the start of the query interval
+        for time in start_times:
+            if time <= query_start:
+                active_count += 1
+                start_idx += 1
+            else:
+                break
+
+        # set the first free interval start to the query start if no obstacles are active
+        interval_start = query_start if active_count == 0 else -1
+
+        # combine start and end times into a single list and sort it
+        start_times = [(time, "start") for time in start_times[start_idx:]]
+        end_times = [(time, "end") for time in end_times]
+        time_list = start_times + end_times
+        time_list.sort(key=lambda tup: tup[0])
+
+        # iterate over the remaining start and end times and find the collision free intervals
+        intervals = []
+
+        for time in time_list:
+            # if the current time is after the query interval, stop the iteration
+            if time[0] > query_end:
+                break
+
+            if time[1] == "start":
+                # if no obstacle was active before, end the free interval
+                if active_count == 0 and interval_start < time[0]:
+                    intervals.append(Interval(interval_start, time[0], closed="both"))
+                    interval_start = -1
+
+                # increment the count of active obstacles
+                active_count += 1
+
+            else:
+                # decrement the count of active obstacles
+                active_count -= 1
+
+                # if no obstacle is active after, start a new free interval
+                if active_count == 0:
+                    interval_start = time[0]
+
+        # if no obstacle was active after the query interval, end the last free interval
+        if active_count == 0 and interval_start != -1 and interval_start < query_end:
+            intervals.append(Interval(interval_start, query_end, closed="both"))
+
+        return intervals

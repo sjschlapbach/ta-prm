@@ -1126,3 +1126,418 @@ class TestEnvironmentInstance:
         assert env_instance.static_collision_free(pt2) == False
         assert env_instance.static_collision_free(pt3) == True
         assert env_instance.static_collision_free(pt4) == True
+
+    def test_static_collision_ln(self):
+        # set time interval parameters and scenario size
+        interval_min = 0
+        interval_max = 100
+        range_x = (0, 9)
+        range_y = (0, 6)
+        resolution = 3
+
+        # create environment for all test cases
+        env = Environment()
+
+        # create first static obstacle
+        sh_poly1 = ShapelyPolygon([(2, 1), (4, 1), (4, 3), (2, 3)])
+        poly1 = Polygon(geometry=sh_poly1, radius=0.0)
+
+        # create second static obstacle
+        sh_poly2 = ShapelyPolygon([(3, 4), (6, 4), (6, 6), (3, 6)])
+        poly2 = Polygon(geometry=sh_poly2, radius=0.0)
+
+        # create third static obstacle
+        sh_poly3 = ShapelyPolygon([(7, 3), (8, 3), (8, 5), (7, 5)])
+        poly3 = Polygon(geometry=sh_poly3, radius=0.0)
+
+        # add static obstacle to environment
+        env.add_obstacles([poly1, poly2, poly3])
+
+        # add 15 random dynamic obstacles to environment
+        env.add_random_obstacles(
+            num_points=5,
+            num_lines=5,
+            num_polygons=5,
+            min_x=range_x[0],
+            max_x=range_x[1],
+            min_y=range_y[0],
+            max_y=range_y[1],
+            min_radius=0,
+            max_radius=4,
+            min_interval=interval_min,
+            max_interval=interval_max,
+            only_dynamic=True,
+            random_recurrence=True,
+        )
+
+        # create environment instance from environment
+        env_inst = EnvironmentInstance(
+            environment=env,
+            query_interval=Interval(interval_min, interval_max, closed="both"),
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+
+        # check that the number of obstalces is correct
+        assert len(env_inst.static_obstacles) == 3
+        assert len(env_inst.dynamic_obstacles) == 15
+
+        # Test case 1 - test line in empty cell
+        sh_line = ShapelyLine([(7, 1), (8, 1)])
+        free1, cells1 = env_inst.static_collision_free_ln(sh_line)
+        assert free1 == True
+        assert len(cells1) == 1
+        assert cells1[0] == (2, 0)
+
+        # Test case 2 - test line in cell with static obstacle
+        sh_line = ShapelyLine([(5, 3), (5.5, 3.5)])
+        free2, cells2 = env_inst.static_collision_free_ln(sh_line)
+        assert free2 == True
+        assert len(cells2) == 1
+        assert cells2[0] == (1, 1)
+
+        # Test case 3 - test line in collision with obstacle in cell
+        sh_line = ShapelyLine([(4, 5), (5, 5)])
+        free3, cells3 = env_inst.static_collision_free_ln(sh_line)
+        assert free3 == False
+        assert len(cells3) == 0
+
+        # Test case 4 - test line over multiple cells with no collision
+        sh_line = ShapelyLine([(1, 3.5), (5, 3.5)])
+        free4, cells4 = env_inst.static_collision_free_ln(sh_line)
+        assert free4 == True
+        assert len(cells4) == 2
+        assert (0, 1) in cells4
+        assert (1, 1) in cells4
+
+        # Test case 5 - test line over multiple cells with close collision
+        sh_line = ShapelyLine([(1.5, 0.5), (7.5, 2.5)])
+        free5, cells5 = env_inst.static_collision_free_ln(sh_line)
+        assert free5 == False
+        assert len(cells5) == 0
+
+        # Test case 6 - test line over multiple cells with collision
+        sh_line = ShapelyLine([(2, 5), (8.5, 3.5)])
+        free6, cells6 = env_inst.static_collision_free_ln(sh_line)
+        assert free6 == False
+        assert len(cells6) == 0
+
+        # Test case 7 - test line over multiple cells without collision
+        sh_line = ShapelyLine([(0.5, 4.5), (6.5, 2.5)])
+        free7, cells7 = env_inst.static_collision_free_ln(sh_line)
+        assert free7 == True
+        assert len(cells7) == 4
+        assert (0, 1) in cells7
+        assert (0, 2) in cells7
+        assert (1, 1) in cells7
+        assert (2, 1) in cells7
+
+    def test_dynamic_line_free_intervals(self):
+        ## PART 1 - scenarios with recurrence free intervals
+        env = Environment()
+        collision_poly = ShapelyPolygon([(1, 1), (10, 1), (10, 10), (1, 10)])
+        range_x = (0, 11)
+        range_y = (0, 11)
+        resolution = 2
+        obs_interval1 = Interval(10, 20, closed="both")
+
+        # add the obstacle to the environment
+        poly_no_recurrence = Polygon(
+            geometry=collision_poly,
+            time_interval=obs_interval1,
+            recurrence=Rec.NONE,
+            radius=0.0,
+        )
+        env.add_obstacles([poly_no_recurrence])
+
+        # colliding query line
+        collision_line = ShapelyLine([(0, 0), (11, 11)])
+        collision_cells = [(0, 0), (0, 1), (1, 0), (1, 1)]
+
+        # collision-free query line
+        free_line = ShapelyLine([(0.5, 0.5), (0.5, 11)])
+        free_cells = [(0, 0), (0, 1)]
+
+        # Test case 1: query interval overlaps with dynamic obstacle in the end
+        query_in1 = Interval(15, 30, closed="both")
+        env_inst1 = EnvironmentInstance(
+            environment=env,
+            query_interval=query_in1,
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+
+        in1 = env_inst1.collision_free_intervals_ln(
+            line=collision_line, cells=collision_cells
+        )
+        assert len(in1) == 1
+        assert in1[0] == Interval(20, 30, closed="both")
+
+        # Non-colliding line should not result in collision
+        in1_free = env_inst1.collision_free_intervals_ln(
+            line=free_line, cells=free_cells
+        )
+        assert len(in1_free) == 1
+        assert in1_free[0] == query_in1
+        in1_free2 = env_inst1.collision_free_intervals_ln(
+            line=free_line, cells=collision_cells
+        )
+        assert len(in1_free2) == 1
+        assert in1_free2[0] == query_in1
+
+        # Test case 2: query interval overlaps with entire dynamic obstacle
+        env_inst2 = EnvironmentInstance(
+            environment=env,
+            query_interval=Interval(10, 30, closed="both"),
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+
+        in2 = env_inst2.collision_free_intervals_ln(
+            line=collision_line, cells=collision_cells
+        )
+        assert len(in2) == 1
+        assert in2[0] == Interval(20, 30, closed="both")
+
+        # Test case 3: query interval overlaps with entire dynamic obstacle
+        env_inst3 = EnvironmentInstance(
+            environment=env,
+            query_interval=Interval(5, 30, closed="both"),
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+
+        in3 = env_inst3.collision_free_intervals_ln(
+            line=collision_line, cells=collision_cells
+        )
+        assert len(in3) == 2
+        assert in3[0] == Interval(5, 10, closed="both")
+        assert in3[1] == Interval(20, 30, closed="both")
+
+        # Test case 4: query interval overlaps with dynamic obstacle in the beginning
+        env_inst4 = EnvironmentInstance(
+            environment=env,
+            query_interval=Interval(5, 15, closed="both"),
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+
+        in4 = env_inst4.collision_free_intervals_ln(
+            line=collision_line, cells=collision_cells
+        )
+        assert len(in4) == 1
+        assert in4[0] == Interval(5, 10, closed="both")
+
+        ## PART 2 - scenarios with recurrence intervals
+        env2 = Environment()
+        poly_recurrence = Polygon(
+            geometry=collision_poly,
+            time_interval=obs_interval1,
+            recurrence=Rec.MINUTELY,
+            radius=0.0,
+        )
+        env2.add_obstacles([poly_recurrence])
+
+        # Test case 5: query interval overlaps with dynamic obstacle in the end
+        env_inst5 = EnvironmentInstance(
+            environment=env2,
+            query_interval=Interval(135, 145, closed="both"),
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+
+        in5 = env_inst5.collision_free_intervals_ln(
+            line=collision_line, cells=collision_cells
+        )
+        assert len(in5) == 1
+        assert in5[0] == Interval(140, 145, closed="both")
+
+        # Test case 6: query interval overlaps with entire dynamic obstacle
+        env_inst6 = EnvironmentInstance(
+            environment=env2,
+            query_interval=Interval(130, 150, closed="both"),
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+
+        in6 = env_inst6.collision_free_intervals_ln(
+            line=collision_line, cells=collision_cells
+        )
+        assert len(in6) == 1
+        assert in6[0] == Interval(140, 150, closed="both")
+
+        # Test case 7: query interval overlaps with entire dynamic obstacle
+        env_inst7 = EnvironmentInstance(
+            environment=env2,
+            query_interval=Interval(125, 155, closed="both"),
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+
+        in7 = env_inst7.collision_free_intervals_ln(
+            line=collision_line, cells=collision_cells
+        )
+        assert len(in7) == 2
+        assert in7[0] == Interval(125, 130, closed="both")
+        assert in7[1] == Interval(140, 155, closed="both")
+
+        # Test case 8: query interval overlaps with dynamic obstacle in the beginning
+        env_inst8 = EnvironmentInstance(
+            environment=env2,
+            query_interval=Interval(125, 135, closed="both"),
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+
+        in8 = env_inst8.collision_free_intervals_ln(
+            line=collision_line, cells=collision_cells
+        )
+        assert len(in8) == 1
+        assert in8[0] == Interval(125, 130, closed="both")
+
+        # Test case 9: query interval spans over multiple occurences
+        env_inst9 = EnvironmentInstance(
+            environment=env2,
+            query_interval=Interval(60, 160, closed="both"),
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+
+        in9 = env_inst9.collision_free_intervals_ln(
+            line=collision_line, cells=collision_cells
+        )
+        assert len(in9) == 3
+        assert in9[0] == Interval(60, 70, closed="both")
+        assert in9[1] == Interval(80, 130, closed="both")
+        assert in9[2] == Interval(140, 160, closed="both")
+
+        # Test case 10: query interval spans over multiple occurences
+        env_inst10 = EnvironmentInstance(
+            environment=env2,
+            query_interval=Interval(70, 135, closed="both"),
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+
+        in10 = env_inst10.collision_free_intervals_ln(
+            line=collision_line, cells=collision_cells
+        )
+        assert len(in10) == 1
+        assert in10[0] == Interval(80, 130, closed="both")
+
+        # Test case 11: query interval spans over multiple occurences
+        env_inst11 = EnvironmentInstance(
+            environment=env2,
+            query_interval=Interval(75, 135, closed="both"),
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+
+        in11 = env_inst11.collision_free_intervals_ln(
+            line=collision_line, cells=collision_cells
+        )
+        assert len(in11) == 1
+        assert in11[0] == Interval(80, 130, closed="both")
+
+        ## PART 3 - combinations of dynamic obstacles with and without recurrence
+        env3 = Environment()
+        poly_rec1 = Polygon(
+            geometry=collision_poly,
+            time_interval=Interval(10, 20, closed="both"),
+            recurrence=Rec.MINUTELY,
+            radius=0.0,
+        )
+        poly_rec2 = Polygon(
+            geometry=collision_poly,
+            time_interval=Interval(135, 195, closed="both"),
+            recurrence=Rec.HOURLY,
+            radius=0.0,
+        )
+        poly_norec = Polygon(
+            geometry=collision_poly,
+            time_interval=Interval(15, 25, closed="both"),
+            radius=0.0,
+        )
+        env3.add_obstacles([poly_rec1, poly_rec2, poly_norec])
+
+        # Test case 12: query interval spans over multiple occurences
+        env_inst12 = EnvironmentInstance(
+            environment=env3,
+            query_interval=Interval(130, 195, closed="both"),
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+
+        in12 = env_inst12.collision_free_intervals_ln(
+            line=collision_line, cells=collision_cells
+        )
+        assert len(in12) == 0
+
+        # Test case 13: query interval spans over multiple occurences
+        env_inst13 = EnvironmentInstance(
+            environment=env3,
+            query_interval=Interval(10, 25, closed="both"),
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+
+        in13 = env_inst13.collision_free_intervals_ln(
+            line=collision_line, cells=collision_cells
+        )
+        print(in13)
+        assert len(in13) == 0
+
+        # Test case 14: query interval spans over multiple occurences
+        env_inst14 = EnvironmentInstance(
+            environment=env3,
+            query_interval=Interval(15, 120, closed="both"),
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+
+        in14 = env_inst14.collision_free_intervals_ln(
+            line=collision_line, cells=collision_cells
+        )
+        assert len(in14) == 2
+        assert in14[0] == Interval(25, 70, closed="both")
+        assert in14[1] == Interval(80, 120, closed="both")
+
+        ## PART 4 - edge cases like empty dynamic obstacles
+        env4 = Environment()
+        query_in4 = Interval(0, 100, closed="both")
+        env_inst4 = EnvironmentInstance(
+            environment=env4,
+            query_interval=query_in4,
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+
+        in15 = env_inst4.collision_free_intervals_ln(
+            line=collision_line, cells=collision_cells
+        )
+        assert len(in15) == 1
+        assert in15[0] == query_in4
+        in16 = env_inst4.collision_free_intervals_ln(line=free_line, cells=free_cells)
+        assert len(in16) == 1
+        assert in16[0] == query_in4
+        in17 = env_inst4.collision_free_intervals_ln(
+            line=collision_line, cells=collision_cells
+        )
+        assert len(in17) == 1
+        assert in17[0] == query_in4

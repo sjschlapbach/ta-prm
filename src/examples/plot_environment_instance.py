@@ -12,7 +12,7 @@ def plot_environment_instance(plotting: bool = True):
     # create an environment from it
     env_instance = EnvironmentInstance(
         environment=env,
-        query_interval=Interval(20, 100),
+        query_interval=Interval(20, 100, closed="both"),
         scenario_range_x=(-1, 15),
         scenario_range_y=(-1, 15),
     )

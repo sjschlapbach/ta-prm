@@ -12,12 +12,12 @@ def plot_graph(plotting: bool = True):
     env = Environment()
 
     # add random obstacles to environment
-    x_range = (0, 300)
-    y_range = (0, 300)
+    x_range = (0, 100)
+    y_range = (0, 100)
     env.add_random_obstacles(
-        num_points=100,
-        num_lines=100,
-        num_polygons=100,
+        num_points=20,
+        num_lines=20,
+        num_polygons=20,
         min_x=x_range[0],
         max_x=x_range[1],
         min_y=y_range[0],
@@ -32,16 +32,15 @@ def plot_graph(plotting: bool = True):
     # create an environment from it
     env_instance = EnvironmentInstance(
         environment=env,
-        query_interval=Interval(20, 100),
+        query_interval=Interval(20, 100, closed="both"),
         scenario_range_x=x_range,
         scenario_range_y=y_range,
     )
 
     # create graph
     graph = Graph(
-        num_samples=1000,
-        max_neighbours=10,
-        neighbour_distance=10.0,
+        num_samples=200,
+        neighbour_distance=20.0,
         env=env_instance,
     )
 

@@ -38,13 +38,11 @@ class TestGraph:
 
         # default parameters
         default_samples = 1000
-        default_max_neighbours = 10
         default_max_distance = 10.0
 
         # create graph
         graph = Graph(
             num_samples=default_samples,
-            max_neighbours=default_max_neighbours,
             neighbour_distance=default_max_distance,
             env=env_inst,
         )
