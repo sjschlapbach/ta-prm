@@ -44,11 +44,15 @@ class TestGraph:
         graph = Graph(
             num_samples=default_samples,
             neighbour_distance=default_max_distance,
+            max_connections=10,
             env=env_inst,
         )
 
         # check if graph vertices are within specified range and collision-free
         assert len(graph.vertices) == default_samples
+        assert graph.num_vertices == default_samples
+        assert graph.neighbour_distance == default_max_distance
+        assert graph.max_connections == 10
         for vertex in graph.vertices.values():
             assert vertex.x >= x_range[0] and vertex.x <= x_range[1]
             assert vertex.y >= y_range[0] and vertex.y <= y_range[1]
