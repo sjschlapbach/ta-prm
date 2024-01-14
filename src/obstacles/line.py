@@ -128,13 +128,24 @@ class Line(Geometry):
         else:
             return False
 
-    def plot(self, query_time: float = None, query_interval: Interval = None, fig=None):
+    def plot(
+        self,
+        query_time: float = None,
+        query_interval: Interval = None,
+        color: str = "black",
+        fill_color: str = None,
+        opactiy: float = 1,
+        fig=None,
+    ):
         """
         Plot the line.
 
         Args:
             query_time (float, optional): The query time. Defaults to None.
             query_interval (Interval, optional): The query time interval. Defaults to None.
+            color (str, optional): The color of the line. Defaults to "black".
+            fill_color (str, optional): The fill color of the line. Defaults to None.
+            opactiy (float, optional): The opacity of the line. Defaults to 1.
             fig: The figure to plot on. Defaults to None.
         """
         if not self.is_active(query_time, query_interval):
@@ -147,9 +158,11 @@ class Line(Geometry):
 
         if self.radius is not None and self.radius > 0:
             poly = self.geometry.buffer(self.radius)
-            plt.plot(*poly.exterior.xy, color="black")
+            plt.plot(*poly.exterior.xy, color=color)
+            plt.fill(*poly.exterior.xy, color=fill_color, alpha=opactiy)
         else:
-            plt.plot(*self.geometry.xy, color="black")
+            plt.plot(*self.geometry.xy, color=color)
+            plt.fill(*self.geometry.xy, color=fill_color, alpha=opactiy)
 
     def copy(self):
         """
