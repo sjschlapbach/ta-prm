@@ -331,7 +331,7 @@ class EnvironmentInstance:
 
     def collision_free_intervals_ln(
         self, line: ShapelyLine, cells: List[Tuple[int, int]]
-    ) -> List[Interval]:
+    ) -> Tuple[bool, List[Interval]]:
         """
         Calculates the collision-free intervals along a given line segment within the specified cells.
 
@@ -340,19 +340,17 @@ class EnvironmentInstance:
             cells (List[Tuple[int, int]]): The cells to consider for dynamic obstacles.
 
         Returns:
+            bool: A boolean value indicating if the line is collision-free.
+            bool: A boolean value indicating if the line is always blocked
             List[Interval]: A list of collision-free intervals along the line segment.
         """
 
-        # if the environment constains no dynamic obstacles or no cells were specified, return the entire query interval
-        if len(self.dynamic_obstacles) == 0 or len(cells) == 0:
-            return [
-                Interval(
-                    self.query_interval.left, self.query_interval.right, closed="both"
-                )
-            ]
-
         query_start = self.query_interval.left
         query_end = self.query_interval.right
+
+        # if the environment constains no dynamic obstacles or no cells were specified, return the entire query interval
+        if len(self.dynamic_obstacles) == 0 or len(cells) == 0:
+            return True, False, [Interval(query_start, query_end, closed="both")]
 
         # collect all dynamic obstacle ids in the selected cells
         dyn_ids = set()
@@ -361,7 +359,7 @@ class EnvironmentInstance:
 
         # if no dynamic obstacles were found, return the entire query interval
         if len(dyn_ids) == 0:
-            return [Interval(query_start, query_end, closed="both")]
+            return True, False, [Interval(query_start, query_end, closed="both")]
 
         # collect all start and end times of the dynamic obstacles
         start_times = []
@@ -474,4 +472,9 @@ class EnvironmentInstance:
         if active_count == 0 and interval_start != -1 and interval_start < query_end:
             intervals.append(Interval(interval_start, query_end, closed="both"))
 
-        return intervals
+        if len(intervals) == 0:
+            return False, True, []
+        if len(intervals) == 1 and intervals[0] == self.query_interval:
+            return True, False, intervals
+        else:
+            return False, False, intervals

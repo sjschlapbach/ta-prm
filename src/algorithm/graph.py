@@ -24,6 +24,7 @@ class Graph:
         __init__: Initializes a Graph object.
         __sample_nodes: Generates random points as vertices in the graph.
         __connect_vertices: Connects vertices in the graph.
+        plot: Plots the graph, including all vertices and edges.
     """
 
     def __init__(
@@ -140,16 +141,22 @@ class Graph:
                 )
 
                 if ln_static_free:
-                    free_intervals = self.env.collision_free_intervals_ln(
+                    (
+                        always_available,
+                        always_blocked,
+                        free_intervals,
+                    ) = self.env.collision_free_intervals_ln(
                         line=edge_candidate, cells=cells
                     )
 
-                    if len(free_intervals) == 0:
+                    if always_blocked:
                         continue
                     else:
                         # add edge to edges and update connections
                         self.edges[edge_idx] = TimedEdge(
-                            geometry=edge_candidate, availability=free_intervals
+                            geometry=edge_candidate,
+                            always_available=always_available,
+                            availability=free_intervals,
                         )
                         self.connections[key].append((nkey, edge_idx))
                         self.connections[nkey].append((key, edge_idx))

@@ -1269,23 +1269,30 @@ class TestEnvironmentInstance:
             resolution=resolution,
         )
 
-        in1 = env_inst1.collision_free_intervals_ln(
+        avail, blocked, in1 = env_inst1.collision_free_intervals_ln(
             line=collision_line, cells=collision_cells
         )
         assert len(in1) == 1
         assert in1[0] == Interval(20, 30, closed="both")
+        assert avail == False
+        assert blocked == False
 
         # Non-colliding line should not result in collision
-        in1_free = env_inst1.collision_free_intervals_ln(
+        avail, blocked, in1_free = env_inst1.collision_free_intervals_ln(
             line=free_line, cells=free_cells
         )
         assert len(in1_free) == 1
         assert in1_free[0] == query_in1
-        in1_free2 = env_inst1.collision_free_intervals_ln(
+        assert avail == True
+        assert blocked == False
+
+        avail, blocked, in1_free2 = env_inst1.collision_free_intervals_ln(
             line=free_line, cells=collision_cells
         )
         assert len(in1_free2) == 1
         assert in1_free2[0] == query_in1
+        assert avail == True
+        assert blocked == False
 
         # Test case 2: query interval overlaps with entire dynamic obstacle
         env_inst2 = EnvironmentInstance(
@@ -1296,11 +1303,13 @@ class TestEnvironmentInstance:
             resolution=resolution,
         )
 
-        in2 = env_inst2.collision_free_intervals_ln(
+        avail, blocked, in2 = env_inst2.collision_free_intervals_ln(
             line=collision_line, cells=collision_cells
         )
         assert len(in2) == 1
         assert in2[0] == Interval(20, 30, closed="both")
+        assert avail == False
+        assert blocked == False
 
         # Test case 3: query interval overlaps with entire dynamic obstacle
         env_inst3 = EnvironmentInstance(
@@ -1311,12 +1320,14 @@ class TestEnvironmentInstance:
             resolution=resolution,
         )
 
-        in3 = env_inst3.collision_free_intervals_ln(
+        avail, blocked, in3 = env_inst3.collision_free_intervals_ln(
             line=collision_line, cells=collision_cells
         )
         assert len(in3) == 2
         assert in3[0] == Interval(5, 10, closed="both")
         assert in3[1] == Interval(20, 30, closed="both")
+        assert avail == False
+        assert blocked == False
 
         # Test case 4: query interval overlaps with dynamic obstacle in the beginning
         env_inst4 = EnvironmentInstance(
@@ -1327,11 +1338,13 @@ class TestEnvironmentInstance:
             resolution=resolution,
         )
 
-        in4 = env_inst4.collision_free_intervals_ln(
+        avail, blocked, in4 = env_inst4.collision_free_intervals_ln(
             line=collision_line, cells=collision_cells
         )
         assert len(in4) == 1
         assert in4[0] == Interval(5, 10, closed="both")
+        assert avail == False
+        assert blocked == False
 
         ## PART 2 - scenarios with recurrence intervals
         env2 = Environment()
@@ -1352,11 +1365,13 @@ class TestEnvironmentInstance:
             resolution=resolution,
         )
 
-        in5 = env_inst5.collision_free_intervals_ln(
+        avail, blocked, in5 = env_inst5.collision_free_intervals_ln(
             line=collision_line, cells=collision_cells
         )
         assert len(in5) == 1
         assert in5[0] == Interval(140, 145, closed="both")
+        assert avail == False
+        assert blocked == False
 
         # Test case 6: query interval overlaps with entire dynamic obstacle
         env_inst6 = EnvironmentInstance(
@@ -1367,11 +1382,13 @@ class TestEnvironmentInstance:
             resolution=resolution,
         )
 
-        in6 = env_inst6.collision_free_intervals_ln(
+        avail, blocked, in6 = env_inst6.collision_free_intervals_ln(
             line=collision_line, cells=collision_cells
         )
         assert len(in6) == 1
         assert in6[0] == Interval(140, 150, closed="both")
+        assert avail == False
+        assert blocked == False
 
         # Test case 7: query interval overlaps with entire dynamic obstacle
         env_inst7 = EnvironmentInstance(
@@ -1382,12 +1399,14 @@ class TestEnvironmentInstance:
             resolution=resolution,
         )
 
-        in7 = env_inst7.collision_free_intervals_ln(
+        avail, blocked, in7 = env_inst7.collision_free_intervals_ln(
             line=collision_line, cells=collision_cells
         )
         assert len(in7) == 2
         assert in7[0] == Interval(125, 130, closed="both")
         assert in7[1] == Interval(140, 155, closed="both")
+        assert avail == False
+        assert blocked == False
 
         # Test case 8: query interval overlaps with dynamic obstacle in the beginning
         env_inst8 = EnvironmentInstance(
@@ -1398,11 +1417,13 @@ class TestEnvironmentInstance:
             resolution=resolution,
         )
 
-        in8 = env_inst8.collision_free_intervals_ln(
+        avail, blocked, in8 = env_inst8.collision_free_intervals_ln(
             line=collision_line, cells=collision_cells
         )
         assert len(in8) == 1
         assert in8[0] == Interval(125, 130, closed="both")
+        assert avail == False
+        assert blocked == False
 
         # Test case 9: query interval spans over multiple occurences
         env_inst9 = EnvironmentInstance(
@@ -1413,13 +1434,15 @@ class TestEnvironmentInstance:
             resolution=resolution,
         )
 
-        in9 = env_inst9.collision_free_intervals_ln(
+        avail, blocked, in9 = env_inst9.collision_free_intervals_ln(
             line=collision_line, cells=collision_cells
         )
         assert len(in9) == 3
         assert in9[0] == Interval(60, 70, closed="both")
         assert in9[1] == Interval(80, 130, closed="both")
         assert in9[2] == Interval(140, 160, closed="both")
+        assert avail == False
+        assert blocked == False
 
         # Test case 10: query interval spans over multiple occurences
         env_inst10 = EnvironmentInstance(
@@ -1430,11 +1453,13 @@ class TestEnvironmentInstance:
             resolution=resolution,
         )
 
-        in10 = env_inst10.collision_free_intervals_ln(
+        avail, blocked, in10 = env_inst10.collision_free_intervals_ln(
             line=collision_line, cells=collision_cells
         )
         assert len(in10) == 1
         assert in10[0] == Interval(80, 130, closed="both")
+        assert avail == False
+        assert blocked == False
 
         # Test case 11: query interval spans over multiple occurences
         env_inst11 = EnvironmentInstance(
@@ -1445,11 +1470,13 @@ class TestEnvironmentInstance:
             resolution=resolution,
         )
 
-        in11 = env_inst11.collision_free_intervals_ln(
+        avail, blocked, in11 = env_inst11.collision_free_intervals_ln(
             line=collision_line, cells=collision_cells
         )
         assert len(in11) == 1
         assert in11[0] == Interval(80, 130, closed="both")
+        assert avail == False
+        assert blocked == False
 
         ## PART 3 - combinations of dynamic obstacles with and without recurrence
         env3 = Environment()
@@ -1481,10 +1508,12 @@ class TestEnvironmentInstance:
             resolution=resolution,
         )
 
-        in12 = env_inst12.collision_free_intervals_ln(
+        avail, blocked, in12 = env_inst12.collision_free_intervals_ln(
             line=collision_line, cells=collision_cells
         )
         assert len(in12) == 0
+        assert avail == False
+        assert blocked == True
 
         # Test case 13: query interval spans over multiple occurences
         env_inst13 = EnvironmentInstance(
@@ -1495,11 +1524,12 @@ class TestEnvironmentInstance:
             resolution=resolution,
         )
 
-        in13 = env_inst13.collision_free_intervals_ln(
+        avail, blocked, in13 = env_inst13.collision_free_intervals_ln(
             line=collision_line, cells=collision_cells
         )
-        print(in13)
         assert len(in13) == 0
+        assert avail == False
+        assert blocked == True
 
         # Test case 14: query interval spans over multiple occurences
         env_inst14 = EnvironmentInstance(
@@ -1510,12 +1540,14 @@ class TestEnvironmentInstance:
             resolution=resolution,
         )
 
-        in14 = env_inst14.collision_free_intervals_ln(
+        avail, blocked, in14 = env_inst14.collision_free_intervals_ln(
             line=collision_line, cells=collision_cells
         )
         assert len(in14) == 2
         assert in14[0] == Interval(25, 70, closed="both")
         assert in14[1] == Interval(80, 120, closed="both")
+        assert avail == False
+        assert blocked == False
 
         ## PART 4 - edge cases like empty dynamic obstacles
         env4 = Environment()
@@ -1528,16 +1560,26 @@ class TestEnvironmentInstance:
             resolution=resolution,
         )
 
-        in15 = env_inst4.collision_free_intervals_ln(
+        avail, blocked, in15 = env_inst4.collision_free_intervals_ln(
             line=collision_line, cells=collision_cells
         )
         assert len(in15) == 1
         assert in15[0] == query_in4
-        in16 = env_inst4.collision_free_intervals_ln(line=free_line, cells=free_cells)
+        assert avail == True
+        assert blocked == False
+
+        avail, blocked, in16 = env_inst4.collision_free_intervals_ln(
+            line=free_line, cells=free_cells
+        )
         assert len(in16) == 1
         assert in16[0] == query_in4
-        in17 = env_inst4.collision_free_intervals_ln(
+        assert avail == True
+        assert blocked == False
+
+        avail, blocked, in17 = env_inst4.collision_free_intervals_ln(
             line=collision_line, cells=collision_cells
         )
         assert len(in17) == 1
         assert in17[0] == query_in4
+        assert avail == True
+        assert blocked == False
