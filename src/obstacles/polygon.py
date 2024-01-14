@@ -110,7 +110,15 @@ class Polygon(Geometry):
         else:
             return False
 
-    def plot(self, query_time: float = None, query_interval: Interval = None, fig=None):
+    def plot(
+        self,
+        query_time: float = None,
+        query_interval: Interval = None,
+        color: str = "black",
+        fill_color: str = None,
+        opactiy: float = 1,
+        fig=None,
+    ):
         """
         Plots the polygon with a circle of the corresponding radius around it.
         Optionally, only shows the polygon with the circle if it is active.
@@ -118,6 +126,9 @@ class Polygon(Geometry):
         Args:
             query_time (optional): The specific time to check if the polygon is active.
             query_interval (optional): The time interval to check if the polygon is active.
+            fig (optional): The figure to plot on. If not provided, a new figure will be created.
+            fill_color (optional): The color to fill the polygon with.
+            opactiy (optional): The opacity of the polygon.
             fig (optional): The figure to plot on. If not provided, a new figure will be created.
         """
         if not self.is_active(query_time, query_interval):
@@ -130,9 +141,11 @@ class Polygon(Geometry):
 
         if self.radius is not None and self.radius > 0:
             poly = self.geometry.buffer(self.radius)
-            plt.plot(*poly.exterior.xy, color="black")
+            plt.plot(*poly.exterior.xy, color=color)
+            plt.fill(*poly.exterior.xy, color=fill_color, alpha=opactiy)
         else:
-            plt.plot(*self.geometry.exterior.xy, color="black")
+            plt.plot(*self.geometry.exterior.xy, color=color)
+            plt.fill(*self.geometry.exterior.xy, color=fill_color, alpha=opactiy)
 
     def copy(self):
         """
