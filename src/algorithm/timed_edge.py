@@ -15,7 +15,11 @@ class TimedEdge:
         __init__(self, geometry: ShapelyLine, availability: List[Interval]):
             Initialize a TimedEdge object.
 
-        # TODO - add collision checking functions for given time interval / time instance
+        is_available(self, query_interval: Interval) -> bool:
+            Check if the edge is available for the given time interval.
+
+        __covers_interval(self, interval: Interval, other: Interval) -> bool:
+            Check if the edge covers the given interval.
     """
 
     def __init__(
