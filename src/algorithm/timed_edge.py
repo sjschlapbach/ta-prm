@@ -25,8 +25,8 @@ class TimedEdge:
     def __init__(
         self,
         geometry: ShapelyLine,
-        always_available: bool,
         availability: List[Interval],
+        always_available: bool = False,
     ):
         """
         Initialize a TimedEdge object.
@@ -69,12 +69,12 @@ class TimedEdge:
             mid = (left + right) // 2
 
             # if the query interval ends before the middle interval starts, search left
-            if self.availability[mid].lower > query_interval.upper:
+            if self.availability[mid].left > query_interval.right:
                 right = mid - 1
                 continue
 
             # if the query interval starts after the current interval ends, search right
-            elif self.availability[mid].upper < query_interval.lower:
+            elif self.availability[mid].right < query_interval.left:
                 left = mid + 1
                 continue
 
@@ -96,4 +96,4 @@ class TimedEdge:
         Returns:
             bool: True if the edge covers the interval, False otherwise.
         """
-        return interval.lower <= other.lower and interval.upper >= other.upper
+        return interval.left <= other.left and interval.right >= other.right
