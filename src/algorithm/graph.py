@@ -236,6 +236,10 @@ class Graph:
             if nkey == vertex_idx:
                 continue
 
+            # skip if the neighbour is already connected to the current vertex
+            if nkey in [x[0] for x in self.connections[vertex_idx]]:
+                continue
+
             # if the current key has reached the maximum number of connections, skip
             if (
                 len(self.connections[vertex_idx]) >= self.max_connections
