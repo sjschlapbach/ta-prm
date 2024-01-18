@@ -1,3 +1,4 @@
+import time
 from shapely import Point as ShapelyPoint
 from pandas import Interval
 import matplotlib.pyplot as plt
@@ -9,14 +10,14 @@ from src.obstacles.point import Point
 from src.algorithm.ta_prm import TAPRM
 
 
-def ta_prm_random(plotting: bool = False):
+def ta_prm_random(scenario_end: int = 600, plotting: bool = False):
     # optional parameters
     seed = 0
     max_size = 30
 
     # time interval
     interval_start = 0
-    interval_end = 600
+    interval_end = scenario_end
     x_range = (0, 300)
     y_range = (0, 300)
 
@@ -81,16 +82,20 @@ def ta_prm_random(plotting: bool = False):
 
     # initialize algorithm and plan path from start to goal
     ta_prm = TAPRM(graph=graph)
-    success, path = ta_prm.plan(start_time=0)
+
+    start = time.time()
+    success, path, max_length_open = ta_prm.plan(start_time=0)
+    runtime = time.time() - start
 
     assert success == True
     assert len(path) > 0
 
     # plot the path
-    graph.plot(sol_path=path)
-
     if plotting:
+        graph.plot(sol_path=path)
         plt.show()
+
+    return runtime, max_length_open
 
 
 if __name__ == "__main__":

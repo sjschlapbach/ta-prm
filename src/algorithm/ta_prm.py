@@ -84,7 +84,13 @@ class TAPRM:
         ]
         heapify(open_list)
 
+        # track the maximum length of the open list over time
+        max_open_list = 1
+
         while open_list:
+            # track the maximum length of the open list over time
+            max_open_list = max(max_open_list, len(open_list))
+
             node = heappop(open_list)
 
             if logging:
@@ -93,7 +99,7 @@ class TAPRM:
             # if the goal node is reached, return the path
             if node[2] == self.graph.goal:
                 print("Successfully found a path from start to goal.")
-                return True, node[4]
+                return True, node[4], max_open_list
 
             # get all neighbours ids
             neighbours = self.graph.connections[node[2]]

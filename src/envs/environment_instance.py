@@ -312,7 +312,6 @@ class EnvironmentInstance:
 
                 # check if the line is in collision with the cell
                 if cell_poly.intersects(line):
-                    # print(line.length)
                     collision_cells.append((kx, ky))
 
         # find all ids of static obstacles in the collision_cells

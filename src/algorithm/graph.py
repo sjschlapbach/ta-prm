@@ -318,6 +318,7 @@ class Graph:
 
         # plot solution path
         if sol_path is not None:
+            length = 0
             for idx in range(len(sol_path) - 1):
                 connections = self.connections[sol_path[idx]]
                 for connection in connections:
@@ -325,11 +326,15 @@ class Graph:
                         edge_idx = connection[1]
                         break
 
+                length += self.edges[edge_idx].length
+
                 plt.plot(
                     *self.edges[edge_idx].geometry.xy,
                     color="green",
                     linewidth=3,
                 )
+
+            print(f"Solution path length: {length:.2f}")
 
         if self.start is not None:
             plt.plot(
