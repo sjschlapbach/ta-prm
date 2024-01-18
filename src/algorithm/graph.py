@@ -31,17 +31,17 @@ class Graph:
     Methods:
         __init__: Initializes a Graph object.
         __sample_nodes: Generates random points as vertices in the graph.
-        __connect_vertices: Connects vertices in the graph.
+        connect_vertices: Connects vertices in the graph.
         __connect_neighbours: Connects the given vertex with its neighboring vertices within a specified distance.
         plot: Plots the graph, including all vertices and edges.
     """
 
     def __init__(
         self,
+        env: EnvironmentInstance,
         num_samples: int = 1000,
         neighbour_distance: float = 10.0,
         max_connections: int = 10,
-        env: EnvironmentInstance = None,
     ):
         """
         Initializes a Graph object.
@@ -63,7 +63,7 @@ class Graph:
         self.__sample_nodes(num_samples)
 
         # connect vertices
-        self.__connect_vertices()
+        self.connect_vertices()
 
         # initialize empty start and goal vertex indices
         self.start = None
@@ -164,7 +164,7 @@ class Graph:
                 self.vertices[vertex_idx] = pt
                 vertex_idx += 1
 
-    def __connect_vertices(self):
+    def connect_vertices(self):
         """
         Connects the vertices in the graph by creating edges between neighboring vertices.
 
@@ -186,7 +186,7 @@ class Graph:
         self.heuristic = {key: np.inf for key in self.vertices}
 
         # initialize edge index
-        next_edge_idx = 1
+        next_edge_idx = 0
 
         print("Connecting vertices in the graph...")
         for key in tqdm(self.vertices):
