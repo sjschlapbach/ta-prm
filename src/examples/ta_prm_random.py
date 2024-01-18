@@ -10,14 +10,16 @@ from src.obstacles.point import Point
 from src.algorithm.ta_prm import TAPRM
 
 
-def ta_prm_random(scenario_end: int = 600, plotting: bool = False):
+def ta_prm_random(
+    interval_end: int = 500, scenario_end: int = 500, plotting: bool = False
+):
     # optional parameters
     seed = 0
     max_size = 30
 
     # time interval
     interval_start = 0
-    interval_end = scenario_end
+    interval_end = interval_end
     x_range = (0, 300)
     y_range = (0, 300)
 
@@ -57,7 +59,7 @@ def ta_prm_random(scenario_end: int = 600, plotting: bool = False):
     # create environment instance
     env_inst = EnvironmentInstance(
         environment=env,
-        query_interval=Interval(interval_start, interval_end, closed="both"),
+        query_interval=Interval(interval_start, scenario_end, closed="both"),
         scenario_range_x=x_range,
         scenario_range_y=y_range,
     )

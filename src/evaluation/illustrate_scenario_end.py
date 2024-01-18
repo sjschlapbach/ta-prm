@@ -14,11 +14,14 @@ if __name__ == "__main__":
     # maximum length of the open list during expansion
     max_open_list = []
 
-    for k in tqdm(range(460, 620)):
-        print(k)
+    # set values for interval_end and minimum length to find a solution
+    min_for_solution = 460
+    max_scenario_end = 1500
+
+    for k in tqdm(range(min_for_solution, max_scenario_end, 10)):
         runtime, max_open = ta_prm_random(plotting=False, scenario_end=k)
         scenario_ends.append(k)
-        runtimes.append(runtime)
+        runtimes.append(runtime * 1000)
         max_open_list.append(max_open)
 
     # plof the result in two subplots of the same figure
@@ -26,7 +29,7 @@ if __name__ == "__main__":
     fig.suptitle("Runtime and maximum length of open list over scenario end")
 
     ax1.plot(scenario_ends, runtimes)
-    ax1.set_ylabel("Runtime (s)")
+    ax1.set_ylabel("Runtime (ms)")
 
     ax2.plot(scenario_ends, max_open_list)
     ax2.set_ylabel("Maximum length of open list")

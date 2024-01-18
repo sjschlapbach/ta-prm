@@ -156,6 +156,7 @@ class TestTAPRM:
 
         # run TA-PRM and check debugging output
         algo = TAPRM(graph=graph)
-        success, path = algo.plan(start_time=0)
+        success, path, max_open = algo.plan(start_time=0)
         assert success == True
         assert path == [2, 1, 0, 3]
+        assert max_open > 0

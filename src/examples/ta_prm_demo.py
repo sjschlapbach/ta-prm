@@ -89,9 +89,11 @@ def ta_prm_demo(plotting: bool = False):
 
     # run TA-PRM and check debugging output
     algo = TAPRM(graph=graph)
-    success, path = algo.plan(start_time=0, logging=True)
+    success, path, max_open = algo.plan(start_time=0, logging=True)
 
     assert success == True
+    assert len(path) > 0
+    assert max_open > 0
 
     print("Found optimal solution with fastest path from start to goal being:")
     print(path)
