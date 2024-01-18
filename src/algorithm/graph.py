@@ -309,12 +309,6 @@ class Graph:
 
             cost += self.edges[edge_idx].cost
 
-            plt.plot(
-                *self.edges[edge_idx].geometry.xy,
-                color="green",
-                linewidth=3,
-            )
-
         return cost
 
     def plot(self, query_time: float = None, fig=None, sol_path: List[int] = None):
@@ -348,6 +342,19 @@ class Graph:
         if sol_path is not None:
             cost = self.path_cost(sol_path=sol_path)
             print(f"Solution path cost: {cost:.2f}")
+
+            for idx in range(len(sol_path) - 1):
+                connections = self.connections[sol_path[idx]]
+                for connection in connections:
+                    if connection[0] == sol_path[idx + 1]:
+                        edge_idx = connection[1]
+                        break
+
+                plt.plot(
+                    *self.edges[edge_idx].geometry.xy,
+                    color="green",
+                    linewidth=3,
+                )
 
         if self.start is not None:
             plt.plot(

@@ -29,9 +29,9 @@ if __name__ == "__main__":
         runtimes.append(runtime * 1000)
         max_open_list.append(max_open)
 
-    # plof the result in two subplots of the same figure
+    # plot the result in two subplots of the same figure
     fig, (ax1, ax2, ax3) = plt.subplots(3, sharex=True)
-    fig.suptitle("Algorithm metrics over the number of samples")
+    fig.suptitle("Algorithm metrics over the number of samples - Random Scenario")
 
     ax1.plot(samples, runtimes)
     ax1.set_ylabel("Runtime (ms)")
