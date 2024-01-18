@@ -109,7 +109,6 @@ class Graph:
         Raises:
             ValueError: If the goal node is not collision-free or could not be connected to any other node.
         """
-
         # create shapely point
         goal_pt = ShapelyPoint(coords[0], coords[1])
 
@@ -178,8 +177,6 @@ class Graph:
             success, next_edge_idx = self.__connect_neighbours(
                 key, next_edge_idx=next_edge_idx
             )
-
-    # TODO - add methods to connect start and goal node to graph
 
     def __connect_neighbours(
         self, vertex_idx: int, next_edge_idx: int, ignore_max_connections: bool = False
