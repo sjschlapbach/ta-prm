@@ -9,7 +9,7 @@ from src.obstacles.point import Point
 from src.algorithm.ta_prm import TAPRM
 
 
-def ta_prm_demo():
+def ta_prm_demo(plotting: bool = False):
     x_range = (-5, 105)
     y_range = (-5, 105)
     query_interval = Interval(0, 20, closed="both")
@@ -92,8 +92,10 @@ def ta_prm_demo():
     print(path)
 
     graph.plot(sol_path=path)
-    plt.show()
+
+    if plotting:
+        plt.show()
 
 
 if __name__ == "__main__":
-    ta_prm_demo()
+    ta_prm_demo(plotting=True)

@@ -159,17 +159,3 @@ class TestTAPRM:
         success, path = algo.plan(start_time=0)
         assert success == True
         assert path == [2, 1, 0, 3]
-
-    # def test_plan_real(self):
-    #     # create random graph with start and goal node specified
-    #     graph = self.__create_random_graph()
-    #     graph = self.__add_start_goal(graph)
-
-    #     # initialize algorithm and plan path from start to goal
-    #     ta_prm = TAPRM(graph=graph)
-    #     success, path = ta_prm.plan(start_time=0)
-
-    #     # TODO - add asserts, which make sense
-    #     assert success == True
-
-    #     # TODO - add test cases of known scenarios / graphs with known outcomes

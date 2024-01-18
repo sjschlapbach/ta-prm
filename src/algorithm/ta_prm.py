@@ -7,7 +7,22 @@ from src.algorithm.graph import Graph
 
 
 class TAPRM:
-    # TODO - docstring
+    """
+    The TA-PRM (Time-Aware Probabilistic Roadmap) algorithm class.
+
+    This class represents an instance of the TA-PRM algorithm, which is used to plan a path from a start node to a goal node
+    in a graph-based environment.
+
+    Attributes:
+        graph (Graph): The graph representing the environment.
+
+    Methods:
+        __init__(self, graph: Graph, start: Tuple[float, float] = None, goal: Tuple[float, float] = None):
+            Initializes a TA-PRM algorithm instance.
+
+        plan(self, start_time: float, logging: bool = False):
+            Plans a path from the start node to the goal node using the TA-PRM algorithm.
+    """
 
     def __init__(
         self,
@@ -38,7 +53,16 @@ class TAPRM:
             self.graph.connect_goal(goal)
 
     def plan(self, start_time: float, logging: bool = False):
-        # TODO - docstring
+        """
+        Plans a path from the start node to the goal node using the TA-PRM algorithm.
+
+        Args:
+            start_time (float): The start time for the planning process.
+            logging (bool, optional): Flag indicating whether to enable logging. Defaults to False.
+
+        Returns:
+            tuple: A tuple containing a boolean indicating whether a path was found and the path (vertex ids) itself.
+        """
 
         # raise an error if start or goal node are not specified
         if self.graph.start is None or self.graph.goal is None:
@@ -87,6 +111,18 @@ class TAPRM:
                 edge = self.graph.edges[edge_id]
                 start_time = node[3]
                 end_time = start_time + edge.length
+
+                # if end point of the edge would only be reached after the scenario interval, skip it
+                if end_time > self.graph.env.query_interval.right:
+                    if logging:
+                        print(
+                            "Edge",
+                            edge_id,
+                            "would end after the scenario interval.",
+                        )
+
+                    continue
+
                 edge_cost = edge.get_cost(Interval(start_time, end_time, closed="both"))
 
                 # if edge is not available, skip it
@@ -102,12 +138,7 @@ class TAPRM:
 
                     continue
                 else:
-                    # TODO - check if the node at the current time is already in open
-                    # TODO - update the node in open if the cost is smaller than before
-                    # How can this be done efficiently?
-
-                    # TODO - once check in open list is implemented, move this to else statement
-                    # if the node is not already in the open list, add it to the open list
+                    # add the new node to the open list
                     heuristic = self.graph.heuristic[neighbour_id]
                     cost_to_come = node[1] + edge.cost
                     cost = cost_to_come + heuristic
@@ -137,4 +168,6 @@ class TAPRM:
                         )
                         print(open_list)
 
-        raise ValueError("No valid path found from start to goal.")
+        raise ValueError(
+            "No valid path found from start to goal within the specified scenario horizon."
+        )
