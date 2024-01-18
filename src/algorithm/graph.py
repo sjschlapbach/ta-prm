@@ -91,12 +91,12 @@ class Graph:
         # add start node to vertices and create connect it to the graph
         self.vertices[self.start] = start_pt
         self.connections[self.start] = []
-        self.__connect_neighbours(
+        success, _ = self.__connect_neighbours(
             self.start, next_edge_idx=len(self.edges), ignore_max_connections=True
         )
 
         # check if the start node was connected to any other node
-        if len(self.connections[self.start]) == 0:
+        if not success or len(self.connections[self.start]) == 0:
             raise ValueError("Start node could not be connected to any other node.")
 
     def connect_goal(self, coords: ShapelyPoint):
@@ -122,12 +122,12 @@ class Graph:
         # add goal node to vertices and create connect it to the graph
         self.vertices[self.goal] = goal_pt
         self.connections[self.goal] = []
-        self.__connect_neighbours(
+        success, _ = self.__connect_neighbours(
             self.goal, next_edge_idx=len(self.edges), ignore_max_connections=True
         )
 
         # check if the goal node was connected to any other node
-        if len(self.connections[self.goal]) == 0:
+        if not success or len(self.connections[self.goal]) == 0:
             raise ValueError("Goal node could not be connected to any other node.")
 
     def __sample_nodes(self, num_samples: int):
