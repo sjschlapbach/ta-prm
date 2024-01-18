@@ -1,6 +1,7 @@
 from typing import List
 from shapely.geometry import LineString as ShapelyLine
 from pandas import Interval
+import numpy as np
 
 
 class TimedEdge:
@@ -10,13 +11,14 @@ class TimedEdge:
     Attributes:
         geometry (ShapelyLine): The geometry of the edge.
         availability (List[Interval]): The availability intervals of the edge.
+        cost (float): The cost of the edge.
 
     Methods:
         __init__(self, geometry: ShapelyLine, availability: List[Interval]):
             Initialize a TimedEdge object.
 
-        is_available(self, query_interval: Interval) -> bool:
-            Check if the edge is available for the given time interval.
+        get_cost(self, query_interval: Interval) -> bool:
+            Check if the edge is available and if so, return the cost.
 
         __covers_interval(self, interval: Interval, other: Interval) -> bool:
             Check if the edge covers the given interval.
@@ -27,6 +29,7 @@ class TimedEdge:
         geometry: ShapelyLine,
         availability: List[Interval],
         always_available: bool = False,
+        cost: float = np.inf,
     ):
         """
         Initialize a TimedEdge object.
@@ -39,22 +42,25 @@ class TimedEdge:
         self.geometry = geometry
         self.always_available = always_available
         self.availability = availability
+        self.cost = cost
 
-    def is_available(self, query_interval: Interval) -> bool:
+    def get_cost(self, query_interval: Interval) -> bool:
         """
-        Check if the edge is available for the given time interval.
+        Check if the edge is available and if so, return the cost.
 
         Args:
             query_interval (Interval): The time interval to check.
 
         Returns:
-            bool: True if the edge is available, False otherwise.
+            float: The cost of the edge if it is available, np.inf otherwise.
         """
         if self.always_available:
-            return True
+            return self.cost
 
-        if len(self.availability) == 1:
-            return self.__covers_interval(self.availability[0], query_interval)
+        if len(self.availability) == 1 and self.__covers_interval(
+            self.availability[0], query_interval
+        ):
+            return self.cost
 
         # perform binary search to find the first interval intersecting with the query_interval
         left = 0
@@ -62,8 +68,10 @@ class TimedEdge:
 
         while left <= right:
             # only one interval is left from the search that potentially covers the query_interval
-            if left == right:
-                return self.__covers_interval(self.availability[left], query_interval)
+            if left == right and self.__covers_interval(
+                self.availability[left], query_interval
+            ):
+                return self.cost
 
             # select the center interval
             mid = (left + right) // 2
@@ -81,9 +89,13 @@ class TimedEdge:
             # query interval ends after the current interval starts and starts before the current interval ends
             # -> the query interval at least partially lies within the current interval
             else:
-                return self.__covers_interval(self.availability[mid], query_interval)
+                return (
+                    self.cost
+                    if self.__covers_interval(self.availability[mid], query_interval)
+                    else np.inf
+                )
 
-        return False
+        return np.inf
 
     def __covers_interval(self, interval: Interval, other: Interval) -> bool:
         """

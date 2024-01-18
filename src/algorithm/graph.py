@@ -267,6 +267,7 @@ class Graph:
                     self.edges[next_edge_idx] = TimedEdge(
                         geometry=edge_candidate,
                         always_available=always_available,
+                        cost=edge_candidate.length,
                         availability=free_intervals,
                     )
                     self.connections[vertex_idx].append((nkey, next_edge_idx))
