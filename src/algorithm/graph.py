@@ -96,73 +96,105 @@ class Graph:
         self.connections = {key: [] for key in self.vertices}
 
         # initialize edge index
-        edge_idx = 1
+        next_edge_idx = 1
 
         print("Connecting vertices in the graph...")
         for key in tqdm(self.vertices):
-            # get vertex
-            vertex = self.vertices[key]
-
-            # initialize neighbours list
-            neighbours = []
-
-            # if the maximum number of connections is reached, skip
-            if len(self.connections[key]) >= self.max_connections:
-                continue
-
-            # find all neighbours within the specified distance
-            for other_key in self.vertices:
-                other_vertex = self.vertices[other_key]
-                if vertex.distance(other_vertex) <= self.neighbour_distance:
-                    neighbours.append(other_key)
-
-            # connect all neighbours within the maximum connection distance
-            for nkey in neighbours:
-                # skip if the neighbour is the same as the current vertex
-                if nkey == key:
-                    continue
-
-                # if either one of the vertices has reached the maximum number of connections, skip
-                if (
-                    len(self.connections[key]) >= self.max_connections
-                    or len(self.connections[nkey]) >= self.max_connections
-                ):
-                    continue
-
-                # extract neighbour key and shapely coordinates
-                nnode = self.vertices[nkey]
-
-                # create edge and check it for collisions with static obstacles
-                edge_candidate = ShapelyLine([(vertex.x, vertex.y), (nnode.x, nnode.y)])
-
-                # if the edge is static collision free, add it to the graph
-                ln_static_free, cells = self.env.static_collision_free_ln(
-                    edge_candidate
-                )
-
-                if ln_static_free:
-                    (
-                        always_available,
-                        always_blocked,
-                        free_intervals,
-                    ) = self.env.collision_free_intervals_ln(
-                        line=edge_candidate, cells=cells
-                    )
-
-                    if always_blocked:
-                        continue
-                    else:
-                        # add edge to edges and update connections
-                        self.edges[edge_idx] = TimedEdge(
-                            geometry=edge_candidate,
-                            always_available=always_available,
-                            availability=free_intervals,
-                        )
-                        self.connections[key].append((nkey, edge_idx))
-                        self.connections[nkey].append((key, edge_idx))
-                        edge_idx += 1
+            success, next_edge_idx = self.__connect_neighbours(
+                key, next_edge_idx=next_edge_idx
+            )
 
     # TODO - add methods to connect start and goal node to graph
+
+    def __connect_neighbours(
+        self, vertex_idx: int, next_edge_idx: int, ignore_max_connections: bool = False
+    ):
+        """
+        Connects the given vertex with its neighboring vertices within a specified distance.
+
+        Args:
+            vertex_idx (int): The index of the vertex to connect.
+
+        Returns:
+            bool: True if the vertex was successfully connected to at least one other vertex, False otherwise.
+            int: The index of the next edge to be added to the graph.
+        """
+
+        # get vertex
+        vertex = self.vertices[vertex_idx]
+
+        # initialize neighbours list
+        neighbours = []
+
+        # if the maximum number of connections is reached, skip
+        if (
+            len(self.connections[vertex_idx]) >= self.max_connections
+            and not ignore_max_connections
+        ):
+            return False, next_edge_idx
+
+        # find all neighbours within the specified distance
+        for other_key in self.vertices:
+            other_vertex = self.vertices[other_key]
+            if vertex.distance(other_vertex) <= self.neighbour_distance:
+                neighbours.append(other_key)
+
+        # track if node was successfully connected to any other node
+        valid_connection = False
+
+        # connect all neighbours within the maximum connection distance
+        for nkey in neighbours:
+            # skip if the neighbour is the same as the current vertex
+            if nkey == vertex_idx:
+                continue
+
+            # if the current key has reached the maximum number of connections, skip
+            if (
+                len(self.connections[vertex_idx]) >= self.max_connections
+                and not ignore_max_connections
+            ):
+                return True, next_edge_idx
+
+            # if the neighbour node has reached the maximum number of connections, skip
+            if (
+                len(self.connections[nkey]) >= self.max_connections
+                and not ignore_max_connections
+            ):
+                continue
+
+            # extract neighbour key and shapely coordinates
+            nnode = self.vertices[nkey]
+
+            # create edge and check it for collisions with static obstacles
+            edge_candidate = ShapelyLine([(vertex.x, vertex.y), (nnode.x, nnode.y)])
+
+            # if the edge is static collision free, add it to the graph
+            ln_static_free, cells = self.env.static_collision_free_ln(edge_candidate)
+
+            if ln_static_free:
+                (
+                    always_available,
+                    always_blocked,
+                    free_intervals,
+                ) = self.env.collision_free_intervals_ln(
+                    line=edge_candidate, cells=cells
+                )
+
+                if always_blocked:
+                    continue
+                else:
+                    # add edge to edges and update connections
+                    self.edges[next_edge_idx] = TimedEdge(
+                        geometry=edge_candidate,
+                        always_available=always_available,
+                        availability=free_intervals,
+                    )
+                    self.connections[vertex_idx].append((nkey, next_edge_idx))
+                    self.connections[nkey].append((vertex_idx, next_edge_idx))
+                    valid_connection = True
+                    next_edge_idx += 1
+
+        return valid_connection, next_edge_idx
 
     def plot(self, query_time: float = None, fig=None):
         """
