@@ -118,6 +118,7 @@ class TAPRM:
                 start_time = node[3]
                 end_time = start_time + edge.length
 
+                # TODO - think about pruning in cost dimension on top of this / or instead of this
                 # if end point of the edge would only be reached after the scenario interval, skip it
                 if end_time > self.graph.env.query_interval.right:
                     if logging:

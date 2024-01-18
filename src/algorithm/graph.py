@@ -289,6 +289,34 @@ class Graph:
 
         return valid_connection, next_edge_idx
 
+    def path_cost(self, sol_path: List[int] = None):
+        """
+        Calculates the cost of a given solution path.
+
+        Args:
+            sol_path (List[int]): The solution path represented as a list of node indices.
+
+        Returns:
+            float: The total cost of the solution path.
+        """
+        cost = 0
+        for idx in range(len(sol_path) - 1):
+            connections = self.connections[sol_path[idx]]
+            for connection in connections:
+                if connection[0] == sol_path[idx + 1]:
+                    edge_idx = connection[1]
+                    break
+
+            cost += self.edges[edge_idx].cost
+
+            plt.plot(
+                *self.edges[edge_idx].geometry.xy,
+                color="green",
+                linewidth=3,
+            )
+
+        return cost
+
     def plot(self, query_time: float = None, fig=None, sol_path: List[int] = None):
         """
         Plots the graph, including all vertices and edges.
@@ -318,23 +346,8 @@ class Graph:
 
         # plot solution path
         if sol_path is not None:
-            length = 0
-            for idx in range(len(sol_path) - 1):
-                connections = self.connections[sol_path[idx]]
-                for connection in connections:
-                    if connection[0] == sol_path[idx + 1]:
-                        edge_idx = connection[1]
-                        break
-
-                length += self.edges[edge_idx].length
-
-                plt.plot(
-                    *self.edges[edge_idx].geometry.xy,
-                    color="green",
-                    linewidth=3,
-                )
-
-            print(f"Solution path length: {length:.2f}")
+            cost = self.path_cost(sol_path=sol_path)
+            print(f"Solution path cost: {cost:.2f}")
 
         if self.start is not None:
             plt.plot(

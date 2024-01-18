@@ -11,7 +11,10 @@ from src.algorithm.ta_prm import TAPRM
 
 
 def ta_prm_random(
-    interval_end: int = 500, scenario_end: int = 500, plotting: bool = False
+    interval_end: int = 500,
+    scenario_end: int = 500,
+    samples: int = 100,
+    plotting: bool = False,
 ):
     # optional parameters
     seed = 0
@@ -65,12 +68,11 @@ def ta_prm_random(
     )
 
     # default parameters
-    default_samples = 100
     default_max_distance = 100.0
 
     # create graph
     graph = Graph(
-        num_samples=default_samples,
+        num_samples=samples,
         neighbour_distance=default_max_distance,
         max_connections=10,
         env=env_inst,
@@ -92,12 +94,15 @@ def ta_prm_random(
     assert success == True
     assert len(path) > 0
 
+    # compute path cost
+    path_cost = graph.path_cost(sol_path=path)
+
     # plot the path
     if plotting:
         graph.plot(sol_path=path)
         plt.show()
 
-    return runtime, max_length_open
+    return runtime, max_length_open, path_cost
 
 
 if __name__ == "__main__":
