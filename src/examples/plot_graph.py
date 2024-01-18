@@ -27,6 +27,7 @@ def plot_graph(plotting: bool = True):
         min_radius=0,
         max_radius=5,
         random_recurrence=True,
+        seed=0,
     )
 
     # create an environment from it
@@ -44,6 +45,14 @@ def plot_graph(plotting: bool = True):
         max_connections=12,
         env=env_instance,
     )
+
+    # connect start node to the graph
+    start_coords = (2, 2)
+    graph.connect_start(coords=start_coords)
+
+    # connect goal node to the graph
+    goal_coords = (98, 98)
+    graph.connect_goal(coords=goal_coords)
 
     # initialize a figure
     fig = plt.figure(figsize=(8, 8))

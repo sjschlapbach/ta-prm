@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-from shapely.geometry import LineString as ShapelyLine
+from shapely.geometry import LineString as ShapelyLine, Point as ShapelyPoint
+from typing import Tuple
 
 from src.envs.environment_instance import EnvironmentInstance
 from src.algorithm.timed_edge import TimedEdge
@@ -16,14 +17,21 @@ class Graph:
         env (EnvironmentInstance): An instance of the environment in which the graph is constructed.
 
     Attributes:
+        env (EnvironmentInstance): The environment instance in which the graph is constructed.
         vertices (dict): A dictionary that maps vertex indices to their corresponding coordinates.
         edges (dict): A dictionary that stores the edges between vertices.
         connections (dict): A dictionary that stores the connections between vertices for faster access.
+        num_vertices (int): The number of vertices in the graph.
+        neighbour_distance (float): The maximum distance between a vertex and its neighbor.
+        max_connections (int): The maximum number of connections for each vertex.
+        start (int): The index of the start vertex.
+        goal (int): The index of the goal vertex.
 
     Methods:
         __init__: Initializes a Graph object.
         __sample_nodes: Generates random points as vertices in the graph.
         __connect_vertices: Connects vertices in the graph.
+        __connect_neighbours: Connects the given vertex with its neighboring vertices within a specified distance.
         plot: Plots the graph, including all vertices and edges.
     """
 
@@ -55,6 +63,73 @@ class Graph:
 
         # connect vertices
         self.__connect_vertices()
+
+        # initialize empty start and goal vertex indices
+        self.start = None
+        self.goal = None
+
+    def connect_start(self, coords: Tuple[float, float]):
+        """
+        Connects the start node to the graph.
+
+        Args:
+            coords (Tuple[float, float]): The coordinates of the start node.
+
+        Raises:
+            ValueError: If the start node is not collision-free or could not be connected to any other node.
+        """
+        # create shapely point
+        start_pt = ShapelyPoint(coords[0], coords[1])
+
+        # check if start node is collision free
+        if not self.env.static_collision_free(start_pt):
+            raise ValueError("Start node is not collision free.")
+
+        # extract index of start node, which will be inserted
+        self.start = len(self.vertices)
+
+        # add start node to vertices and create connect it to the graph
+        self.vertices[self.start] = start_pt
+        self.connections[self.start] = []
+        self.__connect_neighbours(
+            self.start, next_edge_idx=len(self.edges), ignore_max_connections=True
+        )
+
+        # check if the start node was connected to any other node
+        if len(self.connections[self.start]) == 0:
+            raise ValueError("Start node could not be connected to any other node.")
+
+    def connect_goal(self, coords: ShapelyPoint):
+        """
+        Connects the goal node to the graph.
+
+        Args:
+            coords (ShapelyPoint): The coordinates of the goal node.
+
+        Raises:
+            ValueError: If the goal node is not collision-free or could not be connected to any other node.
+        """
+
+        # create shapely point
+        goal_pt = ShapelyPoint(coords[0], coords[1])
+
+        # check if goal node is collision free
+        if not self.env.static_collision_free(goal_pt):
+            raise ValueError("Goal node is not collision free.")
+
+        # extract index of goal node, which will be inserted
+        self.goal = len(self.vertices)
+
+        # add goal node to vertices and create connect it to the graph
+        self.vertices[self.goal] = goal_pt
+        self.connections[self.goal] = []
+        self.__connect_neighbours(
+            self.goal, next_edge_idx=len(self.edges), ignore_max_connections=True
+        )
+
+        # check if the goal node was connected to any other node
+        if len(self.connections[self.goal]) == 0:
+            raise ValueError("Goal node could not be connected to any other node.")
 
     def __sample_nodes(self, num_samples: int):
         """
@@ -220,6 +295,24 @@ class Graph:
                 *line.geometry.xy,
                 color="red",
                 linewidth=0.5,
+            )
+
+        if self.start is not None:
+            plt.plot(
+                self.vertices[self.start].x,
+                self.vertices[self.start].y,
+                color="blue",
+                marker="o",
+                markersize=6,
+            )
+
+        if self.goal is not None:
+            plt.plot(
+                self.vertices[self.goal].x,
+                self.vertices[self.goal].y,
+                color="green",
+                marker="o",
+                markersize=6,
             )
 
     # TODO - add functions to save and load from file
