@@ -72,15 +72,20 @@ def ta_prm_demo(plotting: bool = False):
         assert len(value) == 3
 
     # override generated heuristic
-    graph.heuristic[0] = 10
-    graph.heuristic[1] = 15
+    graph.heuristic[0] = 15
+    graph.heuristic[1] = 10
     graph.heuristic[2] = 20
-    assert graph.heuristic == {0: 10, 1: 15, 2: 20, 3: 0}
+    assert graph.heuristic == {0: 15, 1: 10, 2: 20, 3: 0}
 
-    # override edge costs and flight time lengths to 2
+    # override edge costs and flight time
     for edge_id in graph.edges:
-        graph.edges[edge_id].cost = 2
         graph.edges[edge_id].length = 2
+        graph.edges[edge_id].cost = 20
+
+    # only edge between nodes 0 (A) and 3 (goal) should have cost 15
+    for connection in graph.connections[0]:
+        if connection[0] == 3:
+            graph.edges[connection[1]].cost = 15
 
     # run TA-PRM and check debugging output
     algo = TAPRM(graph=graph)
