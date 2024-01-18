@@ -28,6 +28,7 @@ class TestGraph:
             min_interval=interval_start,
             max_interval=interval_end,
             random_recurrence=True,
+            seed=0,
         )
 
         # create environment instance
@@ -59,6 +60,26 @@ class TestGraph:
             assert vertex.x >= x_range[0] and vertex.x <= x_range[1]
             assert vertex.y >= y_range[0] and vertex.y <= y_range[1]
             assert env_inst.static_collision_free(vertex)
+
+        # connect start and goal node
+        start_coords = (x_range[0] + 2, y_range[0] + 2)
+        goal_coords = (x_range[1] - 2, y_range[1] - 2)
+        graph.connect_start(coords=start_coords)
+        graph.connect_goal(coords=goal_coords)
+
+        # check if start and goal node are connected
+        assert len(graph.vertices) == default_samples + 2
+        assert graph.num_vertices == default_samples
+        assert graph.start == default_samples
+        assert graph.goal == default_samples + 1
+        assert graph.vertices[graph.start] is not None
+        assert graph.vertices[graph.goal] is not None
+        assert graph.vertices[graph.start].x == start_coords[0]
+        assert graph.vertices[graph.start].y == start_coords[1]
+        assert graph.vertices[graph.goal].x == goal_coords[0]
+        assert graph.vertices[graph.goal].y == goal_coords[1]
+        assert len(graph.connections[graph.start]) > 0
+        assert len(graph.connections[graph.goal]) > 0
 
     def test_timed_line_availability(self):
         # create shapely line objects

@@ -1,5 +1,5 @@
-import random
 from enum import Enum
+import numpy as np
 
 
 class Recurrence(Enum):
@@ -64,18 +64,23 @@ class Recurrence(Enum):
         else:
             raise ValueError("Invalid recurrence string.")
 
-    def random(min_duration: float = None):
+    def random(min_duration: float = None, seed: int = None):
         """
         Returns a random recurrence.
 
         Args:
             min_duration (float): The minimum duration for the recurrence.
+            seed (int, optional): The seed to use for the random number generator.
 
         Returns:
             Recurrence: A randomly selected recurrence from the available options.
         """
+        # set seed if specified
+        if seed is not None:
+            np.random.seed(seed)
+
         if min_duration is None or min_duration < 60:
-            return random.choice(
+            return np.random.choice(
                 [
                     Recurrence.NONE,
                     Recurrence.MINUTELY,
@@ -84,8 +89,10 @@ class Recurrence(Enum):
                 ]
             )
         elif min_duration < 3600:
-            return random.choice([Recurrence.NONE, Recurrence.HOURLY, Recurrence.DAILY])
+            return np.random.choice(
+                [Recurrence.NONE, Recurrence.HOURLY, Recurrence.DAILY]
+            )
         elif min_duration < 86400:
-            return random.choice([Recurrence.NONE, Recurrence.DAILY])
+            return np.random.choice([Recurrence.NONE, Recurrence.DAILY])
         else:
             return Recurrence.NONE

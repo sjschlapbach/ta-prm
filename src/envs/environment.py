@@ -7,6 +7,7 @@ from shapely.geometry import (
 from shapely import wkt
 import json
 import matplotlib.pyplot as plt
+import numpy as np
 
 from src.obstacles.point import Point
 from src.obstacles.line import Line
@@ -137,6 +138,7 @@ class Environment:
         only_static: bool = False,
         only_dynamic: bool = False,
         random_recurrence: bool = False,
+        seed: int = None,
     ):
         """
         Adds random obstacles to the environment.
@@ -193,7 +195,14 @@ class Environment:
 
         random_recurrence : bool, optional
             Whether to generate a random recurrence.
+
+        seed : int, optional
+            The seed to use for the random number generator.
         """
+        # set seed
+        if seed is not None:
+            np.random.seed(seed)
+
         # add random points
         for _ in range(num_points):
             point = Point.random(
