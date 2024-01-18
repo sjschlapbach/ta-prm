@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 from shapely.geometry import LineString as ShapelyLine, Point as ShapelyPoint
 from typing import Tuple
+import numpy as np
 
 from src.envs.environment_instance import EnvironmentInstance
 from src.algorithm.timed_edge import TimedEdge
@@ -130,6 +131,11 @@ class Graph:
         if not success or len(self.connections[self.goal]) == 0:
             raise ValueError("Goal node could not be connected to any other node.")
 
+        # compute the heuristic cost-to-go values for all nodes
+        print("Computing heuristic cost-to-go values...")
+        for key in tqdm(self.vertices):
+            self.heuristic[key] = self.vertices[key].distance(self.vertices[self.goal])
+
     def __sample_nodes(self, num_samples: int):
         """
         Generates random points as vertices in the graph.
@@ -163,11 +169,13 @@ class Graph:
             None
         """
 
-        # initialize edges and connections
+        # initialize edges, connections and heuristic dictionaries
         # format {"edge_id": EdgeWithTemporalAvailability}
         self.edges = {}
         # format {"node_id": [("neighbor_id", "edge_id"), ...]}
         self.connections = {key: [] for key in self.vertices}
+        # format {"node_id": float}
+        self.heuristic = {key: np.inf for key in self.vertices}
 
         # initialize edge index
         next_edge_idx = 1

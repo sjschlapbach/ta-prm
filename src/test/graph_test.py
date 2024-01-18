@@ -82,6 +82,10 @@ class TestGraph:
         assert len(graph.connections[graph.start]) > 0
         assert len(graph.connections[graph.goal]) > 0
 
+        # check that the heuristic does not contain any inf values anymore
+        for value in graph.heuristic.values():
+            assert np.isfinite(value)
+
     def test_timed_line_availability(self):
         # create shapely line objects
         ln = ShapelyLine([(0, 0), (100, 0)])
