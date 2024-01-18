@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from shapely.geometry import LineString as ShapelyLine, Point as ShapelyPoint
-from typing import Tuple
+from typing import Tuple, List
 import numpy as np
 
 from src.envs.environment_instance import EnvironmentInstance
@@ -289,13 +289,14 @@ class Graph:
 
         return valid_connection, next_edge_idx
 
-    def plot(self, query_time: float = None, fig=None):
+    def plot(self, query_time: float = None, fig=None, sol_path: List[int] = None):
         """
         Plots the graph, including all vertices and edges.
 
         Parameters:
         - query_time (float): The time at which the query is made (optional).
         - fig (matplotlib.pyplot.figure): The figure to plot the obstacles on (optional).
+        - sol_path (List[int]): The solution path to plot (optional).
         """
         if fig is None:
             fig = plt.figure(figsize=(8, 8))
@@ -314,6 +315,21 @@ class Graph:
                 color="red",
                 linewidth=0.5,
             )
+
+        # plot solution path
+        if sol_path is not None:
+            for idx in range(len(sol_path) - 1):
+                connections = self.connections[sol_path[idx]]
+                for connection in connections:
+                    if connection[0] == sol_path[idx + 1]:
+                        edge_idx = connection[1]
+                        break
+
+                plt.plot(
+                    *self.edges[edge_idx].geometry.xy,
+                    color="green",
+                    linewidth=3,
+                )
 
         if self.start is not None:
             plt.plot(

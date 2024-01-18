@@ -1,5 +1,6 @@
 from shapely import Point as ShapelyPoint
 from pandas import Interval
+import matplotlib.pyplot as plt
 
 from src.envs.environment import Environment
 from src.envs.environment_instance import EnvironmentInstance
@@ -89,6 +90,9 @@ def ta_prm_demo():
 
     print("Found optimal solution with fastest path from start to goal being:")
     print(path)
+
+    graph.plot(sol_path=path)
+    plt.show()
 
 
 if __name__ == "__main__":
