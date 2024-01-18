@@ -81,6 +81,10 @@ class Graph:
         # create shapely point
         start_pt = ShapelyPoint(coords[0], coords[1])
 
+        # start and goal node cannot be the same
+        if self.goal is not None and self.vertices[self.goal] == start_pt:
+            raise ValueError("Start and goal node cannot be the same.")
+
         # check if start node is collision free
         if not self.env.static_collision_free(start_pt):
             raise ValueError("Start node is not collision free.")
@@ -111,6 +115,10 @@ class Graph:
         """
         # create shapely point
         goal_pt = ShapelyPoint(coords[0], coords[1])
+
+        # start and goal node cannot be the same
+        if self.start is not None and self.vertices[self.start] == goal_pt:
+            raise ValueError("Start and goal node cannot be the same.")
 
         # check if goal node is collision free
         if not self.env.static_collision_free(goal_pt):
