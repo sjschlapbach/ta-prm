@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from shapely.geometry import LineString as ShapelyLine, Point as ShapelyPoint
-from typing import Tuple
+from typing import Tuple, List
 import numpy as np
 
 from src.envs.environment_instance import EnvironmentInstance
@@ -31,17 +31,17 @@ class Graph:
     Methods:
         __init__: Initializes a Graph object.
         __sample_nodes: Generates random points as vertices in the graph.
-        __connect_vertices: Connects vertices in the graph.
+        connect_vertices: Connects vertices in the graph.
         __connect_neighbours: Connects the given vertex with its neighboring vertices within a specified distance.
         plot: Plots the graph, including all vertices and edges.
     """
 
     def __init__(
         self,
+        env: EnvironmentInstance,
         num_samples: int = 1000,
         neighbour_distance: float = 10.0,
         max_connections: int = 10,
-        env: EnvironmentInstance = None,
     ):
         """
         Initializes a Graph object.
@@ -63,7 +63,7 @@ class Graph:
         self.__sample_nodes(num_samples)
 
         # connect vertices
-        self.__connect_vertices()
+        self.connect_vertices()
 
         # initialize empty start and goal vertex indices
         self.start = None
@@ -81,6 +81,10 @@ class Graph:
         """
         # create shapely point
         start_pt = ShapelyPoint(coords[0], coords[1])
+
+        # start and goal node cannot be the same
+        if self.goal is not None and self.vertices[self.goal] == start_pt:
+            raise ValueError("Start and goal node cannot be the same.")
 
         # check if start node is collision free
         if not self.env.static_collision_free(start_pt):
@@ -112,6 +116,10 @@ class Graph:
         """
         # create shapely point
         goal_pt = ShapelyPoint(coords[0], coords[1])
+
+        # start and goal node cannot be the same
+        if self.start is not None and self.vertices[self.start] == goal_pt:
+            raise ValueError("Start and goal node cannot be the same.")
 
         # check if goal node is collision free
         if not self.env.static_collision_free(goal_pt):
@@ -156,7 +164,7 @@ class Graph:
                 self.vertices[vertex_idx] = pt
                 vertex_idx += 1
 
-    def __connect_vertices(self):
+    def connect_vertices(self):
         """
         Connects the vertices in the graph by creating edges between neighboring vertices.
 
@@ -178,7 +186,7 @@ class Graph:
         self.heuristic = {key: np.inf for key in self.vertices}
 
         # initialize edge index
-        next_edge_idx = 1
+        next_edge_idx = 0
 
         print("Connecting vertices in the graph...")
         for key in tqdm(self.vertices):
@@ -226,6 +234,10 @@ class Graph:
         for nkey in neighbours:
             # skip if the neighbour is the same as the current vertex
             if nkey == vertex_idx:
+                continue
+
+            # skip if the neighbour is already connected to the current vertex
+            if nkey in [x[0] for x in self.connections[vertex_idx]]:
                 continue
 
             # if the current key has reached the maximum number of connections, skip
@@ -277,13 +289,14 @@ class Graph:
 
         return valid_connection, next_edge_idx
 
-    def plot(self, query_time: float = None, fig=None):
+    def plot(self, query_time: float = None, fig=None, sol_path: List[int] = None):
         """
         Plots the graph, including all vertices and edges.
 
         Parameters:
         - query_time (float): The time at which the query is made (optional).
         - fig (matplotlib.pyplot.figure): The figure to plot the obstacles on (optional).
+        - sol_path (List[int]): The solution path to plot (optional).
         """
         if fig is None:
             fig = plt.figure(figsize=(8, 8))
@@ -302,6 +315,21 @@ class Graph:
                 color="red",
                 linewidth=0.5,
             )
+
+        # plot solution path
+        if sol_path is not None:
+            for idx in range(len(sol_path) - 1):
+                connections = self.connections[sol_path[idx]]
+                for connection in connections:
+                    if connection[0] == sol_path[idx + 1]:
+                        edge_idx = connection[1]
+                        break
+
+                plt.plot(
+                    *self.edges[edge_idx].geometry.xy,
+                    color="green",
+                    linewidth=3,
+                )
 
         if self.start is not None:
             plt.plot(

@@ -12,6 +12,7 @@ class TimedEdge:
         geometry (ShapelyLine): The geometry of the edge.
         availability (List[Interval]): The availability intervals of the edge.
         cost (float): The cost of the edge.
+        length (float): The length of the edge.
 
     Methods:
         __init__(self, geometry: ShapelyLine, availability: List[Interval]):
@@ -43,6 +44,7 @@ class TimedEdge:
         self.always_available = always_available
         self.availability = availability
         self.cost = cost
+        self.length = geometry.length
 
     def get_cost(self, query_interval: Interval) -> bool:
         """
