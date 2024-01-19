@@ -23,13 +23,12 @@ export PYTHONPATH=.
 
 ## Example Scripts
 
-The `src/examples/` directory contains a number of example scripts. They showcase the core functionalities of this repository and offer an entry point into the codebase. For more detailed insights and edge cases, check out the test suite (below). The following scripts are currently available:
+The `src/examples/` directory contains a number of example scripts. They showcase the core functionalities of this repository and offer an entry point into the codebase. For more detailed insights and edge cases, check out the test suite (below). Demonstration scripts for the following topics are currently available:
 
-- `src/examples/plot_environment.py`: Create an environment with obstacles and plot it using `matplotlib`. Besides the geometric illustration, the scripts also showcases the usage of temporal parameters and querying.
-- `src/examples/plot_random_environment.py`: Plots an automatically generated environment with random color-coded static and dynamic obstacles.
-- `src/examples/plot_environment_instance`: Script to illustrate the obstacles (static and dynamic) in an environment instance.
-- `src/examples/plot_geometries.py`: Simple script, creating geometric obstacles and using their member functions to illustrate them.
-- `src/examples/plot_graph.py`: Generates a graph from random samples in an environment with randomly generated obstacles (both static and dynamic).
+- Creation and plotting of defined or random `Environment` and `EnvironmentInstance` objects with static and dynamic obstacles, using `matplotlib`.
+- Creation and plotting of `Geometry` objects, which can be of types `Point`, `Line` or `Polygon`.
+- Creation and plotting of `Graph` objects, which can be generated from random samples in an environment.
+- Example scenarios for the usage of the `TimeAwarePRM` class, which implements the TA-PRM algorithm.
 
 A separate GitHub action is run on every push or pull_request. The status of the latest run can be seen in the badge at the top of this README.
 
