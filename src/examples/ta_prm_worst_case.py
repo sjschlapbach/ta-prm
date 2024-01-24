@@ -12,7 +12,10 @@ from src.algorithm.ta_prm import TAPRM
 
 
 def ta_prm_worst_case(
-    samples: int = 50, max_connections: int = 10, plotting: bool = False
+    samples: int = 50,
+    max_connections: int = 10,
+    plotting: bool = False,
+    quiet: bool = False,
 ):
     np.random.seed(0)
 
@@ -36,6 +39,7 @@ def ta_prm_worst_case(
         query_interval=scenario_interval,
         scenario_range_x=x_range,
         scenario_range_y=y_range,
+        quiet=quiet,
     )
 
     ## create path, override the sampling and place samples manually, connect nodes manually
@@ -44,26 +48,27 @@ def ta_prm_worst_case(
         num_samples=samples,
         neighbour_distance=40.0,
         max_connections=max_connections,
+        quiet=quiet,
     )
 
     # connect start and goal nodes
     start_coords = (2, 2)
     goal_coords = (98, 98)
     graph.connect_start(start_coords)
-    graph.connect_goal(goal_coords)
+    graph.connect_goal(goal_coords, quiet=quiet)
 
     # run TA-PRM and check debugging output
     algo = TAPRM(graph=graph)
     start = time.time()
-    success, path, max_open = algo.plan(start_time=0)
+    success, path, max_open = algo.plan(start_time=0, quiet=quiet)
     runtime = time.time() - start
 
     assert success == True
     assert len(path) > 0
     assert max_open > 0
 
-    print("Found optimal solution with fastest path from start to goal being:")
-    print(path)
+    # print("Found optimal solution with fastest path from start to goal being:")
+    # print(path)
 
     if plotting:
         graph.plot(sol_path=path)

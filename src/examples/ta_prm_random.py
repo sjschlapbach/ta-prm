@@ -14,7 +14,9 @@ def ta_prm_random(
     interval_end: int = 500,
     scenario_end: int = 500,
     samples: int = 100,
+    max_connections: int = 10,
     plotting: bool = False,
+    quiet: bool = False,
 ):
     # optional parameters
     seed = 0
@@ -65,6 +67,7 @@ def ta_prm_random(
         query_interval=Interval(interval_start, scenario_end, closed="both"),
         scenario_range_x=x_range,
         scenario_range_y=y_range,
+        quiet=quiet,
     )
 
     # default parameters
@@ -74,21 +77,22 @@ def ta_prm_random(
     graph = Graph(
         num_samples=samples,
         neighbour_distance=default_max_distance,
-        max_connections=10,
+        max_connections=max_connections,
         env=env_inst,
+        quiet=quiet,
     )
 
     # connect start and goal node
     start_coords = (x_range[0] + 2, y_range[0] + 2)
     goal_coords = (x_range[1] - 2, y_range[1] - 2)
     graph.connect_start(coords=start_coords)
-    graph.connect_goal(coords=goal_coords)
+    graph.connect_goal(coords=goal_coords, quiet=quiet)
 
     # initialize algorithm and plan path from start to goal
     ta_prm = TAPRM(graph=graph)
 
     start = time.time()
-    success, path, max_length_open = ta_prm.plan(start_time=0)
+    success, path, max_length_open = ta_prm.plan(start_time=0, quiet=quiet)
     runtime = time.time() - start
 
     assert success == True

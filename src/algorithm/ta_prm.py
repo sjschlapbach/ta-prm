@@ -52,7 +52,7 @@ class TAPRM:
 
             self.graph.connect_goal(goal)
 
-    def plan(self, start_time: float, logging: bool = False):
+    def plan(self, start_time: float, logging: bool = False, quiet: bool = False):
         """
         Plans a path from the start node to the goal node using the TA-PRM algorithm.
 
@@ -98,7 +98,8 @@ class TAPRM:
 
             # if the goal node is reached, return the path
             if node[2] == self.graph.goal:
-                print("Successfully found a path from start to goal.")
+                if not quiet:
+                    print("Successfully found a path from start to goal.")
                 return True, node[4], max_open_list
 
             # get all neighbours ids

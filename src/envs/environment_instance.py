@@ -46,6 +46,7 @@ class EnvironmentInstance:
         scenario_range_x: Tuple[int, int],
         scenario_range_y: Tuple[int, int],
         resolution: int = 20,
+        quiet: bool = False,
     ):
         """
         Initialize an instance of the EnvironmentInstance class.
@@ -67,8 +68,10 @@ class EnvironmentInstance:
         self.dynamic_obstacles: Dict[int, Union[Point, Line, Polygon]] = {}
         counter = 1
 
-        print("Loading obstacles into environment instance...")
-        for obstacle in tqdm(environment.obstacles):
+        if not quiet:
+            print("Loading obstacles into environment instance...")
+
+        for obstacle in tqdm(environment.obstacles, disable=quiet):
             # if dimensions are specified for the environment, check that the obstacle is contained
             env_poly = ShapelyPolygon(
                 [
@@ -154,7 +157,9 @@ class EnvironmentInstance:
             else:
                 continue
 
-        print("Creating spatial index for environment instance...")
+        if not quiet:
+            print("Creating spatial index for environment instance...")
+
         self.resolution = resolution
         (
             self.static_idx,
@@ -162,7 +167,9 @@ class EnvironmentInstance:
             self.spacing_x,
             self.spacing_y,
         ) = self.compute_spatial_indices(resolution)
-        print("Environment instance created successfully!")
+
+        if not quiet:
+            print("Environment instance created successfully!")
 
     def compute_spatial_indices(self, resolution: int):
         """

@@ -42,6 +42,7 @@ class Graph:
         num_samples: int = 1000,
         neighbour_distance: float = 10.0,
         max_connections: int = 10,
+        quiet: bool = False,
     ):
         """
         Initializes a Graph object.
@@ -63,7 +64,7 @@ class Graph:
         self.__sample_nodes(num_samples)
 
         # connect vertices
-        self.connect_vertices()
+        self.connect_vertices(quiet=quiet)
 
         # initialize empty start and goal vertex indices
         self.start = None
@@ -104,7 +105,7 @@ class Graph:
         if not success or len(self.connections[self.start]) == 0:
             raise ValueError("Start node could not be connected to any other node.")
 
-    def connect_goal(self, coords: ShapelyPoint):
+    def connect_goal(self, coords: ShapelyPoint, quiet: bool = False):
         """
         Connects the goal node to the graph.
 
@@ -140,8 +141,10 @@ class Graph:
             raise ValueError("Goal node could not be connected to any other node.")
 
         # compute the heuristic cost-to-go values for all nodes
-        print("Computing heuristic cost-to-go values...")
-        for key in tqdm(self.vertices):
+        if not quiet:
+            print("Computing heuristic cost-to-go values...")
+
+        for key in tqdm(self.vertices, disable=quiet):
             self.heuristic[key] = self.vertices[key].distance(self.vertices[self.goal])
 
     def __sample_nodes(self, num_samples: int):
@@ -164,7 +167,7 @@ class Graph:
                 self.vertices[vertex_idx] = pt
                 vertex_idx += 1
 
-    def connect_vertices(self):
+    def connect_vertices(self, quiet: bool = False):
         """
         Connects the vertices in the graph by creating edges between neighboring vertices.
 
@@ -188,8 +191,10 @@ class Graph:
         # initialize edge index
         next_edge_idx = 0
 
-        print("Connecting vertices in the graph...")
-        for key in tqdm(self.vertices):
+        if not quiet:
+            print("Connecting vertices in the graph...")
+
+        for key in tqdm(self.vertices, disable=quiet):
             success, next_edge_idx = self.__connect_neighbours(
                 key, next_edge_idx=next_edge_idx
             )
