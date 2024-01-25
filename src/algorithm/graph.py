@@ -229,14 +229,19 @@ class Graph:
         # find all neighbours within the specified distance
         for other_key in self.vertices:
             other_vertex = self.vertices[other_key]
-            if vertex.distance(other_vertex) <= self.neighbour_distance:
-                neighbours.append(other_key)
+            distance_to_other = vertex.distance(other_vertex)
+
+            if distance_to_other <= self.neighbour_distance:
+                neighbours.append((other_key, distance_to_other))
+
+        # sort neighbours by distance (ascending)
+        neighbours = sorted(neighbours, key=lambda x: x[1])
 
         # track if node was successfully connected to any other node
         valid_connection = False
 
-        # connect all neighbours within the maximum connection distance
-        for nkey in neighbours:
+        # connect node to its closest neighbors
+        for nkey, _ in neighbours:
             # skip if the neighbour is the same as the current vertex
             if nkey == vertex_idx:
                 continue
