@@ -15,9 +15,9 @@ if __name__ == "__main__":
     runtimes = []
 
     # use different numbers of samples and track runtime
-    min_samples = 50
-    max_samples = 1000
-    step = 20
+    min_samples = 40
+    max_samples = 100
+    step = 5
 
     for k in tqdm(range(min_samples, max_samples, step)):
         runtime, path_cost = ta_prm_worst_case(plotting=False, samples=k, quiet=True)
@@ -47,13 +47,13 @@ if __name__ == "__main__":
     runtimes = []
 
     # use different numbers of samples and track runtime
-    min_connections = 10
+    min_connections = 5
     max_connections = 20
     step = 1
 
     for k in tqdm(range(min_connections, max_connections, step)):
         runtime, path_cost = ta_prm_worst_case(
-            plotting=False, samples=500, max_connections=k, quiet=True
+            plotting=False, samples=80, max_connections=k, quiet=True
         )
         connections_per_node.append(k)
         costs.append(path_cost)

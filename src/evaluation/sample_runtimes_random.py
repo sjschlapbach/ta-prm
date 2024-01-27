@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
     # use different numbers of samples and track runtime
     min_samples = 70
-    max_samples = 300
+    max_samples = 200
     step = 10
 
     for k in tqdm(range(min_samples, max_samples, step)):
@@ -58,13 +58,13 @@ if __name__ == "__main__":
     runtimes = []
 
     # use different numbers of samples and track runtime
-    min_connections = 10
-    max_connections = 25
+    min_connections = 8
+    max_connections = 12
     step = 1
 
     for k in tqdm(range(min_connections, max_connections, step)):
         runtime, _, path_cost = ta_prm_random(
-            plotting=False, samples=500, max_connections=k, quiet=True
+            plotting=False, samples=200, max_connections=k, quiet=True
         )
         connections_per_node.append(k)
         costs.append(path_cost)
