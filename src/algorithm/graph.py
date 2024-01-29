@@ -3,6 +3,7 @@ from tqdm import tqdm
 from shapely.geometry import LineString as ShapelyLine, Point as ShapelyPoint
 from typing import Tuple, List
 import numpy as np
+from scipy.stats import qmc
 
 from src.envs.environment_instance import EnvironmentInstance
 from src.algorithm.timed_edge import TimedEdge
@@ -42,6 +43,7 @@ class Graph:
         num_samples: int = 1000,
         neighbour_distance: float = 10.0,
         max_connections: int = 10,
+        seed: int = None,
         quiet: bool = False,
     ):
         """
@@ -61,7 +63,7 @@ class Graph:
         self.max_connections = max_connections
 
         # sample random vertices
-        self.__sample_nodes(num_samples)
+        self.__sample_nodes(num_samples=num_samples, seed=seed)
 
         # connect vertices
         self.connect_vertices(quiet=quiet)
@@ -147,7 +149,7 @@ class Graph:
         for key in tqdm(self.vertices, disable=quiet):
             self.heuristic[key] = self.vertices[key].distance(self.vertices[self.goal])
 
-    def __sample_nodes(self, num_samples: int):
+    def __sample_nodes(self, num_samples: int, seed: int = None):
         """
         Generates random points as vertices in the graph.
 
@@ -155,11 +157,20 @@ class Graph:
             num_samples (int): The number of samples to generate.
             env (EnvironmentInstance): The environment instance to use for sampling and collision checking.
         """
+        # set up Halton sequence and draw samples
+        lower_bounds = [self.env.dim_x[0], self.env.dim_y[0]]
+        upper_bounds = [self.env.dim_x[1], self.env.dim_y[1]]
+        sampler = qmc.Halton(d=2, scramble=False, seed=seed)
+
         self.vertices = {}
         vertex_idx = 0
 
         while vertex_idx < num_samples:
-            pt = self.env.sample_point()
+            # draw sample
+            candidate = sampler.random(n=1)
+            candidate = qmc.scale(candidate, lower_bounds, upper_bounds)
+
+            pt = ShapelyPoint(candidate[0][0], candidate[0][1])
 
             if not self.env.static_collision_free(pt):
                 continue

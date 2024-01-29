@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 
 
 def plot_graph(plotting: bool = True):
+    seed = 0
+
     # create an environment with all types of obstacles (static and continuous)
     env = Environment()
 
@@ -27,7 +29,7 @@ def plot_graph(plotting: bool = True):
         min_radius=0,
         max_radius=5,
         random_recurrence=True,
-        seed=0,
+        seed=seed,
     )
 
     # create an environment from it
@@ -43,6 +45,7 @@ def plot_graph(plotting: bool = True):
         num_samples=200,
         neighbour_distance=20.0,
         max_connections=12,
+        seed=seed,
         env=env_instance,
     )
 

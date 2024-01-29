@@ -17,7 +17,8 @@ def ta_prm_worst_case(
     plotting: bool = False,
     quiet: bool = False,
 ):
-    np.random.seed(0)
+    seed = 0
+    np.random.seed(seed)
 
     x_range = (0, 100)
     y_range = (0, 100)
@@ -48,6 +49,7 @@ def ta_prm_worst_case(
         num_samples=samples,
         neighbour_distance=40.0,
         max_connections=max_connections,
+        seed=seed,
         quiet=quiet,
     )
 

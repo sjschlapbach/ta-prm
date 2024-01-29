@@ -247,18 +247,6 @@ class EnvironmentInstance:
                 opactiy=0.2,
             )
 
-    def sample_point(self) -> ShapelyPoint:
-        """
-        Generates a random point within the specified x and y dimensions.
-
-        Returns:
-            ShapelyPoint: A randomly generated point within the specified dimensions.
-        """
-        x_sample = np.random.uniform(self.dim_x[0], self.dim_x[1])
-        y_sample = np.random.uniform(self.dim_y[0], self.dim_y[1])
-
-        return ShapelyPoint(x_sample, y_sample)
-
     def static_collision_free(self, point: ShapelyPoint) -> bool:
         """
         Check if a given point is in collision with any static obstacle in the environment.
