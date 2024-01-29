@@ -317,7 +317,7 @@ class TAPRM:
                                     print(
                                         "Node",
                                         neighbour_id,
-                                        "at time",
+                                        "around time",
                                         end_time,
                                         "already in open list with larger cost und will be updated.",
                                     )
