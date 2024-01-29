@@ -50,6 +50,7 @@ class TestTAPRM:
             num_samples=default_samples,
             neighbour_distance=default_max_distance,
             max_connections=10,
+            seed=0,
             env=env_inst,
         )
 
@@ -116,7 +117,11 @@ class TestTAPRM:
 
         ## create path, override the sampling and place samples manually, connect nodes manually
         graph = Graph(
-            env=env_inst, num_samples=2, max_connections=10, neighbour_distance=200
+            env=env_inst,
+            num_samples=2,
+            max_connections=10,
+            neighbour_distance=200,
+            seed=0,
         )
 
         # overwrite the graphs vertices and add start and goal node

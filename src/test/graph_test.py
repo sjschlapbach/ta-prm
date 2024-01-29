@@ -49,6 +49,7 @@ class TestGraph:
             num_samples=default_samples,
             neighbour_distance=default_max_distance,
             max_connections=10,
+            seed=0,
             env=env_inst,
         )
 

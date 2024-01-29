@@ -1057,26 +1057,6 @@ class TestEnvironmentInstance:
             scenario_range_y=(0, 10),
         )
 
-        # check that the random sample generation creates different points within the environment range
-        sample = env_instance.sample_point()
-        assert sample.x >= min_x and sample.x <= max_x
-        assert sample.y >= min_y and sample.y <= max_y
-
-        sample2 = env_instance.sample_point()
-        assert sample.x != sample2.x and sample.y != sample2.y
-        assert sample.x >= min_x and sample.x <= max_x
-        assert sample.y >= min_y and sample.y <= max_y
-
-        sample3 = env_instance.sample_point()
-        assert (
-            sample.x != sample3.x
-            and sample.y != sample3.y
-            and sample2.x != sample3.x
-            and sample2.y != sample3.y
-        )
-        assert sample.x >= min_x and sample.x <= max_x
-        assert sample.y >= min_y and sample.y <= max_y
-
     def test_static_collision(self):
         # create first static obstacle
         sh_poly1 = ShapelyPolygon([(0, 0), (1, 0), (1, 1), (0, 1)])

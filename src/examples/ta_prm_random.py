@@ -79,6 +79,7 @@ def ta_prm_random(
         neighbour_distance=default_max_distance,
         max_connections=max_connections,
         env=env_inst,
+        seed=seed,
         quiet=quiet,
     )
 
