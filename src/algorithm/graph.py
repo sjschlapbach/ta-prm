@@ -50,9 +50,12 @@ class Graph:
         Initializes a Graph object.
 
         Args:
+            env (EnvironmentInstance): The environment instance to use for sampling and collision checking.
             num_samples (int): The number of samples to generate.
             neighbour_distance (float): The maximum distance between neighboring vertices.
-            env (EnvironmentInstance): The environment instance to use for sampling and collision checking.
+            max_connections (int): The maximum number of connections for each vertex.
+            seed (int): The seed to use for random number generation.
+            quiet (bool): If True, disables verbose print statements / progress bars.
         """
         # save the environment instance
         self.env = env
