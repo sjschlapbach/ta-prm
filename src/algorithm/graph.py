@@ -507,7 +507,7 @@ class Graph:
             curr_pos_y = prev_coords.y + alpha * (next_coords.y - prev_coords.y)
 
             # plot the environment with solution path at current simulation time
-            plt.title(f"Simulation Time: {time}")
+            plt.title(f"Simulation Time: {round(time, 2)}")
             self.plot(query_time=time, fig=fig, sol_path=sol_path, quiet=True)
 
             # plot the current position
