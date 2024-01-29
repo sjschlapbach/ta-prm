@@ -183,13 +183,13 @@ class TAPRM:
     def plan_temporal(
         self,
         start_time: float,
-        temporal_res: int,
+        temporal_precision: int,
         logging: bool = False,
         quiet: bool = False,
     ):
         """
         Plans a path from the start node to the goal node using the TA-PRM algorithm. This version is extended
-        with a temporal pruning / limited temporal resolution setup, such that nodes are only reconsidered, if
+        with a temporal pruning / limited temporal precision setup, such that nodes are only reconsidered, if
         there are no other instances with closeby time stamps in the open list. Otherwise, the instance with
         smaller cost to come will be used (assuming constant heuristic values)
 
@@ -197,7 +197,7 @@ class TAPRM:
             start_time (float): The start time for the planning process.
             logging (bool, optional): Flag indicating whether to enable logging. Defaults to False.
             quiet (bool, optional): Flag indicating whether to suppress output. Defaults to False.
-            temporal_res (int): The number of decimal digits considered in the temporal dimension.
+            temporal_precision (int): The number of decimal digits considered in the temporal dimension.
 
         Returns:
             tuple: A tuple containing a boolean indicating whether a path was found and the path (vertex ids) itself.
@@ -219,7 +219,7 @@ class TAPRM:
                 0,
                 self.graph.start,
                 start_time,
-                round(start_time, temporal_res),
+                round(start_time, temporal_precision),
                 [self.graph.start],
             )
         ]
@@ -291,7 +291,7 @@ class TAPRM:
                     heuristic = self.graph.heuristic[neighbour_id]
                     cost = cost_to_come + heuristic
                     path = node[5] + [neighbour_id]
-                    rounded_end_time = round(end_time, temporal_res)
+                    rounded_end_time = round(end_time, temporal_precision)
 
                     if open_list:
                         # convert the open list heap to a list/set of tuples (node_id, rounded_time)
@@ -338,7 +338,7 @@ class TAPRM:
                                         neighbour_id,
                                         "around time",
                                         end_time,
-                                        "(within resolution) already in open list with lower cost und will be skipped.",
+                                        "(within precision) already in open list with lower cost und will be skipped.",
                                     )
 
                                 continue
