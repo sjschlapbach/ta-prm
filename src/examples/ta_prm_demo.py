@@ -98,10 +98,21 @@ def ta_prm_demo(plotting: bool = False):
     print("Found optimal solution with fastest path from start to goal being:")
     print(path)
 
-    graph.plot(sol_path=path)
-
     if plotting:
+        # Option 1) plot the static result
+        graph.plot(sol_path=path)
         plt.show()
+
+        # Option 2) create simulation video
+        # graph.simulate(
+        #     start_time=0,
+        #     sol_path=path,
+        #     step=0.05,
+        #     fps=15,
+        #     plotting=False,
+        #     save_simulation=True,
+        #     filename="ta_prm_demo",
+        # )
 
 
 if __name__ == "__main__":

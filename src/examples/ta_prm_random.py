@@ -104,8 +104,20 @@ def ta_prm_random(
 
     # plot the path
     if plotting:
+        # Option 1) plot the static result
         graph.plot(sol_path=path)
         plt.show()
+
+        # Option 2) create simulation video
+        # graph.simulate(
+        #     start_time=0,
+        #     sol_path=path,
+        #     step=1,
+        #     fps=20,
+        #     plotting=False,
+        #     save_simulation=True,
+        #     filename="simulation_ta_prm",
+        # )
 
     return runtime, max_length_open, path_cost
 
