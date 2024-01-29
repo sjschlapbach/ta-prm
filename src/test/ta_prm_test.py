@@ -264,8 +264,85 @@ class TestTAPRM:
         assert expansions == 4
 
     def test_limited_precision2(self):
-        # TODO - test case 2
-        pass
+        # Test case 1: arriving at the same node at the same time (higher cost) -> skip node, do not add to OL
+        env = Environment(obstacles=[])
+        env_inst = EnvironmentInstance(
+            environment=env,
+            query_interval=Interval(0, 200, closed="both"),
+            scenario_range_x=(0, 100),
+            scenario_range_y=(0, 100),
+        )
+        graph = Graph(env=env_inst, num_samples=0, quiet=True)
+
+        start = ShapelyPoint(10, 10)
+        pt0 = ShapelyPoint(15, 5)
+        pt1 = ShapelyPoint(20, 10)
+        goal = ShapelyPoint(30, 10)
+
+        graph.vertices = {0: start, 1: pt0, 2: pt1, 3: goal}
+        graph.start = 0
+        graph.goal = 3
+
+        # edge from start to pt0
+        tmp_ln = ShapelyLine([(start.x, start.y), (pt0.x, pt0.y)])
+        edge_start_pt0 = TimedEdge(
+            geometry=tmp_ln, availability=[], always_available=True, cost=10
+        )
+        edge_start_pt0.length = 5
+
+        # edge from start to pt1
+        tmp_ln = ShapelyLine([(start.x, start.y), (pt1.x, pt1.y)])
+        edge_start_pt1 = TimedEdge(
+            geometry=tmp_ln, availability=[], always_available=True, cost=15
+        )
+        edge_start_pt1.length = 10
+
+        # edge from pt0 to pt1
+        tmp_ln = ShapelyLine([(pt0.x, pt0.y), (pt1.x, pt1.y)])
+        edge_pt0_pt1 = TimedEdge(
+            geometry=tmp_ln, availability=[], always_available=True, cost=10
+        )
+        edge_pt0_pt1.length = 5
+
+        # edge from pt1 to goal
+        tmp_ln = ShapelyLine([(pt1.x, pt1.y), (goal.x, goal.y)])
+        edge_pt1_goal = TimedEdge(
+            geometry=tmp_ln, availability=[], always_available=True, cost=20
+        )
+        edge_pt1_goal.length = 5
+
+        # add the edges to the graph and index connections
+        graph.edges = {
+            0: edge_start_pt0,
+            1: edge_start_pt1,
+            2: edge_pt0_pt1,
+            3: edge_pt1_goal,
+        }
+        graph.connections = {
+            0: [(1, 0), (2, 1)],
+            1: [(2, 2)],
+            2: [(3, 3)],
+            3: [],
+        }
+        graph.heuristic = {0: 12, 1: 11, 2: 10, 3: 0}
+        algo = TAPRM(graph=graph)
+
+        # applying the standard algorithm, the same node (same time) should be expanded at two different costs
+        success, path, max_open, expansions = algo.plan(start_time=0)
+
+        assert success == True
+        assert path == [0, 2, 3]
+        assert max_open == 2
+        assert expansions == 5
+
+        success, path, max_open, expansions = algo.plan_temporal(
+            start_time=0, temporal_precision=0
+        )
+
+        assert success == True
+        assert path == [0, 2, 3]
+        assert max_open == 2
+        assert expansions == 4
 
     def test_limited_precision3(self):
         # TODO - test case 3
