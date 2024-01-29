@@ -105,6 +105,7 @@ def ta_prm_random(
     # plot the path
     if plotting:
         graph.plot(sol_path=path)
+        # graph.simulate(start_time=0, sol_path=path, step=1)
         plt.show()
 
     return runtime, max_length_open, path_cost

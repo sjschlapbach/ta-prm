@@ -335,7 +335,13 @@ class Graph:
 
         return cost
 
-    def plot(self, query_time: float = None, fig=None, sol_path: List[int] = None):
+    def plot(
+        self,
+        query_time: float = None,
+        fig=None,
+        sol_path: List[int] = None,
+        quiet: bool = False,
+    ):
         """
         Plots the graph, including all vertices and edges.
 
@@ -364,8 +370,9 @@ class Graph:
 
         # plot solution path
         if sol_path is not None:
-            cost = self.path_cost(sol_path=sol_path)
-            print(f"Solution path cost: {cost:.2f}")
+            if not quiet:
+                cost = self.path_cost(sol_path=sol_path)
+                print(f"Solution path cost: {cost:.2f}")
 
             for idx in range(len(sol_path) - 1):
                 connections = self.connections[sol_path[idx]]
@@ -397,5 +404,86 @@ class Graph:
                 marker="o",
                 markersize=6,
             )
+
+    def simulate(self, start_time: float, sol_path: List[int], step: float = 0.25):
+        """
+        Simulates the movement along a given solution path in the graph.
+
+        Parameters:
+        - start_time (float): The starting time of the simulation.
+        - sol_path (List[int]): The solution path represented as a list of vertex indices.
+        - step (float, optional): The time step between each simulation iteration. Default is 0.25.
+
+        Returns:
+        None
+        """
+
+        # 1) get the edge times to build a time-annotated path
+        timed_path: List[Tuple(ShapelyPoint, float)] = [(sol_path[0], start_time)]
+
+        for idx in range(len(sol_path) - 1):
+            curr_vertex = sol_path[idx]
+            curr_time = timed_path[-1][1]
+            next_vertex = sol_path[idx + 1]
+            connections = self.connections[curr_vertex]
+            for connection in connections:
+                if connection[0] == sol_path[idx + 1]:
+                    edge_idx = connection[1]
+                    break
+
+            edge = self.edges[edge_idx]
+            edge_time = edge.length
+            timed_path.append((next_vertex, curr_time + edge_time))
+
+        goal_time = timed_path[-1][1]
+
+        # 2) simulate the path with dynamic querying
+        fig = plt.figure(figsize=(8, 8))
+
+        for time in np.arange(start_time, goal_time, step):
+            # find the index and time at previous and next vertex along path
+            prev_vertex = None
+            next_vertex = None
+            prev_time = None
+            next_time = None
+
+            for idx, (vertex, vertex_time) in enumerate(timed_path):
+                if time >= vertex_time:
+                    prev_vertex = vertex
+                    prev_time = vertex_time
+
+                    if prev_vertex == sol_path[-1]:
+                        break
+                    else:
+                        next_vertex = timed_path[idx + 1][0]
+                        next_time = timed_path[idx + 1][1]
+                else:
+                    break
+
+            if next_vertex is None:
+                if curr_vertex == sol_path[-1]:
+                    print("Goal node has been reached by simulation")
+                    break
+                else:
+                    print("Simulation failed")
+                    break
+
+            # linearly interpolate between vertices to find current position
+            prev_coords = self.vertices[prev_vertex]
+            next_coords = self.vertices[next_vertex]
+            alpha = (time - prev_time) / (next_time - prev_time)
+            curr_pos_x = prev_coords.x + alpha * (next_coords.x - prev_coords.x)
+            curr_pos_y = prev_coords.y + alpha * (next_coords.y - prev_coords.y)
+
+            # plot the environment with solution path at current simulation time
+            plt.title(f"Simulation Time: {time}")
+            self.plot(query_time=time, fig=fig, sol_path=sol_path, quiet=True)
+
+            # plot the current position
+            plt.plot(curr_pos_x, curr_pos_y, color="blue", marker="o", markersize=6)
+
+            plt.draw()
+            plt.pause(0.001)
+            plt.clf()
 
     # TODO - add functions to save and load from file
