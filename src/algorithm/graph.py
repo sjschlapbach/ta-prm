@@ -1,3 +1,7 @@
+import cv2
+import datetime
+import os
+import shutil
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from shapely.geometry import LineString as ShapelyLine, Point as ShapelyPoint
@@ -405,7 +409,16 @@ class Graph:
                 markersize=6,
             )
 
-    def simulate(self, start_time: float, sol_path: List[int], step: float = 0.25):
+    def simulate(
+        self,
+        start_time: float,
+        sol_path: List[int],
+        step: float = 0.25,
+        fps: int = 10,
+        filename: str = "simulation",
+        plotting: bool = False,
+        save_simulation: bool = False,
+    ):
         """
         Simulates the movement along a given solution path in the graph.
 
@@ -413,6 +426,9 @@ class Graph:
         - start_time (float): The starting time of the simulation.
         - sol_path (List[int]): The solution path represented as a list of vertex indices.
         - step (float, optional): The time step between each simulation iteration. Default is 0.25.
+        - fps (int, optional): The frames per second for the simulation. Default is 10.
+        - plotting (bool, optional): If True, the simulation will be shown. Default is False.
+        - save_simulation (bool, optional): If True, the simulation will be saved as an mp4 file. Default is False.
 
         Returns:
         None
@@ -440,7 +456,22 @@ class Graph:
         # 2) simulate the path with dynamic querying
         fig = plt.figure(figsize=(8, 8))
 
-        for time in np.arange(start_time, goal_time, step):
+        if save_simulation:
+            # check if the folder "animations" exists in the current repository, otherwise create it
+            if not os.path.exists("animations"):
+                os.makedirs("animations")
+
+            # create a temporary image directory
+            if not os.path.exists("tmp_images"):
+                os.makedirs("tmp_images")
+            else:
+                shutil.rmtree("tmp_images")
+                os.makedirs("tmp_images")
+
+            images = []
+
+        print("Simulating solution path / creating simulation images...")
+        for time in tqdm(np.arange(start_time, goal_time, step)):
             # find the index and time at previous and next vertex along path
             prev_vertex = None
             next_vertex = None
@@ -482,8 +513,47 @@ class Graph:
             # plot the current position
             plt.plot(curr_pos_x, curr_pos_y, color="blue", marker="o", markersize=6)
 
-            plt.draw()
-            plt.pause(0.001)
-            plt.clf()
+            if plotting:
+                plt.draw()
+                plt.pause(0.001)
+                plt.clf()
+
+            if save_simulation:
+                # save the current figure as an image
+                image_path = f"tmp_images/image_{time}.png"
+                plt.savefig(image_path, dpi=300)
+
+                # save the image to the corresponding list
+                images.append(image_path)
+
+                # clear the figure
+                plt.clf()
+
+        if save_simulation:
+            print("Creating simulation video...")
+            current_time = datetime.datetime.now()
+            mp4_path = (
+                f"animations/{filename}_{current_time.strftime('%Y%m%d%H%M%S')}.avi"
+            )
+            frame = cv2.imread(images[0])
+            height, width, layers = frame.shape
+
+            video = cv2.VideoWriter(mp4_path, 0, fps, (width, height))
+
+            for image in images:
+                video.write(cv2.imread(image))
+
+            cv2.destroyAllWindows()
+            video.release()
+            shutil.rmtree("tmp_images")
+
+            # call ffmpeg from the command line to convert avi file to mp4 and compress size
+            os.system(
+                f"ffmpeg -i {mp4_path} -vcodec libx264 -crf 28 {mp4_path[:-4]}_compressed.mp4"
+            )
+
+            # delete avi file
+            os.remove(mp4_path)
+            print(f"Simulation saved as {mp4_path}")
 
     # TODO - add functions to save and load from file
