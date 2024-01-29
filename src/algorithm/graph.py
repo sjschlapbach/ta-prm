@@ -515,7 +515,7 @@ class Graph:
 
             if plotting:
                 plt.draw()
-                plt.pause(0.001)
+                plt.pause(step)
                 plt.clf()
 
             if save_simulation:
