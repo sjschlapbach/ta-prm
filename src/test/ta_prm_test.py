@@ -165,3 +165,14 @@ class TestTAPRM:
         assert success == True
         assert path == [2, 1, 0, 3]
         assert max_open > 0
+
+        # run TA-PRM with temporal pruning and check debugging output
+        success2, path2, max_open2 = algo.plan_temporal(start_time=0, temporal_res=0)
+        assert success2 == True
+        assert path2 == [2, 1, 0, 3]
+        assert max_open2 > 0
+
+        success3, path3, max_open3 = algo.plan_temporal(start_time=0, temporal_res=10)
+        assert success3 == True
+        assert path3 == [2, 1, 0, 3]
+        assert max_open3 > 0

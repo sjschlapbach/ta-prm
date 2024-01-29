@@ -90,6 +90,9 @@ def ta_prm_demo(plotting: bool = False):
     # run TA-PRM and check debugging output
     algo = TAPRM(graph=graph)
     success, path, max_open = algo.plan(start_time=0, logging=True)
+    # success, path, max_open = algo.plan_temporal(
+    #     start_time=0, logging=True, temporal_res=0
+    # )
 
     assert success == True
     assert len(path) > 0
