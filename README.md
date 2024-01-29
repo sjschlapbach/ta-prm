@@ -32,6 +32,16 @@ The `src/examples/` directory contains a number of example scripts. They showcas
 
 A separate GitHub action is run on every push or pull_request. The status of the latest run can be seen in the badge at the top of this README.
 
+## Simulation Videos
+
+The `simulate`-function of the graph class, allows to simulate a solution path in a time-varying environment and either illustrate the result using `matplotlib` or save it as a video. While the video is initially save in the `avi`-format, this results in a very large file size. A subsequent conversion to the more compressed `mp4`-format is implemented through the `ffmpeg`-tool. To install it on MacOS, run the following command:
+
+```bash
+brew install ffmpeg
+```
+
+For the installation of `ffmpeg` on other operating systems, please refer to the [official documentation](https://ffmpeg.org/).
+
 ## Test Suite
 
 After installing the pytest package, the test suite can be run with the following command:
