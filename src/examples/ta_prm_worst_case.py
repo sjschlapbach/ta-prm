@@ -62,7 +62,7 @@ def ta_prm_worst_case(
     # run TA-PRM and check debugging output
     algo = TAPRM(graph=graph)
     start = time.time()
-    success, path, max_open = algo.plan(start_time=0, quiet=quiet)
+    success, path, max_open, expansions = algo.plan(start_time=0, quiet=quiet)
     runtime = time.time() - start
 
     assert success == True

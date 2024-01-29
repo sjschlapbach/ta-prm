@@ -84,6 +84,7 @@ class TAPRM:
             )
         ]
         heapify(open_list)
+        expansions = 0
 
         # track the maximum length of the open list over time
         max_open_list = 1
@@ -93,6 +94,7 @@ class TAPRM:
             max_open_list = max(max_open_list, len(open_list))
 
             node = heappop(open_list)
+            expansions += 1
 
             if logging:
                 print("Expanding node: ", node[2], " at time: ", node[3])
@@ -101,7 +103,7 @@ class TAPRM:
             if node[2] == self.graph.goal:
                 if not quiet:
                     print("Successfully found a path from start to goal.")
-                return True, node[4], max_open_list
+                return True, node[4], max_open_list, expansions
 
             # get all neighbours ids
             neighbours = self.graph.connections[node[2]]
@@ -224,6 +226,7 @@ class TAPRM:
             )
         ]
         heapify(open_list)
+        expansions = 0
 
         # track the maximum length of the open list over time
         max_open_list = 1
@@ -233,6 +236,7 @@ class TAPRM:
             max_open_list = max(max_open_list, len(open_list))
 
             node = heappop(open_list)
+            expansions += 1
 
             if logging:
                 print("Expanding node: ", node[2], " at time: ", node[3])
@@ -241,7 +245,7 @@ class TAPRM:
             if node[2] == self.graph.goal:
                 if not quiet:
                     print("Successfully found a path from start to goal.")
-                return True, node[5], max_open_list
+                return True, node[5], max_open_list, expansions
 
             # get all neighbours ids
             neighbours = self.graph.connections[node[2]]
