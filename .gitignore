@@ -118,6 +118,7 @@ ipython_config.py
 # Results / Outputs
 animations/
 tmp_images/
+plots/
 
 # PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
 __pypackages__/

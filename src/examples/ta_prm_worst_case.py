@@ -16,6 +16,7 @@ def ta_prm_worst_case(
     max_connections: int = 10,
     plotting: bool = False,
     quiet: bool = False,
+    temporal_precision: int = None,
 ):
     seed = 0
     np.random.seed(seed)
@@ -62,7 +63,13 @@ def ta_prm_worst_case(
     # run TA-PRM and check debugging output
     algo = TAPRM(graph=graph)
     start = time.time()
-    success, path, max_open, expansions = algo.plan(start_time=0, quiet=quiet)
+    if temporal_precision is None:
+        success, path, max_open, expansions = algo.plan(start_time=0, quiet=quiet)
+    else:
+        success, path, max_open, expansions = algo.plan_temporal(
+            start_time=0, quiet=quiet, temporal_precision=temporal_precision
+        )
+
     runtime = time.time() - start
 
     assert success == True
@@ -79,7 +86,7 @@ def ta_prm_worst_case(
     # compute the cost of the solution path
     path_cost = graph.path_cost(path)
 
-    return runtime, path_cost
+    return runtime, max_open, path_cost
 
 
 if __name__ == "__main__":

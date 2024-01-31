@@ -17,6 +17,7 @@ def ta_prm_random(
     max_connections: int = 10,
     plotting: bool = False,
     quiet: bool = False,
+    temporal_precision: int = None,
 ):
     # optional parameters
     seed = 0
@@ -93,7 +94,15 @@ def ta_prm_random(
     ta_prm = TAPRM(graph=graph)
 
     start = time.time()
-    success, path, max_length_open, expansions = ta_prm.plan(start_time=0, quiet=quiet)
+    if temporal_precision is None:
+        success, path, max_length_open, expansions = ta_prm.plan(
+            start_time=0, quiet=quiet
+        )
+    else:
+        success, path, max_length_open, expansions = ta_prm.plan_temporal(
+            start_time=0, quiet=quiet, temporal_precision=temporal_precision
+        )
+
     runtime = time.time() - start
 
     assert success == True
