@@ -344,21 +344,24 @@ class Graph:
         query_time: float = None,
         fig=None,
         sol_path: List[int] = None,
+        show_inactive: bool = False,
         quiet: bool = False,
     ):
         """
         Plots the graph, including all vertices and edges.
 
         Parameters:
-        - query_time (float): The time at which the query is made (optional).
-        - fig (matplotlib.pyplot.figure): The figure to plot the obstacles on (optional).
-        - sol_path (List[int]): The solution path to plot (optional).
+            query_time (float): The time at which the query is made (optional).
+            fig (matplotlib.pyplot.figure): The figure to plot the obstacles on (optional).
+            sol_path (List[int]): The solution path to plot (optional).
+            show_inactive (bool): If True, inactive obstacles will be shown (optional).
+            quiet (bool): If True, no additional information will be printed (optional).
         """
         if fig is None:
             fig = plt.figure(figsize=(8, 8))
 
         # plot the environment instance
-        self.env.plot(query_time=query_time, fig=fig)
+        self.env.plot(query_time=query_time, show_inactive=show_inactive, fig=fig)
 
         # plot vertices
         for vertex in self.vertices.values():
@@ -418,20 +421,23 @@ class Graph:
         filename: str = "simulation",
         plotting: bool = False,
         save_simulation: bool = False,
+        show_inactive: bool = False,
     ):
         """
         Simulates the movement along a given solution path in the graph.
 
         Parameters:
-        - start_time (float): The starting time of the simulation.
-        - sol_path (List[int]): The solution path represented as a list of vertex indices.
-        - step (float, optional): The time step between each simulation iteration. Default is 0.25.
-        - fps (int, optional): The frames per second for the simulation. Default is 10.
-        - plotting (bool, optional): If True, the simulation will be shown. Default is False.
-        - save_simulation (bool, optional): If True, the simulation will be saved as an mp4 file. Default is False.
+            start_time (float): The starting time of the simulation.
+            sol_path (List[int]): The solution path represented as a list of vertex indices.
+            step (float, optional): The time step between each simulation iteration. Default is 0.25.
+            fps (int, optional): The frames per second for the simulation. Default is 10.
+            filename (str, optional): The name of the simulation file. Default is "simulation".
+            plotting (bool, optional): If True, the simulation will be shown. Default is False.
+            save_simulation (bool, optional): If True, the simulation will be saved as an mp4 file. Default is False.
+            show_inactive (bool, optional): If True, inactive obstacles will be shown. Default is False.
 
         Returns:
-        None
+            None
         """
 
         # 1) get the edge times to build a time-annotated path
@@ -508,7 +514,13 @@ class Graph:
 
             # plot the environment with solution path at current simulation time
             plt.title(f"Simulation Time: {round(time, 2)}")
-            self.plot(query_time=time, fig=fig, sol_path=sol_path, quiet=True)
+            self.plot(
+                query_time=time,
+                fig=fig,
+                sol_path=sol_path,
+                show_inactive=show_inactive,
+                quiet=True,
+            )
 
             # plot the current position
             plt.plot(curr_pos_x, curr_pos_y, color="blue", marker="o", markersize=6)

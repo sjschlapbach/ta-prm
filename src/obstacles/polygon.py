@@ -29,7 +29,7 @@ class Polygon(Geometry):
         check_collision(self, shape, query_time=None, query_interval=None):
             Checks if the polygon is in collision with a given shape. Touching time intervals are considered to be overlapping.
 
-        plot(self, query_time=None, query_interval=None, fig=None):
+        plot(self, query_time=None, query_interval=None, color="black", fill_color=None, opactiy=1, show_inactive=False, inactive_color="grey", inactive_fill_color=None, fig=None):
             Plots the polygon with a circle of the corresponding radius around it.
             Optionally, only shows the polygon with the circle if it is active.
 
@@ -117,6 +117,9 @@ class Polygon(Geometry):
         color: str = "black",
         fill_color: str = None,
         opactiy: float = 1,
+        show_inactive: bool = False,
+        inactive_color: str = "grey",
+        inactive_fill_color: str = None,
         fig=None,
     ):
         """
@@ -129,9 +132,24 @@ class Polygon(Geometry):
             fig (optional): The figure to plot on. If not provided, a new figure will be created.
             fill_color (optional): The color to fill the polygon with.
             opactiy (optional): The opacity of the polygon.
+            show_inactive (optional): Whether to show the polygon if it is inactive.
+            inactive_color (optional): The color to use for inactive polygons.
+            inactive_fill_color (optional): The fill color to use for inactive polygons.
             fig (optional): The figure to plot on. If not provided, a new figure will be created.
         """
         if not self.is_active(query_time, query_interval):
+            if show_inactive:
+                if self.radius is not None and self.radius > 0:
+                    poly = self.geometry.buffer(self.radius)
+                    plt.plot(*poly.exterior.xy, color=inactive_color)
+                    plt.fill(*poly.exterior.xy, color=inactive_fill_color, alpha=0.05)
+                else:
+                    plt.plot(*self.geometry.exterior.xy, color=inactive_color)
+                    plt.fill(
+                        *self.geometry.exterior.xy,
+                        color=inactive_fill_color,
+                        alpha=0.05
+                    )
             return
 
         if fig is None:
