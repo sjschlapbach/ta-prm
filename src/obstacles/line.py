@@ -30,7 +30,7 @@ class Line(Geometry):
         check_collision(self, shape: Union[Point, LineString, Polygon], query_time: float = None, query_interval: Interval = None) -> bool:
             Check if the line collides with a given shape.
 
-        plot(self, query_time: float = None, query_interval: Interval = None, fig=None):
+        plot(self, query_time: float = None, query_interval: Interval = None, color: str = "black", fill_color: str = None, opacity: float = 1, show_inactive: bool = False, inactive_color: str = "grey", inactive_fill_color: str = None, fig=None):
             Plot the line.
 
         export_to_json(self) -> dict:
@@ -49,6 +49,7 @@ class Line(Geometry):
             max_y: float,
             min_radius: float,
             max_radius: float,
+            max_size: float,
             min_interval: float = 0,
             max_interval: float = 100,
             only_static: bool = False,
@@ -134,7 +135,10 @@ class Line(Geometry):
         query_interval: Interval = None,
         color: str = "black",
         fill_color: str = None,
-        opactiy: float = 1,
+        opacity: float = 1,
+        show_inactive: bool = False,
+        inactive_color: str = "grey",
+        inactive_fill_color: str = None,
         fig=None,
     ):
         """
@@ -145,10 +149,21 @@ class Line(Geometry):
             query_interval (Interval, optional): The query time interval. Defaults to None.
             color (str, optional): The color of the line. Defaults to "black".
             fill_color (str, optional): The fill color of the line. Defaults to None.
-            opactiy (float, optional): The opacity of the line. Defaults to 1.
+            opacity (float, optional): The opacity of the line. Defaults to 1.
+            show_inactive (bool, optional): Whether to show inactive obstacles. Defaults to False.
+            inactive_color (str, optional): The color of inactive obstacles. Defaults to "grey".
+            inactive_fill_color (str, optional): The fill color of inactive obstacles. Defaults to None.
             fig: The figure to plot on. Defaults to None.
         """
         if not self.is_active(query_time, query_interval):
+            if not show_inactive:
+                if self.radius is not None and self.radius > 0:
+                    poly = self.geometry.buffer(self.radius)
+                    plt.plot(*poly.exterior.xy, color=inactive_color)
+                    plt.fill(*poly.exterior.xy, color=inactive_fill_color, alpha=0.05)
+                else:
+                    plt.plot(*self.geometry.xy, color=inactive_color)
+                    plt.fill(*self.geometry.xy, color=inactive_fill_color, alpha=0.05)
             return
 
         if fig is None:
@@ -159,10 +174,10 @@ class Line(Geometry):
         if self.radius is not None and self.radius > 0:
             poly = self.geometry.buffer(self.radius)
             plt.plot(*poly.exterior.xy, color=color)
-            plt.fill(*poly.exterior.xy, color=fill_color, alpha=opactiy)
+            plt.fill(*poly.exterior.xy, color=fill_color, alpha=opacity)
         else:
             plt.plot(*self.geometry.xy, color=color)
-            plt.fill(*self.geometry.xy, color=fill_color, alpha=opactiy)
+            plt.fill(*self.geometry.xy, color=fill_color, alpha=opacity)
 
     def copy(self):
         """

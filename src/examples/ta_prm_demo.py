@@ -115,6 +115,7 @@ def ta_prm_demo(plotting: bool = False):
         #     plotting=False,
         #     save_simulation=True,
         #     filename="ta_prm_demo",
+        #     show_inactive=True,
         # )
 
 

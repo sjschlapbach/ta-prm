@@ -126,6 +126,7 @@ def ta_prm_random(
         #     plotting=False,
         #     save_simulation=True,
         #     filename="simulation_ta_prm",
+        #     show_inactive=True,
         # )
 
     return runtime, max_length_open, path_cost

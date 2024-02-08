@@ -37,6 +37,10 @@ class EnvironmentInstance:
     Methods:
         __init__(self, environment: Environment, query_interval: Interval, scenario_range_x: Tuple[int, int], scenario_range_y: Tuple[int, int], resolution: int = 20)
         compute_spatial_indices(self, resolution: int) -> Tuple[List[List[List[int]]], List[List[List[int]]], float, float]
+        plot(self, query_time: float = None, show_inactive: bool = False, fig=None)
+        static_collision_free(self, point: ShapelyPoint) -> bool
+        static_collision_free_ln(self, line: ShapelyLine)
+        collision_free_intervals_ln(self, line: ShapelyLine, cells: List[Tuple[int, int]]) -> Tuple[bool, List[Interval]]
     """
 
     def __init__(
@@ -218,12 +222,13 @@ class EnvironmentInstance:
 
         return static_arr, dynamic_arr, spacing_x, spacing_y
 
-    def plot(self, query_time: float = None, fig=None):
+    def plot(self, query_time: float = None, show_inactive: bool = False, fig=None):
         """
         Plots the obstacles in the environment instance using matplotlib.
 
         Parameters:
         - query_time (float): The time at which the query is made (optional).
+        - show_inactive (bool): A boolean value indicating if inactive dynamic obstacles should be plotted (optional).
         - fig (matplotlib.pyplot.figure): The figure to plot the obstacles on (optional).
         """
         if fig is None:
@@ -235,7 +240,7 @@ class EnvironmentInstance:
 
         # plot static obstacles independent of query time
         for obstacle_stat in self.static_obstacles.values():
-            obstacle_stat.plot(fig=fig, color="black", fill_color="blue", opactiy=0.2)
+            obstacle_stat.plot(fig=fig, color="black", fill_color="blue", opacity=0.2)
 
         # plot dynamic obstacles at the query time
         for obstacle_dyn in self.dynamic_obstacles.values():
@@ -244,7 +249,8 @@ class EnvironmentInstance:
                 fig=fig,
                 color="black",
                 fill_color="green",
-                opactiy=0.2,
+                opacity=0.2,
+                show_inactive=True,
             )
 
     def static_collision_free(self, point: ShapelyPoint) -> bool:
