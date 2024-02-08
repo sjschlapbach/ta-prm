@@ -1,7 +1,13 @@
+# Mac Files
+*.DS_Store
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+
+# VS Code Settings
+.vscode/
 
 # C extensions
 *.so
@@ -108,6 +114,11 @@ ipython_config.py
 #   in version control.
 #   https://pdm.fming.dev/#use-with-ide
 .pdm.toml
+
+# Results / Outputs
+animations/
+tmp_images/
+plots/
 
 # PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
 __pypackages__/
