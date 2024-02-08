@@ -30,7 +30,7 @@ class Point(Geometry):
         check_collision(self, shape, query_time=None, query_interval=None):
             Checks if the point is in collision with a given shape. Touching time intervals are considered to be overlapping.
 
-        plot(self, query_time=None, query_interval=None, color="black", fill_color=None, opactiy=1, show_inactive=False, inactive_color="grey", inactive_fill_color=None, fig=None):
+        plot(self, query_time=None, query_interval=None, color="black", fill_color=None, opacity=1, show_inactive=False, inactive_color="grey", inactive_fill_color=None, fig=None):
             Plots the point with a circle of the corresponding radius around it.
             Optionally, only shows the point with the circle if it is active.
 
@@ -133,7 +133,7 @@ class Point(Geometry):
         query_interval: Interval = None,
         color: str = "black",
         fill_color: str = None,
-        opactiy: float = 1,
+        opacity: float = 1,
         show_inactive: bool = False,
         inactive_color: str = "grey",
         inactive_fill_color: str = None,
@@ -148,7 +148,7 @@ class Point(Geometry):
             query_interval (optional): The time interval to check if the point is active.
             color (str, optional): The color of the point. Defaults to "black".
             fill_color (str, optional): The color to fill the circle with. Defaults to None.
-            opactiy (float, optional): The opacity of the circle. Defaults to 1.
+            opacity (float, optional): The opacity of the circle. Defaults to 1.
             show_inactive (bool, optional): If True, the point will be plotted even if it is inactive. Defaults to False.
             inactive_color (str, optional): The color of the point if it is inactive. Defaults to "grey".
             inactive_fill_color (str, optional): The color to fill the circle with if the point is inactive. Defaults to None.
@@ -173,10 +173,10 @@ class Point(Geometry):
         if self.radius is not None and self.radius > 0:
             poly = self.geometry.buffer(self.radius)
             plt.plot(*poly.exterior.xy, color=color)
-            plt.fill(*poly.exterior.xy, color=fill_color, alpha=opactiy)
+            plt.fill(*poly.exterior.xy, color=fill_color, alpha=opacity)
         else:
             plt.plot(*self.geometry.xy, color=color, marker="o")
-            plt.fill(*self.geometry.xy, color=fill_color, alpha=opactiy)
+            plt.fill(*self.geometry.xy, color=fill_color, alpha=opacity)
 
     def copy(self):
         """

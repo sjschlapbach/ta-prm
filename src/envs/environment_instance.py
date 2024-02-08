@@ -240,7 +240,7 @@ class EnvironmentInstance:
 
         # plot static obstacles independent of query time
         for obstacle_stat in self.static_obstacles.values():
-            obstacle_stat.plot(fig=fig, color="black", fill_color="blue", opactiy=0.2)
+            obstacle_stat.plot(fig=fig, color="black", fill_color="blue", opacity=0.2)
 
         # plot dynamic obstacles at the query time
         for obstacle_dyn in self.dynamic_obstacles.values():
@@ -249,7 +249,7 @@ class EnvironmentInstance:
                 fig=fig,
                 color="black",
                 fill_color="green",
-                opactiy=0.2,
+                opacity=0.2,
                 show_inactive=True,
             )
 
