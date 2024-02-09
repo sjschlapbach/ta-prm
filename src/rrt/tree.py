@@ -56,7 +56,7 @@ class Tree:
         next_sample = 2
 
         # build the tree up to the required number of samples
-        while next_sample <= num_samples:
+        while next_sample <= num_samples + 1:
             x_candidate = np.random.uniform(env.dim_x[0], env.dim_x[1])
             y_candidate = np.random.uniform(env.dim_y[0], env.dim_y[1])
             candidate = ShapelyPoint(x_candidate, y_candidate)

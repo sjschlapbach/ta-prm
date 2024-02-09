@@ -1,6 +1,5 @@
 from src.envs.environment import Environment
 from src.envs.environment_instance import EnvironmentInstance
-from src.examples.plot_environment import create_environment
 from src.rrt.tree import Tree
 
 from pandas import Interval
