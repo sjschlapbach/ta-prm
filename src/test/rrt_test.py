@@ -62,6 +62,7 @@ class RRTTest:
         assert tree.tree[tree.goal]["children"] == []
 
         # if no error is thrown, a connection from start to goal should be available
+        manual_path = [tree.goal]
         current = tree.goal
         while True:
             if current == tree.start:
@@ -71,3 +72,9 @@ class RRTTest:
             assert previous is not None
             assert current in tree.tree[previous]["children"]
             current = previous
+            manual_path.append(current)
+
+        sol_path = tree.rrt_find_path()
+        assert len(manual_path) > 1
+        assert len(sol_path) > 1
+        assert manual_path == sol_path

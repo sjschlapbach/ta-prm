@@ -48,11 +48,14 @@ def plot_rrt_tree(plotting: bool = True):
         seed=seed,
     )
 
+    # compute solution path
+    sol_path = tree.rrt_find_path()
+
     # initialize a figure
     fig = plt.figure(figsize=(8, 8))
 
     # plot the tree
-    tree.plot(fig=fig)
+    tree.plot(fig=fig, sol_path=sol_path)
 
     if plotting:
         plt.show()

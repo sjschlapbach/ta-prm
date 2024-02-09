@@ -96,6 +96,21 @@ class Tree:
                 "Goal node is not reachable from the tree or not collision free."
             )
 
+    def rrt_find_path(self):
+        """
+        Finds the path from the start to the goal node in the tree.
+
+        Returns:
+            List[int]: A list of indices representing the path from the start to the goal node.
+        """
+        path = [self.goal]
+        current = self.goal
+        while current != self.start:
+            current = self.tree[current]["parent"]
+            path.append(current)
+
+        return path[::-1]
+
     def __find_closest_neighbor(self, candidate: ShapelyPoint) -> Tuple[int, float]:
         """
         Finds the closest neighbor to the given candidate point in the tree.
@@ -192,7 +207,17 @@ class Tree:
                     linewidth=0.5,
                 )
 
-        # TODO: plot solution path if provided
+        # plot solution path
+        if sol_path is not None:
+            for i in range(len(sol_path) - 1):
+                parent = self.tree[sol_path[i]]["position"]
+                child = self.tree[sol_path[i + 1]]["position"]
+                plt.plot(
+                    [parent.x, child.x],
+                    [parent.y, child.y],
+                    color="green",
+                    linewidth=3,
+                )
 
         # plot start node
         if self.start is not None:
