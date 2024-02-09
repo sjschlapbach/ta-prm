@@ -1030,7 +1030,7 @@ class TestEnvironmentInstance:
         assert len(dynamic_index[4][3]) == 0
         assert len(dynamic_index[4][4]) == 0
 
-    def test_sample(self):
+    def test_random_obstacles(self):
         # create environment with random obstacles
         min_x = 0
         max_x = 200
