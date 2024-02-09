@@ -40,12 +40,14 @@ def plot_rrt(plotting: bool = True):
     )
 
     # create tree
+    obs_free = 0.95  # free-space percentage should be over-approximation for asymptotic optimality
     rrt = RRT(
         start=(2, 2),
         goal=(98, 98),
         env=env_instance,
         num_samples=1000,
         rewiring=True,
+        obs_free=0.5,
         seed=seed,
     )
 

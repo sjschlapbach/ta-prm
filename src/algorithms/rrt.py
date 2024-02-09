@@ -17,6 +17,7 @@ class RRT:
     - num_samples (int): The number of samples to build the tree.
     - seed (int): The seed for the random number generator.
     - rewiring (bool): Whether to use the RRT* algorithm (default: False).
+    - obs_free_volume (float): The volume of the free space (default: 0.5).
     - quiet (bool): Whether to suppress output messages.
 
     Attributes:
@@ -39,6 +40,7 @@ class RRT:
         num_samples: int = 100,
         seed: int = None,
         rewiring: bool = False,
+        obs_free: float = 0.5,
         quiet: bool = False,
     ):
         # check for collision of start node
@@ -67,6 +69,23 @@ class RRT:
         self.start = 0
         self.env = env
         next_sample = 2
+
+        # precompute gammaPRM for RRT* algorithm
+        if rewiring:
+            # ! assumption: free space percentag chosen s.t. gammaPRM is > gammaPRM* for asymptotic optimality
+            # see section 3.3 of https://arxiv.org/pdf/1105.1186.pdf
+            d = 2
+            obs_free_volume = (
+                obs_free * (env.dim_x[1] - env.dim_x[0]) * (env.dim_y[1] - env.dim_y[0])
+            )
+            unit_ball_volume = 1
+            self.gammaPRM = (
+                2
+                * ((1 + 1 / d) ** (1 / d))
+                * ((obs_free_volume / unit_ball_volume) ** (1 / d))
+            )
+        else:
+            self.gammaPRM = None
 
         # build the tree up to the required number of samples
         while next_sample <= num_samples + 1:
@@ -208,7 +227,7 @@ class RRT:
             n = len(self.tree)
             for key, node in self.tree.items():
                 dist = candidate.distance(node["position"])
-                if dist < np.log(n) / n:
+                if dist < self.gammaPRM * (np.log(n) / n) ** (0.5):
                     xnear.append(key)
 
         return closest, distance, xnear
