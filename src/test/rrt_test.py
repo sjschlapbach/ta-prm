@@ -1,12 +1,9 @@
-# TODO: potentially update imports to only have the required ones
 from pandas import Interval
-from shapely.geometry import LineString as ShapelyLine
 import numpy as np
 
 from src.algorithms.rrt import RRT
 from src.envs.environment import Environment
 from src.envs.environment_instance import EnvironmentInstance
-from src.algorithms.timed_edge import TimedEdge
 
 
 class RRTTest:

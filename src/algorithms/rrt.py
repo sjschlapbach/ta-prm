@@ -8,7 +8,7 @@ from src.envs.environment_instance import EnvironmentInstance
 
 class RRT:
     """
-    Represents an instance of the RRT (RRT*) algorithm.
+    Represents an instance of the RRT (RRT* if rewiring is enabled) algorithm.
 
     Parameters:
     - start (Tuple[float, float]): The coordinates of the start node.
@@ -16,6 +16,8 @@ class RRT:
     - env (EnvironmentInstance): An instance of the environment.
     - num_samples (int): The number of samples to build the tree.
     - seed (int): The seed for the random number generator.
+    - rewiring (bool): Whether to use the RRT* algorithm (default: False).
+    - obs_free_volume (float): The volume of the free space (default: 0.5).
     - quiet (bool): Whether to suppress output messages.
 
     Attributes:
@@ -37,6 +39,8 @@ class RRT:
         env: EnvironmentInstance,
         num_samples: int = 100,
         seed: int = None,
+        rewiring: bool = False,
+        obs_free: float = 0.5,
         quiet: bool = False,
     ):
         # check for collision of start node
@@ -44,16 +48,44 @@ class RRT:
             raise ValueError("start node is in collision with static obstacles.")
 
         # initialize tree
-        self.tree = {
-            0: {
-                "position": ShapelyPoint(start[0], start[1]),
-                "parent": None,
-                "children": [],
+        if rewiring:
+            self.tree = {
+                0: {
+                    "position": ShapelyPoint(start[0], start[1]),
+                    "cost": 0,
+                    "parent": None,
+                    "children": [],
+                }
             }
-        }
+        else:
+            self.tree = {
+                0: {
+                    "position": ShapelyPoint(start[0], start[1]),
+                    "parent": None,
+                    "children": [],
+                }
+            }
+
         self.start = 0
         self.env = env
         next_sample = 2
+
+        # precompute gammaPRM for RRT* algorithm
+        if rewiring:
+            # ! assumption: free space percentag chosen s.t. gammaPRM is > gammaPRM* for asymptotic optimality
+            # see section 3.3 of https://arxiv.org/pdf/1105.1186.pdf
+            d = 2
+            obs_free_volume = (
+                obs_free * (env.dim_x[1] - env.dim_x[0]) * (env.dim_y[1] - env.dim_y[0])
+            )
+            unit_ball_volume = 1
+            self.gammaPRM = (
+                2
+                * ((1 + 1 / d) ** (1 / d))
+                * ((obs_free_volume / unit_ball_volume) ** (1 / d))
+            )
+        else:
+            self.gammaPRM = None
 
         # build the tree up to the required number of samples
         while next_sample <= num_samples + 1:
@@ -61,36 +93,54 @@ class RRT:
             y_candidate = np.random.uniform(env.dim_y[0], env.dim_y[1])
             candidate = ShapelyPoint(x_candidate, y_candidate)
 
+            # TODO: track distance to xnear alongside the node indices
             # find closest neighbour
-            neighbor, distance = self.__find_closest_neighbor(candidate=candidate)
+            xnearest, distance, xnear = self.__find_closest_neighbor(
+                candidate=candidate, rewiring=rewiring
+            )
 
             # check if edge is (static) collision-free, and if so, add the new node to the tree
             # dynamic obstacles are not considered during building phase of RRT graph
             if self.__check_connection_collision_free(
-                neighbor=neighbor, candidate=candidate, distance=distance
+                neighbor=xnearest, candidate=candidate
             ):
-                self.tree[next_sample] = {
-                    "position": candidate,
-                    "parent": neighbor,
-                    "children": [],
-                }
-                self.tree[neighbor]["children"].append(next_sample)
+                self.__connect_new_sample(
+                    xnearest=xnearest,
+                    candidate=candidate,
+                    next_sample=next_sample,
+                    rewiring=rewiring,
+                    distance=distance,
+                    xnear=xnear,
+                )
+
+                # increment after successful sample addition
                 next_sample += 1
 
         # connect goal to the tree as well
         self.goal = next_sample
         goal_node = ShapelyPoint(goal[0], goal[1])
-        neighbor, distance = self.__find_closest_neighbor(candidate=goal_node)
+        xnearest, distance, xnear = self.__find_closest_neighbor(
+            candidate=goal_node, rewiring=rewiring
+        )
 
         if self.__check_connection_collision_free(
-            neighbor=neighbor, candidate=goal_node, distance=distance
+            neighbor=xnearest, candidate=goal_node
         ):
+            self.__connect_new_sample(
+                xnearest=xnearest,
+                candidate=goal_node,
+                next_sample=next_sample,
+                rewiring=rewiring,
+                distance=distance,
+                xnear=xnear,
+            )
+
             self.tree[next_sample] = {
                 "position": goal_node,
-                "parent": neighbor,
+                "parent": xnearest,
                 "children": [],
             }
-            self.tree[neighbor]["children"].append(next_sample)
+            self.tree[xnearest]["children"].append(next_sample)
         else:
             raise ValueError(
                 "Goal node is not reachable from the tree or not collision free."
@@ -111,18 +161,22 @@ class RRT:
 
         return path[::-1]
 
-    def __find_closest_neighbor(self, candidate: ShapelyPoint) -> Tuple[int, float]:
+    def __find_closest_neighbor(
+        self, candidate: ShapelyPoint, rewiring: bool
+    ) -> Tuple[int, float, List[int]]:
         """
         Finds the closest neighbor to the given candidate point in the tree.
 
         Args:
             candidate (ShapelyPoint): The point for which to find the closest neighbor.
+            rewiring (bool): Whether to use the RRT* algorithm and also return all the neighbours in a radius of log(n) / n around the new candidate
 
         Returns:
             Tuple[int, float]: The key of the closest neighbor node in the tree and the distance between the candidate point and the closest neighbor.
         """
         closest = None
         distance = np.inf
+        xnear = []
 
         for key, node in self.tree.items():
             dist = candidate.distance(node["position"])
@@ -130,18 +184,22 @@ class RRT:
                 closest = key
                 distance = dist
 
-        return closest, distance
+        if rewiring:
+            n = len(self.tree)
+            for key, node in self.tree.items():
+                dist = candidate.distance(node["position"])
+                if dist < self.gammaPRM * (np.log(n) / n) ** (0.5):
+                    xnear.append(key)
 
-    def __check_connection_collision_free(
-        self, neighbor: int, candidate: ShapelyPoint, distance: float
-    ):
+        return closest, distance, xnear
+
+    def __check_connection_collision_free(self, neighbor: int, candidate: ShapelyPoint):
         """
         Checks if the connection between the neighbor node and the candidate node is collision-free.
 
         Args:
             neighbor (int): Index of the neighbor node in the tree.
             candidate (ShapelyPoint): The candidate node to connect with the neighbor node.
-            distance (float): The distance between the neighbor node and the candidate node.
 
         Returns:
             bool: True if the connection is collision-free, False otherwise.
@@ -238,3 +296,83 @@ class RRT:
                 marker="o",
                 markersize=6,
             )
+
+    def __connect_new_sample(
+        self,
+        xnearest: int,
+        candidate: int,
+        next_sample: int,
+        rewiring: bool,
+        distance: float,
+        xnear: List[int],
+    ):
+        """
+        Connects a new sample to the RRT tree.
+
+        Args:
+            xnearest (int): Index of the nearest node in the tree.
+            candidate (int): Index of the candidate node to be connected.
+            next_sample (int): Index of the new sample node in the tree.
+            rewiring (bool): Flag indicating whether to use RRT* algorithm.
+            distance (float): Distance between the nearest node and the candidate node.
+            xnear (List[int]): List of indices of all nodes close to the candidate node (within rewiring distance according to RRT* definition).
+
+        Returns:
+            None
+        """
+
+        # ! use standard RRT algorithm
+        if not rewiring:
+            self.tree[next_sample] = {
+                "position": candidate,
+                "parent": xnearest,
+                "children": [],
+            }
+            self.tree[xnearest]["children"].append(next_sample)
+
+        # ! use RRT* algorithm
+        else:
+            xmin = xnearest
+            cmin = self.tree[xnearest]["cost"] + distance
+
+            for x in xnear:
+                new_cost = self.tree[x]["cost"] + self.tree[x]["position"].distance(
+                    candidate
+                )
+
+                if (
+                    self.__check_connection_collision_free(
+                        neighbor=x, candidate=candidate
+                    )
+                    and new_cost < cmin
+                ):
+                    xmin = x
+                    cmin = new_cost
+
+            self.tree[next_sample] = {
+                "position": candidate,
+                "cost": cmin,
+                "parent": xmin,
+                "children": [],
+            }
+            self.tree[xmin]["children"].append(next_sample)
+
+            # rewire all nodes in the vicinity of the new node
+            for x in xnear:
+                new_cost = cmin + self.tree[xmin]["position"].distance(
+                    self.tree[x]["position"]
+                )
+
+                # if cost is improved and the new edge is collision-free, rewire the tree
+                if (
+                    self.__check_connection_collision_free(
+                        neighbor=next_sample,
+                        candidate=self.tree[x]["position"],
+                    )
+                    and new_cost < self.tree[x]["cost"]
+                ):
+                    prev_parent = self.tree[x]["parent"]
+                    self.tree[prev_parent]["children"].remove(x)
+                    self.tree[x]["parent"] = next_sample
+                    self.tree[x]["cost"] = new_cost
+                    self.tree[next_sample]["children"].append(x)
