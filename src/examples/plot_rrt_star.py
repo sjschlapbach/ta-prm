@@ -6,7 +6,7 @@ from pandas import Interval
 import matplotlib.pyplot as plt
 
 
-def plot_rrt(plotting: bool = True):
+def plot_rrt_star(plotting: bool = True):
     seed = 0
 
     # create an environment with all types of obstacles (static and continuous)
@@ -65,4 +65,4 @@ def plot_rrt(plotting: bool = True):
 
 
 if __name__ == "__main__":
-    plot_rrt()
+    plot_rrt_star()
