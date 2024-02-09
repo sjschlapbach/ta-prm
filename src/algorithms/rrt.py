@@ -101,65 +101,17 @@ class RRT:
 
             # check if edge is (static) collision-free, and if so, add the new node to the tree
             # dynamic obstacles are not considered during building phase of RRT graph
-            # TODO: extract this to function as the entire block is repeated for goal
             if self.__check_connection_collision_free(
                 neighbor=xnearest, candidate=candidate
             ):
-                # ! use standard RRT algorithm
-                if not rewiring:
-                    self.tree[next_sample] = {
-                        "position": candidate,
-                        "parent": xnearest,
-                        "children": [],
-                    }
-                    self.tree[xnearest]["children"].append(next_sample)
-
-                # ! use RRT* algorithm
-                else:
-                    xmin = xnearest
-                    cmin = self.tree[xnearest]["cost"] + distance
-
-                    for x in xnear:
-                        new_cost = self.tree[x]["cost"] + self.tree[x][
-                            "position"
-                        ].distance(candidate)
-
-                        if (
-                            self.__check_connection_collision_free(
-                                neighbor=x, candidate=candidate
-                            )
-                            and new_cost < cmin
-                        ):
-                            xmin = x
-                            cmin = new_cost
-
-                    self.tree[next_sample] = {
-                        "position": candidate,
-                        "cost": cmin,
-                        "parent": xmin,
-                        "children": [],
-                    }
-                    self.tree[xmin]["children"].append(next_sample)
-
-                    # rewire all nodes in the vicinity of the new node
-                    for x in xnear:
-                        new_cost = cmin + self.tree[xmin]["position"].distance(
-                            self.tree[x]["position"]
-                        )
-
-                        # if cost is improved and the new edge is collision-free, rewire the tree
-                        if (
-                            self.__check_connection_collision_free(
-                                neighbor=next_sample,
-                                candidate=self.tree[x]["position"],
-                            )
-                            and new_cost < self.tree[x]["cost"]
-                        ):
-                            prev_parent = self.tree[x]["parent"]
-                            self.tree[prev_parent]["children"].remove(x)
-                            self.tree[x]["parent"] = next_sample
-                            self.tree[x]["cost"] = new_cost
-                            self.tree[next_sample]["children"].append(x)
+                self.__connect_new_sample(
+                    xnearest=xnearest,
+                    candidate=candidate,
+                    next_sample=next_sample,
+                    rewiring=rewiring,
+                    distance=distance,
+                    xnear=xnear,
+                )
 
                 # increment after successful sample addition
                 next_sample += 1
@@ -174,6 +126,15 @@ class RRT:
         if self.__check_connection_collision_free(
             neighbor=xnearest, candidate=goal_node
         ):
+            self.__connect_new_sample(
+                xnearest=xnearest,
+                candidate=goal_node,
+                next_sample=next_sample,
+                rewiring=rewiring,
+                distance=distance,
+                xnear=xnear,
+            )
+
             self.tree[next_sample] = {
                 "position": goal_node,
                 "parent": xnearest,
@@ -335,3 +296,83 @@ class RRT:
                 marker="o",
                 markersize=6,
             )
+
+    def __connect_new_sample(
+        self,
+        xnearest: int,
+        candidate: int,
+        next_sample: int,
+        rewiring: bool,
+        distance: float,
+        xnear: List[int],
+    ):
+        """
+        Connects a new sample to the RRT tree.
+
+        Args:
+            xnearest (int): Index of the nearest node in the tree.
+            candidate (int): Index of the candidate node to be connected.
+            next_sample (int): Index of the new sample node in the tree.
+            rewiring (bool): Flag indicating whether to use RRT* algorithm.
+            distance (float): Distance between the nearest node and the candidate node.
+            xnear (List[int]): List of indices of all nodes close to the candidate node (within rewiring distance according to RRT* definition).
+
+        Returns:
+            None
+        """
+
+        # ! use standard RRT algorithm
+        if not rewiring:
+            self.tree[next_sample] = {
+                "position": candidate,
+                "parent": xnearest,
+                "children": [],
+            }
+            self.tree[xnearest]["children"].append(next_sample)
+
+        # ! use RRT* algorithm
+        else:
+            xmin = xnearest
+            cmin = self.tree[xnearest]["cost"] + distance
+
+            for x in xnear:
+                new_cost = self.tree[x]["cost"] + self.tree[x]["position"].distance(
+                    candidate
+                )
+
+                if (
+                    self.__check_connection_collision_free(
+                        neighbor=x, candidate=candidate
+                    )
+                    and new_cost < cmin
+                ):
+                    xmin = x
+                    cmin = new_cost
+
+            self.tree[next_sample] = {
+                "position": candidate,
+                "cost": cmin,
+                "parent": xmin,
+                "children": [],
+            }
+            self.tree[xmin]["children"].append(next_sample)
+
+            # rewire all nodes in the vicinity of the new node
+            for x in xnear:
+                new_cost = cmin + self.tree[xmin]["position"].distance(
+                    self.tree[x]["position"]
+                )
+
+                # if cost is improved and the new edge is collision-free, rewire the tree
+                if (
+                    self.__check_connection_collision_free(
+                        neighbor=next_sample,
+                        candidate=self.tree[x]["position"],
+                    )
+                    and new_cost < self.tree[x]["cost"]
+                ):
+                    prev_parent = self.tree[x]["parent"]
+                    self.tree[prev_parent]["children"].remove(x)
+                    self.tree[x]["parent"] = next_sample
+                    self.tree[x]["cost"] = new_cost
+                    self.tree[next_sample]["children"].append(x)
