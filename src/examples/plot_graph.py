@@ -1,7 +1,7 @@
 from src.envs.environment import Environment
 from src.envs.environment_instance import EnvironmentInstance
 from src.examples.plot_environment import create_environment
-from src.algorithm.graph import Graph
+from src.algorithms.graph import Graph
 
 from pandas import Interval
 import matplotlib.pyplot as plt

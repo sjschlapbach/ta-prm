@@ -3,7 +3,7 @@ from heapq import heappush, heappop, heapify, _siftdown
 from pandas import Interval
 import numpy as np
 
-from src.algorithm.graph import Graph
+from src.algorithms.graph import Graph
 
 
 class TAPRM:

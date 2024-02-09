@@ -1,12 +1,12 @@
 from src.envs.environment import Environment
 from src.envs.environment_instance import EnvironmentInstance
-from src.rrt.tree import Tree
+from src.algorithms.rrt import RRT
 
 from pandas import Interval
 import matplotlib.pyplot as plt
 
 
-def plot_rrt_tree(plotting: bool = True):
+def plot_rrt(plotting: bool = True):
     seed = 0
 
     # create an environment with all types of obstacles (static and continuous)
@@ -40,8 +40,8 @@ def plot_rrt_tree(plotting: bool = True):
     )
 
     # create tree
-    tree = Tree(
-        root=(2, 2),
+    rrt = RRT(
+        start=(2, 2),
         goal=(98, 98),
         env=env_instance,
         num_samples=1000,
@@ -49,17 +49,17 @@ def plot_rrt_tree(plotting: bool = True):
     )
 
     # compute solution path
-    sol_path = tree.rrt_find_path()
+    sol_path = rrt.rrt_find_path()
 
     # initialize a figure
     fig = plt.figure(figsize=(8, 8))
 
     # plot the tree
-    tree.plot(fig=fig, sol_path=sol_path)
+    rrt.plot(fig=fig, sol_path=sol_path)
 
     if plotting:
         plt.show()
 
 
 if __name__ == "__main__":
-    plot_rrt_tree()
+    plot_rrt()

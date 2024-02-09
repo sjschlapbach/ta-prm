@@ -10,7 +10,7 @@ import numpy as np
 from scipy.stats import qmc
 
 from src.envs.environment_instance import EnvironmentInstance
-from src.algorithm.timed_edge import TimedEdge
+from src.algorithms.timed_edge import TimedEdge
 
 
 class Graph:

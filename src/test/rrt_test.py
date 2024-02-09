@@ -3,10 +3,10 @@ from pandas import Interval
 from shapely.geometry import LineString as ShapelyLine
 import numpy as np
 
-from src.rrt.tree import Tree
+from src.algorithms.rrt import RRT
 from src.envs.environment import Environment
 from src.envs.environment_instance import EnvironmentInstance
-from src.algorithm.timed_edge import TimedEdge
+from src.algorithms.timed_edge import TimedEdge
 
 
 class RRTTest:
@@ -41,40 +41,40 @@ class RRTTest:
         )
 
         # create tree
-        tree = Tree(
-            root=(2, 2),
+        rrt = RRT(
+            start=(2, 2),
             goal=(298, 298),
             env=env_inst,
             num_samples=300,
             seed=0,
         )
 
-        assert len(tree.tree.values()) == 300 + 2
-        assert tree.start == 0
-        assert tree.goal == 301
-        assert tree.tree[tree.start]["position"].x == 2
-        assert tree.tree[tree.start]["position"].y == 2
-        assert tree.tree[tree.goal]["position"].x == 298
-        assert tree.tree[tree.goal]["position"].y == 298
-        assert tree.tree[tree.start]["parent"] is None
-        assert tree.tree[tree.goal]["parent"] is not None
-        assert len(tree.tree[tree.start]["children"]) > 0
-        assert tree.tree[tree.goal]["children"] == []
+        assert len(rrt.tree.values()) == 300 + 2
+        assert rrt.start == 0
+        assert rrt.goal == 301
+        assert rrt.tree[rrt.start]["position"].x == 2
+        assert rrt.tree[rrt.start]["position"].y == 2
+        assert rrt.tree[rrt.goal]["position"].x == 298
+        assert rrt.tree[rrt.goal]["position"].y == 298
+        assert rrt.tree[rrt.start]["parent"] is None
+        assert rrt.tree[rrt.goal]["parent"] is not None
+        assert len(rrt.tree[rrt.start]["children"]) > 0
+        assert rrt.tree[rrt.goal]["children"] == []
 
         # if no error is thrown, a connection from start to goal should be available
-        manual_path = [tree.goal]
-        current = tree.goal
+        manual_path = [rrt.goal]
+        current = rrt.goal
         while True:
-            if current == tree.start:
+            if current == rrt.start:
                 break
 
-            previous = tree.tree[current]["parent"]
+            previous = rrt.tree[current]["parent"]
             assert previous is not None
-            assert current in tree.tree[previous]["children"]
+            assert current in rrt.tree[previous]["children"]
             current = previous
             manual_path.append(current)
 
-        sol_path = tree.rrt_find_path()
+        sol_path = rrt.rrt_find_path()
         assert len(manual_path) > 1
         assert len(sol_path) > 1
         assert manual_path == sol_path

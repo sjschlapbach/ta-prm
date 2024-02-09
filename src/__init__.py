@@ -1,6 +1,5 @@
-from .algorithm import *
+from .algorithms import *
 from .envs import *
 from .obstacles import *
 from .examples import *
 from .util import *
-from .rrt import *

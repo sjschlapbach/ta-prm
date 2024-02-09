@@ -2,10 +2,10 @@ from pandas import Interval
 from shapely.geometry import LineString as ShapelyLine
 import numpy as np
 
-from src.algorithm.graph import Graph
+from src.algorithms.graph import Graph
 from src.envs.environment import Environment
 from src.envs.environment_instance import EnvironmentInstance
-from src.algorithm.timed_edge import TimedEdge
+from src.algorithms.timed_edge import TimedEdge
 
 
 class TestGraph:

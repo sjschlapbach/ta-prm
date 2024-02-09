@@ -6,12 +6,12 @@ from shapely.geometry import Point as ShapelyPoint, LineString as ShapelyLine
 from src.envs.environment_instance import EnvironmentInstance
 
 
-class Tree:
+class RRT:
     """
-    Represents a tree structure used in the RRT algorithm.
+    Represents an instance of the RRT (RRT*) algorithm.
 
     Parameters:
-    - root (Tuple[float, float]): The coordinates of the root / start node.
+    - start (Tuple[float, float]): The coordinates of the start node.
     - goal (Tuple[float, float]): The coordinates of the goal node.
     - env (EnvironmentInstance): An instance of the environment.
     - num_samples (int): The number of samples to build the tree.
@@ -24,7 +24,7 @@ class Tree:
     - goal (int): The index of the goal node in the tree.
 
     Methods:
-    - __init__: Initializes the Tree object.
+    - __init__: Initializes the RRT object.
     - __find_closest_neighbor: Finds the closest neighbor to a given candidate node.
     - __check_connection_collision_free: Checks if the connection between a neighbor and a candidate node is collision-free.
     - plot: Plots the tree structure.
@@ -32,21 +32,21 @@ class Tree:
 
     def __init__(
         self,
-        root: Tuple[float, float],
+        start: Tuple[float, float],
         goal: Tuple[float, float],
         env: EnvironmentInstance,
         num_samples: int = 100,
         seed: int = None,
         quiet: bool = False,
     ):
-        # check for collision of root node
-        if not env.static_collision_free(ShapelyPoint(root[0], root[1])):
-            raise ValueError("Root node is in collision with static obstacles.")
+        # check for collision of start node
+        if not env.static_collision_free(ShapelyPoint(start[0], start[1])):
+            raise ValueError("start node is in collision with static obstacles.")
 
         # initialize tree
         self.tree = {
             0: {
-                "position": ShapelyPoint(root[0], root[1]),
+                "position": ShapelyPoint(start[0], start[1]),
                 "parent": None,
                 "children": [],
             }

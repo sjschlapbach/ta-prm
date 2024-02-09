@@ -6,9 +6,9 @@ import time
 
 from src.envs.environment import Environment
 from src.envs.environment_instance import EnvironmentInstance
-from src.algorithm.graph import Graph
+from src.algorithms.graph import Graph
 from src.obstacles.line import Line
-from src.algorithm.ta_prm import TAPRM
+from src.algorithms.ta_prm import TAPRM
 
 
 def ta_prm_worst_case(

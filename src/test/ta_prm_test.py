@@ -2,12 +2,12 @@ import pytest
 from pandas import Interval
 from shapely.geometry import Point as ShapelyPoint, LineString as ShapelyLine
 
-from src.algorithm.graph import Graph
+from src.algorithms.graph import Graph
 from src.envs.environment import Environment
 from src.envs.environment_instance import EnvironmentInstance
-from src.algorithm.ta_prm import TAPRM
+from src.algorithms.ta_prm import TAPRM
 from src.obstacles.point import Point
-from src.algorithm.timed_edge import TimedEdge
+from src.algorithms.timed_edge import TimedEdge
 
 
 class TestTAPRM:
