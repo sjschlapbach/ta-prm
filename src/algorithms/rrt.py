@@ -93,7 +93,6 @@ class RRT:
             y_candidate = np.random.uniform(env.dim_y[0], env.dim_y[1])
             candidate = ShapelyPoint(x_candidate, y_candidate)
 
-            # TODO: track distance to xnear alongside the node indices
             # find closest neighbour
             xnearest, distance, xnear = self.__find_closest_neighbor(
                 candidate=candidate, rewiring=rewiring
@@ -163,7 +162,7 @@ class RRT:
 
     def __find_closest_neighbor(
         self, candidate: ShapelyPoint, rewiring: bool
-    ) -> Tuple[int, float, List[int]]:
+    ) -> Tuple[int, float, List[Tuple[int, float]]]:
         """
         Finds the closest neighbor to the given candidate point in the tree.
 
@@ -172,7 +171,7 @@ class RRT:
             rewiring (bool): Whether to use the RRT* algorithm and also return all the neighbours in a radius of log(n) / n around the new candidate
 
         Returns:
-            Tuple[int, float]: The key of the closest neighbor node in the tree and the distance between the candidate point and the closest neighbor.
+            Tuple[int, float, List[Tuple[int, float]]]: The key of the closest neighbor node in the tree and the distance between the candidate point and the closest neighbor.
         """
         closest = None
         distance = np.inf
@@ -189,7 +188,7 @@ class RRT:
             for key, node in self.tree.items():
                 dist = candidate.distance(node["position"])
                 if dist < self.gammaPRM * (np.log(n) / n) ** (0.5):
-                    xnear.append(key)
+                    xnear.append((key, dist))
 
         return closest, distance, xnear
 
@@ -304,7 +303,7 @@ class RRT:
         next_sample: int,
         rewiring: bool,
         distance: float,
-        xnear: List[int],
+        xnear: List[Tuple[int, float]],
     ):
         """
         Connects a new sample to the RRT tree.
@@ -315,7 +314,7 @@ class RRT:
             next_sample (int): Index of the new sample node in the tree.
             rewiring (bool): Flag indicating whether to use RRT* algorithm.
             distance (float): Distance between the nearest node and the candidate node.
-            xnear (List[int]): List of indices of all nodes close to the candidate node (within rewiring distance according to RRT* definition).
+            xnear (List[Tuple[int, float]]): List of indices of all nodes close to the candidate node and their distance (within rewiring distance according to RRT* definition).
 
         Returns:
             None
@@ -335,10 +334,8 @@ class RRT:
             xmin = xnearest
             cmin = self.tree[xnearest]["cost"] + distance
 
-            for x in xnear:
-                new_cost = self.tree[x]["cost"] + self.tree[x]["position"].distance(
-                    candidate
-                )
+            for x, x_dist in xnear:
+                new_cost = self.tree[x]["cost"] + x_dist
 
                 if (
                     self.__check_connection_collision_free(
@@ -358,10 +355,8 @@ class RRT:
             self.tree[xmin]["children"].append(next_sample)
 
             # rewire all nodes in the vicinity of the new node
-            for x in xnear:
-                new_cost = cmin + self.tree[xmin]["position"].distance(
-                    self.tree[x]["position"]
-                )
+            for x, x_dist in xnear:
+                new_cost = cmin + x_dist
 
                 # if cost is improved and the new edge is collision-free, rewire the tree
                 if (
