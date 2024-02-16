@@ -129,17 +129,11 @@ class RRT:
                 xnearest=xnearest,
                 candidate=goal_node,
                 next_sample=next_sample,
-                rewiring=rewiring,
+                rewiring=False,
                 distance=distance,
                 xnear=xnear,
             )
 
-            self.tree[next_sample] = {
-                "position": goal_node,
-                "parent": xnearest,
-                "children": [],
-            }
-            self.tree[xnearest]["children"].append(next_sample)
         else:
             raise ValueError(
                 "Goal node is not reachable from the tree or not collision free."
