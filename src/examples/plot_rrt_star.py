@@ -47,7 +47,7 @@ def plot_rrt_star(plotting: bool = True):
         env=env_instance,
         num_samples=1000,
         rewiring=True,
-        obs_free=0.5,
+        obs_free=obs_free,
         seed=seed,
     )
 
