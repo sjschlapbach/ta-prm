@@ -63,3 +63,4 @@ if __name__ == "__main__":
     ax3.set_ylabel("Maximum Open List Size")
     ax3.set_xlabel("Samples")
     ax3.legend()
+    plt.show()
