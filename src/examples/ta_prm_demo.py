@@ -43,9 +43,7 @@ def ta_prm_demo(plotting: bool = False):
     )
 
     ## create path, override the sampling and place samples manually, connect nodes manually
-    graph = Graph(
-        env=env_inst, num_samples=2, max_connections=10, neighbour_distance=200
-    )
+    graph = Graph(env=env_inst, num_samples=2)
 
     # overwrite the graphs vertices and add start and goal node
     graph.vertices[0] = ShapelyPoint(100, 0)

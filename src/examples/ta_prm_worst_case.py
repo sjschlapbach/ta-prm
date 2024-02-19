@@ -48,7 +48,6 @@ def ta_prm_worst_case(
     graph = Graph(
         env=env_inst,
         num_samples=samples,
-        neighbour_distance=40.0,
         max_connections=max_connections,
         seed=seed,
         quiet=quiet,

@@ -44,12 +44,10 @@ class TestTAPRM:
 
         # default parameters
         default_samples = 1000
-        default_max_distance = 10.0
 
         # create graph
         graph = Graph(
             num_samples=default_samples,
-            neighbour_distance=default_max_distance,
             max_connections=10,
             seed=0,
             env=env_inst,
@@ -121,7 +119,6 @@ class TestTAPRM:
             env=env_inst,
             num_samples=2,
             max_connections=10,
-            neighbour_distance=200,
             seed=0,
         )
 
