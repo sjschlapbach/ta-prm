@@ -14,7 +14,6 @@ def ta_prm_random(
     interval_end: int = 500,
     scenario_end: int = 500,
     samples: int = 100,
-    max_connections: int = 10,
     plotting: bool = False,
     quiet: bool = False,
     temporal_precision: int = None,
@@ -74,7 +73,6 @@ def ta_prm_random(
     # create graph
     graph = Graph(
         num_samples=samples,
-        max_connections=max_connections,
         env=env_inst,
         seed=seed,
         quiet=quiet,

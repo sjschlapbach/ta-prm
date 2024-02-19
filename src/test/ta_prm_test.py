@@ -1,5 +1,6 @@
 import pytest
 from pandas import Interval
+import numpy as np
 from shapely.geometry import Point as ShapelyPoint, LineString as ShapelyLine
 
 from src.algorithms.graph import Graph
@@ -48,7 +49,6 @@ class TestTAPRM:
         # create graph
         graph = Graph(
             num_samples=default_samples,
-            max_connections=10,
             seed=0,
             env=env_inst,
         )
@@ -118,7 +118,6 @@ class TestTAPRM:
         graph = Graph(
             env=env_inst,
             num_samples=2,
-            max_connections=10,
             seed=0,
         )
 
