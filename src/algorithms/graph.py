@@ -68,7 +68,7 @@ class Graph:
         # initialize parameter required for sample-dependent connection distance
         d = 2
         obs_free_volume = env.get_static_obs_free_volume()
-        unit_ball_volume = 1
+        unit_ball_volume = np.pi
         self.gammaPRM = (
             2
             * ((1 + 1 / d) ** (1 / d))
@@ -115,9 +115,12 @@ class Graph:
                     next_edge_idx=next_edge_idx,
                 )
 
-                vertex_idx += 1
+                if success or vertex_idx == 0:
+                    vertex_idx += 1
 
-    def connect_start(self, coords: Tuple[float, float]):
+    def connect_start(
+        self, coords: Tuple[float, float], override_distance: float = None
+    ):
         """
         Connects the start node to the graph.
 
@@ -148,7 +151,9 @@ class Graph:
         neighbor_distance = self.gammaPRM * (np.log(n) / n) ** (1 / 2)
         success, _ = self.__connect_neighbours(
             vertex_idx=self.start,
-            neighbor_distance=neighbor_distance,
+            neighbor_distance=(
+                neighbor_distance if override_distance is None else override_distance
+            ),
             next_edge_idx=len(self.edges),
         )
 
@@ -156,7 +161,9 @@ class Graph:
         if not success or len(self.connections[self.start]) == 0:
             raise ValueError("Start node could not be connected to any other node.")
 
-    def connect_goal(self, coords: ShapelyPoint, quiet: bool = False):
+    def connect_goal(
+        self, coords: ShapelyPoint, quiet: bool = False, override_distance: float = None
+    ):
         """
         Connects the goal node to the graph.
 
@@ -188,7 +195,9 @@ class Graph:
         neighbor_distance = self.gammaPRM * (np.log(n) / n) ** (1 / 2)
         success, _ = self.__connect_neighbours(
             vertex_idx=self.goal,
-            neighbor_distance=neighbor_distance,
+            neighbor_distance=(
+                neighbor_distance if override_distance is None else override_distance
+            ),
             next_edge_idx=len(self.edges),
         )
 
