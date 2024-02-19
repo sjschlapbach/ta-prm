@@ -125,7 +125,26 @@ class TestTAPRM:
         # overwrite the graphs vertices and add start and goal node
         graph.vertices[0] = ShapelyPoint(100, 0)
         graph.vertices[1] = ShapelyPoint(0, 100)
-        graph.connect_vertices()
+
+        # manually add connections in the graph
+        graph.connections = {0: [(1, 0)], 1: [(0, 0)]}
+        graph.heuristic = {0: np.inf, 1: np.inf}
+
+        # manually create edge (always available)
+        shapely_edge = ShapelyLine(
+            [
+                (graph.vertices[0].x, graph.vertices[0].y),
+                (graph.vertices[1].x, graph.vertices[1].y),
+            ]
+        )
+        graph.edges = {
+            0: TimedEdge(
+                geometry=shapely_edge,
+                always_available=True,
+                cost=np.sqrt(20000),
+                availability=[],
+            )
+        }
 
         # check that the graph is correctly initialized
         assert len(graph.vertices) == 2
