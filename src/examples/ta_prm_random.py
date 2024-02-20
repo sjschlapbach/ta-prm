@@ -14,7 +14,6 @@ def ta_prm_random(
     interval_end: int = 500,
     scenario_end: int = 500,
     samples: int = 100,
-    max_connections: int = 10,
     plotting: bool = False,
     quiet: bool = False,
     temporal_precision: int = None,
@@ -71,14 +70,9 @@ def ta_prm_random(
         quiet=quiet,
     )
 
-    # default parameters
-    default_max_distance = 100.0
-
     # create graph
     graph = Graph(
         num_samples=samples,
-        neighbour_distance=default_max_distance,
-        max_connections=max_connections,
         env=env_inst,
         seed=seed,
         quiet=quiet,

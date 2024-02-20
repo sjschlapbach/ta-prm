@@ -74,11 +74,12 @@ class RRT:
             # see section 3.3 of https://arxiv.org/pdf/1105.1186.pdf
             d = 2
             obs_free_volume = env.get_static_obs_free_volume()
-            unit_ball_volume = 1
+            unit_ball_volume = np.pi
             self.gammaPRM = (
                 2
                 * ((1 + 1 / d) ** (1 / d))
                 * ((obs_free_volume / unit_ball_volume) ** (1 / d))
+                + 1e-10
             )
         else:
             self.gammaPRM = None

@@ -43,8 +43,6 @@ def plot_graph(plotting: bool = True):
     # create graph
     graph = Graph(
         num_samples=200,
-        neighbour_distance=20.0,
-        max_connections=12,
         seed=seed,
         env=env_instance,
     )

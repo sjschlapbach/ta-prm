@@ -13,7 +13,6 @@ from src.algorithms.ta_prm import TAPRM
 
 def ta_prm_worst_case(
     samples: int = 50,
-    max_connections: int = 10,
     plotting: bool = False,
     quiet: bool = False,
     temporal_precision: int = None,
@@ -48,8 +47,6 @@ def ta_prm_worst_case(
     graph = Graph(
         env=env_inst,
         num_samples=samples,
-        neighbour_distance=40.0,
-        max_connections=max_connections,
         seed=seed,
         quiet=quiet,
     )
