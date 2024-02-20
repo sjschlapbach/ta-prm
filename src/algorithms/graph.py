@@ -73,6 +73,7 @@ class Graph:
             2
             * ((1 + 1 / d) ** (1 / d))
             * ((obs_free_volume / unit_ball_volume) ** (1 / d))
+            + 1e-10
         )
 
         # sample random vertices and connect them to all neighbors in gammaPRM-dependent distance

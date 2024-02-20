@@ -79,6 +79,7 @@ class RRT:
                 2
                 * ((1 + 1 / d) ** (1 / d))
                 * ((obs_free_volume / unit_ball_volume) ** (1 / d))
+                + 1e-10
             )
         else:
             self.gammaPRM = None
