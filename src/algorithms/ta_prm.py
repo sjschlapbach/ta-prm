@@ -71,12 +71,9 @@ class TAPRM:
 
         # initialize open list with start node - heapq sorts according to first element of tuple
         # tuples have the form (cost_to_come + heuristic, cost_to_come, node_idx, time, path)
-        distance_start_goal = self.graph.vertices[self.graph.start].distance(
-            self.graph.vertices[self.graph.goal]
-        )
         open_list = [
             (
-                0 + distance_start_goal,
+                0 + self.graph.heuristic[self.graph.start],
                 0,
                 self.graph.start,
                 start_time,
@@ -211,9 +208,7 @@ class TAPRM:
 
         # initialize open list with start node - heapq sorts according to first element of tuple
         # tuples have the form (cost_to_come + heuristic, cost_to_come, node_idx, time, rounded_time, path)
-        distance_start_goal = self.graph.vertices[self.graph.start].distance(
-            self.graph.vertices[self.graph.goal]
-        )
+        distance_start_goal = self.graph.heuristic[self.graph.start]
 
         # open list stores the full tuple
         rounded_start_time = round(start_time, temporal_precision)
