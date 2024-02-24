@@ -41,6 +41,10 @@ class RRT:
         rewiring: bool = False,
         quiet: bool = False,
     ):
+        # set the nummpy random seed if specified
+        if seed is not None:
+            np.random.seed(seed)
+
         # check for collision of start node
         if not env.static_collision_free(ShapelyPoint(start[0], start[1])):
             raise ValueError("start node is in collision with static obstacles.")
