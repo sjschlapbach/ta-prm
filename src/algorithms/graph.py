@@ -61,6 +61,10 @@ class Graph:
         # save other parameters
         self.num_vertices = num_samples
 
+        # if a seed is specified, set it
+        if seed is not None:
+            np.random.seed(seed)
+
         # initialize empty start and goal vertex indices
         self.start = None
         self.goal = None
