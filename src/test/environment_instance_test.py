@@ -1,5 +1,6 @@
 import pytest
 import os
+import math
 from pandas import Interval
 from shapely.geometry import (
     Polygon as ShapelyPolygon,
@@ -1030,7 +1031,7 @@ class TestEnvironmentInstance:
         assert len(dynamic_index[4][3]) == 0
         assert len(dynamic_index[4][4]) == 0
 
-    def test_sample(self):
+    def test_random_obstacles(self):
         # create environment with random obstacles
         min_x = 0
         max_x = 200
@@ -1563,3 +1564,198 @@ class TestEnvironmentInstance:
         assert in17[0] == query_in4
         assert avail == True
         assert blocked == False
+
+    def test_free_space_computation(self):
+        # initialize environment
+        env = Environment()
+        range_x = (0, 100)
+        range_y = (0, 100)
+        resolution = 2
+
+        # test 1: create environment with 1 static point obstacle
+        point_obs = Point(geometry=ShapelyPoint(5, 5), radius=1.0)
+        env.add_obstacles([point_obs])
+        env_instance = EnvironmentInstance(
+            environment=env,
+            query_interval=Interval(0, 100, closed="both"),
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+        free_space = env_instance.get_static_obs_free_volume()
+        assert abs(free_space - (10000 - math.pi)) < 1
+
+        # test 2: create environment with 2 static point obstacles (not overlapping)
+        point_obs2 = Point(geometry=ShapelyPoint(15, 15), radius=2.0)
+        env.reset()
+        env.add_obstacles([point_obs, point_obs2])
+        env_instance = EnvironmentInstance(
+            environment=env,
+            query_interval=Interval(0, 100, closed="both"),
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+        free_space = env_instance.get_static_obs_free_volume()
+        assert abs(free_space - (10000 - math.pi - 4 * math.pi)) < 1
+
+        # test 3: create environment with 2 static point obstacles (overlapping)
+        point_obs3 = Point(geometry=ShapelyPoint(5, 5), radius=2.0)
+        env.reset()
+        env.add_obstacles([point_obs, point_obs3])
+        env_instance = EnvironmentInstance(
+            environment=env,
+            query_interval=Interval(0, 100, closed="both"),
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+        free_space = env_instance.get_static_obs_free_volume()
+        assert abs(free_space - (10000 - 4 * math.pi)) < 1
+
+        # test 4: create environment with 1 static line obstacle
+        line_obs = Line(geometry=ShapelyLine([(10, 10), (10, 20)]), radius=1.0)
+        env.reset()
+        env.add_obstacles([line_obs])
+        env_instance = EnvironmentInstance(
+            environment=env,
+            query_interval=Interval(0, 100, closed="both"),
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+        free_space = env_instance.get_static_obs_free_volume()
+        assert abs(free_space - (10000 - 20 - math.pi)) < 1
+
+        # test 5: create environment with 2 static line obstacles (not overlapping)
+        line_obs2 = Line(geometry=ShapelyLine([(30, 30), (30, 40)]), radius=1.0)
+        env.reset()
+        env.add_obstacles([line_obs, line_obs2])
+        env_instance = EnvironmentInstance(
+            environment=env,
+            query_interval=Interval(0, 100, closed="both"),
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+        free_space = env_instance.get_static_obs_free_volume()
+        assert abs(free_space - (10000 - 20 - math.pi - 20 - math.pi)) < 1
+
+        # test 6: create environment with 2 static line obstacles (overlapping)
+        line_obs3 = Line(geometry=ShapelyLine([(10, 10), (10, 20)]), radius=0.5)
+        env.reset()
+        env.add_obstacles([line_obs, line_obs3])
+        env_instance = EnvironmentInstance(
+            environment=env,
+            query_interval=Interval(0, 100, closed="both"),
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+        free_space = env_instance.get_static_obs_free_volume()
+        assert abs(free_space - (10000 - 20 - math.pi)) < 1
+
+        # test 7: create environment with 1 static polygon obstacle
+        poly_obs = Polygon(
+            geometry=ShapelyPolygon([(10, 10), (20, 10), (20, 20), (10, 20)]),
+            radius=1.0,
+        )
+        env.reset()
+        env.add_obstacles([poly_obs])
+        env_instance = EnvironmentInstance(
+            environment=env,
+            query_interval=Interval(0, 100, closed="both"),
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+        free_space = env_instance.get_static_obs_free_volume()
+        assert abs(free_space - (10000 - 100 - 40 - math.pi)) < 1
+
+        # test 8: create environment with 2 static polygon obstacles (not overlapping)
+        poly_obs2 = Polygon(
+            geometry=ShapelyPolygon([(30, 30), (40, 30), (40, 40), (30, 40)]),
+            radius=1.0,
+        )
+        env.reset()
+        env.add_obstacles([poly_obs, poly_obs2])
+        env_instance = EnvironmentInstance(
+            environment=env,
+            query_interval=Interval(0, 100, closed="both"),
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+        free_space = env_instance.get_static_obs_free_volume()
+        assert abs(free_space - (10000 - 100 - 40 - 100 - 40 - 2 * math.pi)) < 1
+
+        # test 9: create environment with 2 static polygon obstacles (overlapping)
+        poly_obs3 = Polygon(
+            geometry=ShapelyPolygon([(10, 15), (20, 15), (20, 25), (10, 25)]),
+            radius=1.0,
+        )
+        env.reset()
+        env.add_obstacles([poly_obs, poly_obs3])
+        env_instance = EnvironmentInstance(
+            environment=env,
+            query_interval=Interval(0, 100, closed="both"),
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+        free_space = env_instance.get_static_obs_free_volume()
+        assert abs(free_space - (10000 - 150 - 50 - math.pi)) < 1
+
+        # test 10: create environment with 3 different obstacles (1 point, 1 line, 1 polygon; not overlapping)
+        point_obs4 = Point(geometry=ShapelyPoint(30, 30), radius=1.0)
+        line_obs4 = Line(geometry=ShapelyLine([(50, 50), (50, 60)]), radius=1.0)
+        poly_obs4 = Polygon(
+            geometry=ShapelyPolygon([(70, 70), (80, 70), (80, 80), (70, 80)]),
+            radius=1.0,
+        )
+        env.reset()
+        env.add_obstacles([point_obs4, line_obs4, poly_obs4])
+        env_instance = EnvironmentInstance(
+            environment=env,
+            query_interval=Interval(0, 100, closed="both"),
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+        free_space = env_instance.get_static_obs_free_volume()
+        assert (
+            abs(free_space - (10000 - math.pi - 20 - math.pi - 100 - 40 - math.pi)) < 1
+        )
+
+        # test 12: create environment with 1 dynamic point obstacle (no free space reduction expected)
+        point_obs5 = Point(
+            geometry=ShapelyPoint(5, 5),
+            radius=1.0,
+            time_interval=Interval(0, 20, closed="both"),
+        )
+        env.reset()
+        env.add_obstacles([point_obs5])
+        env_instance = EnvironmentInstance(
+            environment=env,
+            query_interval=Interval(0, 100, closed="both"),
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+        free_space = env_instance.get_static_obs_free_volume()
+        assert free_space == 10000
+
+        # test 13: create environment with static and dynamic obstacles (only static reduction expected)
+        env.reset()
+        env.add_obstacles([point_obs4, line_obs4, poly_obs4, point_obs5])
+        env_instance = EnvironmentInstance(
+            environment=env,
+            query_interval=Interval(0, 100, closed="both"),
+            scenario_range_x=range_x,
+            scenario_range_y=range_y,
+            resolution=resolution,
+        )
+        free_space = env_instance.get_static_obs_free_volume()
+        assert (
+            abs(free_space - (10000 - math.pi - 20 - math.pi - 100 - 40 - math.pi)) < 1
+        )

@@ -1,12 +1,14 @@
-from shapely import Point as ShapelyPoint
+from shapely import Point as ShapelyPoint, LineString as ShapelyLine
 from pandas import Interval
+import numpy as np
 import matplotlib.pyplot as plt
 
 from src.envs.environment import Environment
 from src.envs.environment_instance import EnvironmentInstance
-from src.algorithm.graph import Graph
+from src.algorithms.graph import Graph
 from src.obstacles.point import Point
-from src.algorithm.ta_prm import TAPRM
+from src.algorithms.ta_prm import TAPRM
+from src.algorithms.timed_edge import TimedEdge
 
 
 def ta_prm_demo(plotting: bool = False):
@@ -43,14 +45,31 @@ def ta_prm_demo(plotting: bool = False):
     )
 
     ## create path, override the sampling and place samples manually, connect nodes manually
-    graph = Graph(
-        env=env_inst, num_samples=2, max_connections=10, neighbour_distance=200
-    )
+    graph = Graph(env=env_inst, num_samples=0)
 
     # overwrite the graphs vertices and add start and goal node
     graph.vertices[0] = ShapelyPoint(100, 0)
     graph.vertices[1] = ShapelyPoint(0, 100)
-    graph.connect_vertices()
+
+    # manually add connections in the graph
+    graph.connections = {0: [(1, 0)], 1: [(0, 0)]}
+    graph.heuristic = {0: np.inf, 1: np.inf}
+
+    # manually create edge (always available)
+    shapely_edge = ShapelyLine(
+        [
+            (graph.vertices[0].x, graph.vertices[0].y),
+            (graph.vertices[1].x, graph.vertices[1].y),
+        ]
+    )
+    graph.edges = {
+        0: TimedEdge(
+            geometry=shapely_edge,
+            always_available=True,
+            cost=np.sqrt(20000),
+            availability=[],
+        )
+    }
 
     # check that the graph is correctly initialized
     assert len(graph.vertices) == 2
@@ -62,8 +81,8 @@ def ta_prm_demo(plotting: bool = False):
     # connect start and goal nodes
     start_coords = (0, 0)
     goal_coords = (100, 100)
-    graph.connect_start(start_coords)
-    graph.connect_goal(goal_coords)
+    graph.connect_start(coords=start_coords, override_distance=200)
+    graph.connect_goal(coords=goal_coords, override_distance=200)
 
     # check that start and goal node are correctly connected to the graph
     assert len(graph.vertices) == 4

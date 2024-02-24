@@ -1,13 +1,12 @@
 from src.envs.environment import Environment
 from src.envs.environment_instance import EnvironmentInstance
-from src.examples.plot_environment import create_environment
-from src.algorithms.graph import Graph
+from src.algorithms.rrt import RRT
 
 from pandas import Interval
 import matplotlib.pyplot as plt
 
 
-def plot_graph(plotting: bool = True):
+def plot_rrt(plotting: bool = True):
     seed = 0
 
     # create an environment with all types of obstacles (static and continuous)
@@ -40,34 +39,27 @@ def plot_graph(plotting: bool = True):
         scenario_range_y=y_range,
     )
 
-    # create graph
-    graph = Graph(
-        num_samples=200,
-        seed=seed,
+    # create tree
+    rrt = RRT(
+        start=(2, 2),
+        goal=(98, 98),
         env=env_instance,
+        num_samples=1000,
+        seed=seed,
     )
 
-    # connect start node to the graph
-    start_coords = (2, 2)
-    graph.connect_start(coords=start_coords)
-
-    # connect goal node to the graph
-    goal_coords = (98, 98)
-    graph.connect_goal(coords=goal_coords)
+    # compute solution path
+    sol_path = rrt.rrt_find_path()
 
     # initialize a figure
     fig = plt.figure(figsize=(8, 8))
 
-    # run the query time from 20 to 100 in increments of 1 and plot the corresponding result and write the current time to the figure
-    for query_time in range(0, 150 if plotting else 10):
-        graph.plot(query_time=query_time, fig=fig)
-        plt.title(f"Query Time: {query_time}")
+    # plot the tree
+    rrt.plot(fig=fig, sol_path=sol_path)
 
-        if plotting:
-            plt.draw()
-            plt.pause(0.2)
-            plt.clf()
+    if plotting:
+        plt.show()
 
 
 if __name__ == "__main__":
-    plot_graph()
+    plot_rrt()

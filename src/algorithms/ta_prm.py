@@ -3,7 +3,7 @@ from heapq import heappush, heappop, heapify, _siftdown
 from pandas import Interval
 import numpy as np
 
-from src.algorithm.graph import Graph
+from src.algorithms.graph import Graph
 
 
 class TAPRM:
@@ -71,12 +71,9 @@ class TAPRM:
 
         # initialize open list with start node - heapq sorts according to first element of tuple
         # tuples have the form (cost_to_come + heuristic, cost_to_come, node_idx, time, path)
-        distance_start_goal = self.graph.vertices[self.graph.start].distance(
-            self.graph.vertices[self.graph.goal]
-        )
         open_list = [
             (
-                0 + distance_start_goal,
+                0 + self.graph.heuristic[self.graph.start],
                 0,
                 self.graph.start,
                 start_time,
@@ -211,32 +208,51 @@ class TAPRM:
 
         # initialize open list with start node - heapq sorts according to first element of tuple
         # tuples have the form (cost_to_come + heuristic, cost_to_come, node_idx, time, rounded_time, path)
-        distance_start_goal = self.graph.vertices[self.graph.start].distance(
-            self.graph.vertices[self.graph.goal]
-        )
+        distance_start_goal = self.graph.heuristic[self.graph.start]
 
-        open_list = [
-            (
+        # open list stores the full tuple
+        rounded_start_time = round(start_time, temporal_precision)
+        ol_idx = 0
+        open_list = {
+            ol_idx: (
                 0 + distance_start_goal,
                 0,
                 self.graph.start,
                 start_time,
-                round(start_time, temporal_precision),
+                rounded_start_time,
                 [self.graph.start],
             )
-        ]
-        heapify(open_list)
+        }
+
+        # open list heap stores the cost + heuristic and the index in the actual open list
+        open_list_heap = [(0 + distance_start_goal, ol_idx)]
+        heapify(open_list_heap)
         expansions = 0
+
+        # create a hash list to find the key in the open list associated to a node at a certain time
+        start_hash = hash((self.graph.start, rounded_start_time))
+        open_list_hash = {start_hash: ol_idx}
 
         # track the maximum length of the open list over time
         max_open_list = 1
+
+        # update the index of the next element to be added to the open list
+        ol_idx += 1
 
         while open_list:
             # track the maximum length of the open list over time
             max_open_list = max(max_open_list, len(open_list))
 
-            node = heappop(open_list)
+            # get the node with the smallest cost + heuristic from the heap
+            heap_node = heappop(open_list_heap)
+            node_idx = heap_node[1]
+            node = open_list[node_idx]
             expansions += 1
+
+            # remove the node from the actual open list and the hashed list
+            node_hash = hash((node[2], node[4]))
+            del open_list[node_idx]
+            del open_list_hash[node_hash]
 
             if logging:
                 print("Expanding node: ", node[2], " at time: ", node[3])
@@ -298,21 +314,16 @@ class TAPRM:
                     rounded_end_time = round(end_time, temporal_precision)
 
                     if open_list:
-                        # convert the open list heap to a list/set of tuples (node_id, rounded_time)
-                        zipped_list = list(zip(*open_list))
-                        open_occurences = list(zip(zipped_list[2], zipped_list[4]))
+                        # hash the neighbour id and its rounded end time to check for containment in the open list
+                        neighbour_hash = hash((neighbour_id, rounded_end_time))
 
-                        # check if the current node at the current time is already in the open list
-                        try:
-                            index = open_occurences.index(
-                                (neighbour_id, rounded_end_time)
-                            )
-                        except ValueError:
-                            index = -1
+                        # check if the neighbour node at a similar time is already in the open list
+                        if neighbour_hash in open_list_hash:
+                            # get the index of the neighbour node in the open list
+                            neighbour_idx = open_list_hash[neighbour_hash]
 
-                        if index != -1:
                             # if the cost_to_come is smaller than for the node in the open list, update it
-                            if cost_to_come < open_list[index][1]:
+                            if cost_to_come < open_list[neighbour_idx][1]:
                                 if logging:
                                     print(
                                         "Node",
@@ -322,8 +333,11 @@ class TAPRM:
                                         "already in open list with larger cost und will be updated.",
                                     )
 
-                                # update the existing node in the heap
-                                open_list[index] = (
+                                # store the old cost + heuristic for the update of the heap
+                                old_cost = open_list[neighbour_idx][0]
+
+                                # update the existing node in the open list
+                                open_list[neighbour_idx] = (
                                     cost,
                                     cost_to_come,
                                     neighbour_id,
@@ -331,8 +345,15 @@ class TAPRM:
                                     rounded_end_time,
                                     path,
                                 )
+
+                                # find the element in the heap and update it
+                                heap_idx = open_list_heap.index(
+                                    (old_cost, neighbour_idx)
+                                )
+                                open_list_heap[heap_idx] = (cost, neighbour_idx)
+
                                 # as the cost + heuristic has decreased, update the heap structure
-                                _siftdown(open_list, 0, index)
+                                _siftdown(open_list_heap, 0, heap_idx)
 
                             else:
                                 # if the new cost is higher, do nothing
@@ -348,32 +369,46 @@ class TAPRM:
                                 continue
 
                         else:
-                            # push the element to the open list
-                            heappush(
-                                open_list,
-                                (
-                                    cost,
-                                    cost_to_come,
-                                    neighbour_id,
-                                    end_time,
-                                    rounded_end_time,
-                                    path,
-                                ),
-                            )
-
-                    else:
-                        # add the new node to the open list
-                        heappush(
-                            open_list,
-                            (
+                            # add the new node to the open list
+                            open_list[ol_idx] = (
                                 cost,
                                 cost_to_come,
                                 neighbour_id,
                                 end_time,
                                 rounded_end_time,
                                 path,
-                            ),
+                            )
+
+                            # update the open list heap
+                            heappush(open_list_heap, (cost, ol_idx))
+
+                            # update the open list hash map
+                            node_hash = hash((neighbour_id, rounded_end_time))
+                            open_list_hash[node_hash] = ol_idx
+
+                            # increment the index for the next element to be added
+                            ol_idx += 1
+
+                    else:
+                        # add the new node to the open list
+                        open_list[ol_idx] = (
+                            cost,
+                            cost_to_come,
+                            neighbour_id,
+                            end_time,
+                            rounded_end_time,
+                            path,
                         )
+
+                        # update the open list heap
+                        heappush(open_list_heap, (cost, ol_idx))
+
+                        # update the open list hash map
+                        node_hash = hash((neighbour_id, rounded_end_time))
+                        open_list_hash[node_hash] = ol_idx
+
+                        # increment the index for the next element to be added
+                        ol_idx += 1
 
                     if logging:
                         print(

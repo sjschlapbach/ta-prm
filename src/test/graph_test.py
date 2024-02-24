@@ -2,10 +2,10 @@ from pandas import Interval
 from shapely.geometry import LineString as ShapelyLine
 import numpy as np
 
-from src.algorithm.graph import Graph
+from src.algorithms.graph import Graph
 from src.envs.environment import Environment
 from src.envs.environment_instance import EnvironmentInstance
-from src.algorithm.timed_edge import TimedEdge
+from src.algorithms.timed_edge import TimedEdge
 
 
 class TestGraph:
@@ -42,13 +42,10 @@ class TestGraph:
 
         # default parameters
         default_samples = 1000
-        default_max_distance = 10.0
 
         # create graph
         graph = Graph(
             num_samples=default_samples,
-            neighbour_distance=default_max_distance,
-            max_connections=10,
             seed=0,
             env=env_inst,
         )
@@ -56,8 +53,6 @@ class TestGraph:
         # check if graph vertices are within specified range and collision-free
         assert len(graph.vertices) == default_samples
         assert graph.num_vertices == default_samples
-        assert graph.neighbour_distance == default_max_distance
-        assert graph.max_connections == 10
         for vertex in graph.vertices.values():
             assert vertex.x >= x_range[0] and vertex.x <= x_range[1]
             assert vertex.y >= y_range[0] and vertex.y <= y_range[1]

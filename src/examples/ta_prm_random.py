@@ -5,16 +5,15 @@ import matplotlib.pyplot as plt
 
 from src.envs.environment import Environment
 from src.envs.environment_instance import EnvironmentInstance
-from src.algorithm.graph import Graph
+from src.algorithms.graph import Graph
 from src.obstacles.point import Point
-from src.algorithm.ta_prm import TAPRM
+from src.algorithms.ta_prm import TAPRM
 
 
 def ta_prm_random(
     interval_end: int = 500,
     scenario_end: int = 500,
     samples: int = 100,
-    max_connections: int = 10,
     plotting: bool = False,
     quiet: bool = False,
     temporal_precision: int = None,
@@ -71,14 +70,9 @@ def ta_prm_random(
         quiet=quiet,
     )
 
-    # default parameters
-    default_max_distance = 100.0
-
     # create graph
     graph = Graph(
         num_samples=samples,
-        neighbour_distance=default_max_distance,
-        max_connections=max_connections,
         env=env_inst,
         seed=seed,
         quiet=quiet,

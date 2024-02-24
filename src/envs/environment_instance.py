@@ -10,6 +10,7 @@ from shapely.geometry import (
     Point as ShapelyPoint,
     LineString as ShapelyLine,
 )
+from shapely import union_all
 
 from .environment import Environment
 from src.obstacles.point import Point
@@ -484,3 +485,22 @@ class EnvironmentInstance:
             return True, False, intervals
         else:
             return False, False, intervals
+
+    def get_static_obs_free_volume(self):
+        """
+        Get the free-space volume with respect to the static obstacles in the environment.
+        """
+
+        # compute the union object of all static obstacles
+        buffered_obs = [
+            obstacle.geometry.buffer(obstacle.radius)
+            for obstacle in self.static_obstacles.values()
+        ]
+        union = union_all(buffered_obs)
+
+        # compute the free space of the entire environment instance
+        env_area = (self.dim_x[1] - self.dim_x[0]) * (self.dim_y[1] - self.dim_y[0])
+        free_space = env_area - union.area
+
+        # return the free-space
+        return free_space
