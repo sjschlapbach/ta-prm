@@ -1,6 +1,7 @@
 from typing import Tuple, List
 import numpy as np
 import matplotlib.pyplot as plt
+from pandas import Interval
 from shapely.geometry import Point as ShapelyPoint, LineString as ShapelyLine
 
 from src.envs.environment_instance import EnvironmentInstance
@@ -36,6 +37,7 @@ class RRT:
         start: Tuple[float, float],
         goal: Tuple[float, float],
         env: EnvironmentInstance,
+        query_time: float = None,
         num_samples: int = 100,
         seed: int = None,
         rewiring: bool = False,
@@ -46,8 +48,12 @@ class RRT:
             np.random.seed(seed)
 
         # check for collision of start node
-        if not env.static_collision_free(ShapelyPoint(start[0], start[1])):
-            raise ValueError("start node is in collision with static obstacles.")
+        if not env.static_collision_free(
+            ShapelyPoint(start[0], start[1]), query_time=query_time
+        ):
+            raise ValueError(
+                "start node is in collision with obstacles visible at query time."
+            )
 
         # initialize tree
         if rewiring:
@@ -154,6 +160,40 @@ class RRT:
             path.append(current)
 
         return path[::-1]
+
+    def validate_path(self, path: List[int], start_time: float = 0.0):
+        """
+        Validates the given path for collision with dynamics obstacles.
+
+        Args:
+            path (List[int]): The path to be validated.
+
+        Returns:
+            bool: True if the path is collision-free, False otherwise.
+            int: The index of the first edge in the path that is not collision-free.
+        """
+        time = start_time
+
+        for i in range(len(path) - 1):
+            parent = self.tree[path[i]]["position"]
+            child = self.tree[path[i + 1]]["position"]
+
+            distance = parent.distance(child)
+            edge_end_time = time + distance
+
+            edge = ShapelyLine([(parent.x, parent.y), (child.x, child.y)])
+
+            # check for dynamic collisions
+            collision_free = self.env.dynamic_collision_free_ln(
+                edge, Interval(time, edge_end_time, closed="both")
+            )
+
+            if not collision_free:
+                return False, i
+
+            time = edge_end_time
+
+        return True, None
 
     def __find_closest_neighbor(
         self, candidate: ShapelyPoint, rewiring: bool

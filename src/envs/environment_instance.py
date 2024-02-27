@@ -39,8 +39,8 @@ class EnvironmentInstance:
         __init__(self, environment: Environment, query_interval: Interval, scenario_range_x: Tuple[int, int], scenario_range_y: Tuple[int, int], resolution: int = 20)
         compute_spatial_indices(self, resolution: int) -> Tuple[List[List[List[int]]], List[List[List[int]]], float, float]
         plot(self, query_time: float = None, show_inactive: bool = False, fig=None)
-        static_collision_free(self, point: ShapelyPoint) -> bool
-        static_collision_free_ln(self, line: ShapelyLine)
+        static_collision_free(self, point: ShapelyPoint, query_time: float = None) -> bool
+        static_collision_free_ln(self, line: ShapelyLine, query_time: float = None) -> Tuple[bool, List[Tuple[int, int]]]
         collision_free_intervals_ln(self, line: ShapelyLine, cells: List[Tuple[int, int]]) -> Tuple[bool, List[Interval]]
     """
 
@@ -254,12 +254,17 @@ class EnvironmentInstance:
                 show_inactive=True,
             )
 
-    def static_collision_free(self, point: ShapelyPoint) -> bool:
+    def static_collision_free(
+        self, point: ShapelyPoint, query_time: float = None
+    ) -> bool:
         """
         Check if a given point is in collision with any static obstacle in the environment.
+        If a query time is specified, the dynamic obstacles active at this time will be considered to be
+        visible to the algorithm and treated as static obstacles.
 
         Args:
             shape (ShapelyPoint): The point to check for collision.
+            query_time (float, optional): The time at which the query is made. Dynamic obstacles at this time are considered to be visible and treated as static obstacles. Defaults to None.
 
         Returns:
             bool: False if the point is in collision with any obstacle, True otherwise.
@@ -275,19 +280,82 @@ class EnvironmentInstance:
             if obstacle.check_collision(shape=point):
                 return False
 
+        if query_time is not None:
+            dynamic_ids = self.dynamic_idx[cell_x][cell_y]
+
+            for key in dynamic_ids:
+                obstacle = self.dynamic_obstacles[key]
+
+                if obstacle.is_active(query_time=query_time):
+                    if obstacle.check_collision(shape=point):
+                        return False
+
         # return True if no collision was found
         return True
 
-    def static_collision_free_ln(self, line: ShapelyLine):
+    def static_collision_free_ln(
+        self, line: ShapelyLine, query_time: float = None
+    ) -> Tuple[bool, List[Tuple[int, int]]]:
         """
         Checks if a line is collision-free with respect to the static obstacles in the environment.
+        If a query time is specified, the dynamic obstacles active at this time will be considered to be
+        visible to the algorithm and treated as static obstacles.
+
+        Args:
+            line (ShapelyLine): The line to check for collision.
+            query_time (float, optional): The time at which the query is made. Dynamic obstacles at this time are considered to be visible and treated as static obstacles. Defaults to None.
+
+        Returns:
+            tuple: A tuple containing a boolean value indicating if the line is collision-free,
+                   and a list of index cells, where potential obstacles should be considered.
+        """
+
+        # compute the cells, the line is in collision with
+        collision_cells = self.__compute_collision_cells(line)
+
+        # find all ids of static obstacles in the collision_cells
+        static_ids = set()
+        for cell in collision_cells:
+            static_ids.update(self.static_idx[cell[0]][cell[1]])
+
+        # if no obstacles were found in the considered cells, return True
+        if len(static_ids) == 0 and query_time is None:
+            return True, collision_cells
+
+        # if static obstacles were found, check if the line is in collision with any of them
+        for key in static_ids:
+            obstacle = self.static_obstacles[key]
+
+            # if the line is in collision with any obstacle, return False
+            if obstacle.check_collision(shape=line):
+                return False, []
+
+        # if dynamic obstacles were found, check if they are active at query time and if so, if the line is in collision with any of them
+        if query_time is not None:
+            dynamic_ids = set()
+
+            for cell in collision_cells:
+                dynamic_ids.update(self.dynamic_idx[cell[0]][cell[1]])
+
+            for key in dynamic_ids:
+                obstacle = self.dynamic_obstacles[key]
+
+                if obstacle.is_active(query_time=query_time):
+                    if obstacle.check_collision(shape=line):
+                        return False, []
+
+        # return True if no collision was found
+        return True, collision_cells
+
+    def __compute_collision_cells(self, line: ShapelyLine):
+        """
+        Compute the cells, the line is geometrically in collision with.
 
         Args:
             line (ShapelyLine): The line to check for collision.
 
         Returns:
-            tuple: A tuple containing a boolean value indicating if the line is collision-free,
-                   and a list of index cells, where potential obstacles should be considered.
+            List[Tuple[int, int]]: A list of index cells, where potential obstacles should be considered.
         """
 
         line_coords = list(line.coords)
@@ -316,25 +384,7 @@ class EnvironmentInstance:
                 if cell_poly.intersects(line):
                     collision_cells.append((kx, ky))
 
-        # find all ids of static obstacles in the collision_cells
-        static_ids = set()
-        for cell in collision_cells:
-            static_ids.update(self.static_idx[cell[0]][cell[1]])
-
-        # if no static obstacles were found in the considered cells, return True
-        if len(static_ids) == 0:
-            return True, collision_cells
-
-        # if static obstacles were found, check if the line is in collision with any of them
-        for key in static_ids:
-            obstacle = self.static_obstacles[key]
-
-            # if the line is in collision with any obstacle, return False
-            if obstacle.check_collision(shape=line):
-                return False, []
-
-        # return True if no collision was found
-        return True, collision_cells
+        return collision_cells
 
     def collision_free_intervals_ln(
         self, line: ShapelyLine, cells: List[Tuple[int, int]]
@@ -485,6 +535,41 @@ class EnvironmentInstance:
             return True, False, intervals
         else:
             return False, False, intervals
+
+    def dynamic_collision_free_ln(
+        self, line: ShapelyLine, query_interval: Interval
+    ) -> bool:
+        """
+        Check if a given line is in collision with any dynamic obstacle in the environment.
+
+        Args:
+            line (ShapelyLine): The line to check for collision.
+            query_interval (Interval): The time interval for which the obstacles are active.
+
+        Returns:
+            bool: False if the line is in collision with any obstacle, True otherwise.
+        """
+        # compute the cells, the line is in collision with
+        collision_cells = self.__compute_collision_cells(line)
+
+        # find all ids of dynamic obstacles in the collision_cells
+        dynamic_ids = set()
+        for cell in collision_cells:
+            dynamic_ids.update(self.dynamic_idx[cell[0]][cell[1]])
+
+        # if no dynamic obstacles were found in the considered cells, return True
+        if len(dynamic_ids) == 0:
+            return True
+
+        # if dynamic obstacles were found, check if the line is in collision with any of them
+        for key in dynamic_ids:
+            obstacle = self.dynamic_obstacles[key]
+
+            if obstacle.is_active(query_interval=query_interval):
+                if obstacle.check_collision(shape=line):
+                    return False
+
+        return True
 
     def get_static_obs_free_volume(self):
         """
