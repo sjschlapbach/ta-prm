@@ -42,18 +42,20 @@ def dynamic_rrt(rrt_star: bool = False, seed: int = None):
     replanning_rrt(
         samples=1000,
         env_inst=env_instance,
+        stepsize=1,
         start=start_coords,
         goal=goal_coords,
         query_time=0,
         seed=seed,
         rewiring=rrt_star,
-        prev_path=[start_coords],
+        prev_path=[ShapelyPoint(start_coords)],
     )
 
 
 def replanning_rrt(
     samples: int,
     env_inst: EnvironmentInstance,
+    stepsize: float,
     start: Tuple[float, float],
     goal: Tuple[float, float],
     query_time: float,
@@ -77,43 +79,83 @@ def replanning_rrt(
 
     # traverse path and check if recomputation is required along each edge with respect to the dynamic obstacles
     print("Validating path...")
-    # TODO: evaluate alternative where path is validated stepwise with provided resolution (min obstacle width) and then returns the last save point as well
-    collision_free, save_idx = rrt.validate_path(path=sol_path, start_time=query_time)
+    collision_free, save_idx, save_time = rrt.validate_path(
+        path=sol_path, start_time=query_time
+    )
 
     if collision_free:
         print("Path is collision free.")
         final_path = prev_path + [
-            rrt.tree[sol_path[idx]["position"]] for idx in range(1, len(sol_path))
+            rrt.tree[sol_path[idx]]["position"] for idx in range(1, len(sol_path))
         ]
+
+        return final_path
 
     else:
         print(
             "Path is not collision free, with first collision at edge with starting point: ",
-            sol_path[save_idx],
+            rrt.tree[save_idx]["position"],
         )
 
-        # TODO: compute collision point
-        last_save_point = (0, 0)
-        last_save_time = 0
-
         # add all points up to the collision point to the final path (coordinates)
-        final_path = prev_path + [
-            rrt.tree[sol_path[i]["position"]] for i in range(1, save_idx + 1)
+        new_path = prev_path + [
+            rrt.tree[sol_path[i]]["position"] for i in range(1, save_idx + 1)
         ]
 
+        # follow the next edge with fixed size steps and save the last collision-free point
+        save_node = new_path[-1]
+        next_node = rrt.tree[sol_path[save_idx + 1]]["position"]
+        delta_distance = next_node.distance(save_node)
+        x_step = (next_node.x - save_node.x) / delta_distance
+        y_step = (next_node.y - save_node.y) / delta_distance
+
+        # track the position and time of the last node, which is not in collision
+        last_save = None
+        last_time = save_time
+
+        # iterate over the edge and check
+        for i in range(1, int(delta_distance / stepsize)):
+            sample = ShapelyPoint(save_node.x + i * x_step, save_node.y + i * y_step)
+
+            # check if the sample is in collision
+            last_time += stepsize
+            collision_free = env_inst.static_collision_free(
+                point=sample, query_time=last_time
+            )
+
+            if collision_free:
+                last_save = sample
+                last_time = last_time
+            else:
+                break
+
+        if last_save is None:
+            raise ValueError(
+                "No collision-free point found on edge. Possibly, the step resolution is too larger"
+            )
+
+        print(
+            "Checked edge with collision, last save point: ",
+            last_save,
+            " at time: ",
+            last_time,
+            "--> triggering replanning...",
+        )
+
         # add the collision point to the path
-        final_path.append(last_save_point)
+        new_path += [last_save]
 
         # recompute path from last save point
         new_path = replanning_rrt(
             samples=samples,
             env_inst=env_inst,
-            start=last_save_point,
+            stepsize=stepsize,
+            start=(last_save.x, last_save.y),
             goal=goal,
-            query_time=last_save_time,
+            query_time=last_time,
             seed=seed,
             rewiring=rewiring,
-            prev_path=final_path,
+            prev_path=new_path,
         )
 
 

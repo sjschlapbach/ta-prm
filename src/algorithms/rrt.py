@@ -171,6 +171,7 @@ class RRT:
         Returns:
             bool: True if the path is collision-free, False otherwise.
             int: The index of the first edge in the path that is not collision-free.
+            float: The time at the starting node of the first colliding node
         """
         time = start_time
 
@@ -189,11 +190,11 @@ class RRT:
             )
 
             if not collision_free:
-                return False, i
+                return False, i, time
 
             time = edge_end_time
 
-        return True, None
+        return True, None, None
 
     def __find_closest_neighbor(
         self, candidate: ShapelyPoint, rewiring: bool
