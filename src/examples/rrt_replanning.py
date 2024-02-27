@@ -52,6 +52,9 @@ def dynamic_rrt(rrt_star: bool = False, seed: int = None):
         dynamic_obstacles=True,
     )
 
+    # simulate the resulting path
+    env_instance.simulate(start_time=0, sol_path=path, stepsize=1, waiting_time=0.1)
+
     return path
 
 

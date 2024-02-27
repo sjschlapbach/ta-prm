@@ -254,6 +254,101 @@ class EnvironmentInstance:
                 show_inactive=True,
             )
 
+    def simulate(
+        self,
+        start_time: float,
+        sol_path: List[ShapelyPoint],
+        stepsize: float = 1,
+        waiting_time: float = 0.2,
+    ):
+        """
+        Simulates a solution path in the environment instance using matplotlib.
+
+        Parameters:
+        - start_time (float): The starting time of the simulation.
+        - sol_path (List[ShapelyPoint]): The solution path to be simulated.
+        - stepsize (float, optional): The time step size for the simulation. Defaults to 1.
+        - waiting_time (float, optional): The waiting time between each plot update. Defaults to 0.2.
+        """
+
+        # 1) get the edge times to build a time-annotated path
+        timed_path: List[Tuple(ShapelyPoint, float)] = [(sol_path[0], start_time)]
+
+        for idx in range(len(sol_path) - 1):
+            curr_vertex = sol_path[idx]
+            curr_time = timed_path[-1][1]
+            next_vertex = sol_path[idx + 1]
+            distance = curr_vertex.distance(next_vertex)
+
+            timed_path.append((next_vertex, curr_time + distance))
+
+        goal_time = timed_path[-1][1]
+
+        print(timed_path)
+        print(goal_time)
+
+        # 2) iterate over the time-annotated path and plot the environment at each time
+        # create a figure
+        fig = plt.figure(figsize=(8, 8))
+
+        # iterate over time
+        for time in np.arange(start_time, goal_time + 5, stepsize):
+            # find the index and time at previous and next vertex along path
+            prev_vertex = None
+            next_vertex = None
+            prev_time = None
+            next_time = None
+
+            for idx, (vertex, vertex_time) in enumerate(timed_path):
+                if time >= vertex_time:
+                    prev_vertex = vertex
+                    prev_time = vertex_time
+
+                    if prev_vertex == sol_path[-1]:
+                        break
+                    else:
+                        next_vertex = timed_path[idx + 1][0]
+                        next_time = timed_path[idx + 1][1]
+                else:
+                    break
+
+            if next_vertex is None:
+                if curr_vertex == sol_path[-1]:
+                    print("Goal node has been reached by simulation")
+                    break
+                else:
+                    print("Simulation failed")
+                    break
+
+            # linearly interpolate between vertices to find current position
+            alpha = (time - prev_time) / (next_time - prev_time)
+            curr_pos_x = prev_vertex.x + alpha * (next_vertex.x - prev_vertex.x)
+            curr_pos_y = prev_vertex.y + alpha * (next_vertex.y - prev_vertex.y)
+
+            # plot the environment with solution path at current simulation time
+            plt.title(f"Simulation Time: {round(time, 2)}")
+            self.plot(
+                fig=fig,
+                query_time=time,
+                show_inactive=True,
+            )
+
+            # plot the solution path
+            plt.plot(
+                [point.x for point in sol_path],
+                [point.y for point in sol_path],
+                color="green",
+                linewidth=3,
+            )
+
+            # plot the current position
+            plt.plot(curr_pos_x, curr_pos_y, color="blue", marker="o", markersize=6)
+
+            # show the plot
+            plt.draw()
+            plt.pause(waiting_time)
+            plt.clf()
+
     def static_collision_free(
         self, point: ShapelyPoint, query_time: float = None
     ) -> bool:
