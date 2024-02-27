@@ -141,7 +141,7 @@ def replanning_rrt(
 
         if last_save is None:
             raise ValueError(
-                "No collision-free point found on edge. Possibly, the step resolution is too larger"
+                "No collision-free point found on edge. Possibly, the step resolution is too large."
             )
 
         print(
@@ -175,8 +175,6 @@ def replanning_rrt(
 if __name__ == "__main__":
     # run the RRT re-planning example (= trigger replanning in case of collision with dynamic obstacle)
     rrt_path = dynamic_rrt(rrt_star=False, seed=0)
-    print(rrt_path)
 
-    # TODO: re-introduce RRT* with replanning
-    # # run the RRT* re-planning example (= trigger replanning in case of collision with dynamic obstacle)
-    # dynamic_rrt(rrt_star=True, seed=0)
+    # run the RRT* re-planning example (= trigger replanning in case of collision with dynamic obstacle)
+    rrt_star_path = dynamic_rrt(rrt_star=True, seed=0)

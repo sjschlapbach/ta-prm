@@ -121,6 +121,7 @@ class RRT:
                     rewiring=rewiring,
                     distance=distance,
                     xnear=xnear,
+                    query_time=query_time if consider_dynamic else None,
                 )
 
                 # increment after successful sample addition
@@ -145,6 +146,7 @@ class RRT:
                 rewiring=False,
                 distance=distance,
                 xnear=xnear,
+                query_time=query_time if consider_dynamic else None,
             )
 
         else:
@@ -353,6 +355,7 @@ class RRT:
         rewiring: bool,
         distance: float,
         xnear: List[Tuple[int, float]],
+        query_time: float = None,
     ):
         """
         Connects a new sample to the RRT tree.
@@ -364,6 +367,7 @@ class RRT:
             rewiring (bool): Flag indicating whether to use RRT* algorithm.
             distance (float): Distance between the nearest node and the candidate node.
             xnear (List[Tuple[int, float]]): List of indices of all nodes close to the candidate node and their distance (within rewiring distance according to RRT* definition).
+            query_time (float): The time at which the query is made (optional, only determined whether or not to check for dynamic obstacles, which are visible at this point in time).
 
         Returns:
             None
@@ -388,7 +392,7 @@ class RRT:
 
                 if (
                     self.__check_connection_collision_free(
-                        neighbor=x, candidate=candidate
+                        neighbor=x, candidate=candidate, query_time=query_time
                     )
                     and new_cost < cmin
                 ):
@@ -412,6 +416,7 @@ class RRT:
                     self.__check_connection_collision_free(
                         neighbor=next_sample,
                         candidate=self.tree[x]["position"],
+                        query_time=query_time,
                     )
                     and new_cost < self.tree[x]["cost"]
                 ):

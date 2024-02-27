@@ -284,9 +284,6 @@ class EnvironmentInstance:
 
         goal_time = timed_path[-1][1]
 
-        print(timed_path)
-        print(goal_time)
-
         # 2) iterate over the time-annotated path and plot the environment at each time
         # create a figure
         fig = plt.figure(figsize=(8, 8))
