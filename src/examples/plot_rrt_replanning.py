@@ -36,7 +36,7 @@ def prepare_environment(
     return env_instance
 
 
-if __name__ == "__main__":
+def plot_rrt_replanning(plotting: bool = True):
     env = prepare_environment()
 
     # set the start and goal coordinates
@@ -78,6 +78,15 @@ if __name__ == "__main__":
         prev_path=[ShapelyPoint(*start_coords)],
         dynamic_obstacles=True,
     )
-    replanner.simulate(
-        start_time=0, sol_path=rrt_path, stepsize=stepsize, waiting_time=waiting_time
-    )
+
+    if plotting:
+        replanner.simulate(
+            start_time=0,
+            sol_path=rrt_path,
+            stepsize=stepsize,
+            waiting_time=waiting_time,
+        )
+
+
+if __name__ == "__main__":
+    plot_rrt_replanning(plotting=True)
