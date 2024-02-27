@@ -1,6 +1,7 @@
 from typing import Tuple, List
 import numpy as np
 import matplotlib.pyplot as plt
+from pandas import Interval
 from shapely.geometry import Point as ShapelyPoint, LineString as ShapelyLine
 
 from src.envs.environment_instance import EnvironmentInstance
@@ -18,6 +19,7 @@ class RRT:
     - seed (int): The seed for the random number generator.
     - rewiring (bool): Whether to use the RRT* algorithm (default: False).
     - quiet (bool): Whether to suppress output messages.
+    - consider_dynamic (bool): Whether to consider dynamic obstacles active at the given query time (default: False).
 
     Attributes:
     - tree (dict): A dictionary representing the tree structure.
@@ -36,18 +38,24 @@ class RRT:
         start: Tuple[float, float],
         goal: Tuple[float, float],
         env: EnvironmentInstance,
+        query_time: float = None,
         num_samples: int = 100,
         seed: int = None,
         rewiring: bool = False,
         quiet: bool = False,
+        consider_dynamic: bool = False,
     ):
         # set the nummpy random seed if specified
         if seed is not None:
             np.random.seed(seed)
 
         # check for collision of start node
-        if not env.static_collision_free(ShapelyPoint(start[0], start[1])):
-            raise ValueError("start node is in collision with static obstacles.")
+        if not env.static_collision_free(
+            ShapelyPoint(start[0], start[1]), query_time=query_time
+        ):
+            raise ValueError(
+                "start node is in collision with obstacles visible at query time."
+            )
 
         # initialize tree
         if rewiring:
@@ -102,7 +110,9 @@ class RRT:
             # check if edge is (static) collision-free, and if so, add the new node to the tree
             # dynamic obstacles are not considered during building phase of RRT graph
             if self.__check_connection_collision_free(
-                neighbor=xnearest, candidate=candidate
+                neighbor=xnearest,
+                candidate=candidate,
+                query_time=query_time if consider_dynamic else None,
             ):
                 self.__connect_new_sample(
                     xnearest=xnearest,
@@ -111,6 +121,7 @@ class RRT:
                     rewiring=rewiring,
                     distance=distance,
                     xnear=xnear,
+                    query_time=query_time if consider_dynamic else None,
                 )
 
                 # increment after successful sample addition
@@ -124,7 +135,9 @@ class RRT:
         )
 
         if self.__check_connection_collision_free(
-            neighbor=xnearest, candidate=goal_node
+            neighbor=xnearest,
+            candidate=goal_node,
+            query_time=query_time if consider_dynamic else None,
         ):
             self.__connect_new_sample(
                 xnearest=xnearest,
@@ -133,6 +146,7 @@ class RRT:
                 rewiring=False,
                 distance=distance,
                 xnear=xnear,
+                query_time=query_time if consider_dynamic else None,
             )
 
         else:
@@ -154,6 +168,41 @@ class RRT:
             path.append(current)
 
         return path[::-1]
+
+    def validate_path(self, path: List[int], start_time: float = 0.0):
+        """
+        Validates the given path for collision with dynamics obstacles.
+
+        Args:
+            path (List[int]): The path to be validated.
+
+        Returns:
+            bool: True if the path is collision-free, False otherwise.
+            int: The index of the first edge in the path that is not collision-free.
+            float: The time at the starting node of the first colliding node
+        """
+        time = start_time
+
+        for i in range(len(path) - 1):
+            parent = self.tree[path[i]]["position"]
+            child = self.tree[path[i + 1]]["position"]
+
+            distance = parent.distance(child)
+            edge_end_time = time + distance
+
+            edge = ShapelyLine([(parent.x, parent.y), (child.x, child.y)])
+
+            # check for dynamic collisions
+            collision_free = self.env.dynamic_collision_free_ln(
+                edge, Interval(time, edge_end_time, closed="both")
+            )
+
+            if not collision_free:
+                return False, i, time
+
+            time = edge_end_time
+
+        return True, None, None
 
     def __find_closest_neighbor(
         self, candidate: ShapelyPoint, rewiring: bool
@@ -187,13 +236,18 @@ class RRT:
 
         return closest, distance, xnear
 
-    def __check_connection_collision_free(self, neighbor: int, candidate: ShapelyPoint):
+    def __check_connection_collision_free(
+        self, neighbor: int, candidate: ShapelyPoint, query_time: float = None
+    ):
         """
         Checks if the connection between the neighbor node and the candidate node is collision-free.
 
         Args:
             neighbor (int): Index of the neighbor node in the tree.
             candidate (ShapelyPoint): The candidate node to connect with the neighbor node.
+            query_time (float): The time at which the query is made
+                (optional, only determined whether or not to check for dynamic obstacles,
+                 which are visible at this point in time).
 
         Returns:
             bool: True if the connection is collision-free, False otherwise.
@@ -204,7 +258,9 @@ class RRT:
         )
 
         # check for static collisions
-        collision_free, _ = self.env.static_collision_free_ln(edge)
+        collision_free, _ = self.env.static_collision_free_ln(
+            line=edge, query_time=query_time
+        )
         if not collision_free:
             return False
         else:
@@ -299,6 +355,7 @@ class RRT:
         rewiring: bool,
         distance: float,
         xnear: List[Tuple[int, float]],
+        query_time: float = None,
     ):
         """
         Connects a new sample to the RRT tree.
@@ -310,6 +367,7 @@ class RRT:
             rewiring (bool): Flag indicating whether to use RRT* algorithm.
             distance (float): Distance between the nearest node and the candidate node.
             xnear (List[Tuple[int, float]]): List of indices of all nodes close to the candidate node and their distance (within rewiring distance according to RRT* definition).
+            query_time (float): The time at which the query is made (optional, only determined whether or not to check for dynamic obstacles, which are visible at this point in time).
 
         Returns:
             None
@@ -334,7 +392,7 @@ class RRT:
 
                 if (
                     self.__check_connection_collision_free(
-                        neighbor=x, candidate=candidate
+                        neighbor=x, candidate=candidate, query_time=query_time
                     )
                     and new_cost < cmin
                 ):
@@ -358,6 +416,7 @@ class RRT:
                     self.__check_connection_collision_free(
                         neighbor=next_sample,
                         candidate=self.tree[x]["position"],
+                        query_time=query_time,
                     )
                     and new_cost < self.tree[x]["cost"]
                 ):
