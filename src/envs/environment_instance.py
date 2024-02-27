@@ -257,7 +257,9 @@ class EnvironmentInstance:
     def simulate(
         self,
         start_time: float,
+        goal_time: float,
         sol_path: List[ShapelyPoint],
+        timed_path: List[Tuple[ShapelyPoint, float]],
         stepsize: float = 1,
         waiting_time: float = 0.2,
     ):
@@ -266,25 +268,13 @@ class EnvironmentInstance:
 
         Parameters:
         - start_time (float): The starting time of the simulation.
-        - sol_path (List[ShapelyPoint]): The solution path to be simulated.
+        - goal_time (float): The goal time of the simulation.
+        - sol_path (List[ShapelyPoint]): The solution path to simulate.
+        - timed_path (List[Tuple(ShapelyPoint, float)]): The time-annotated path to simulate.
         - stepsize (float, optional): The time step size for the simulation. Defaults to 1.
         - waiting_time (float, optional): The waiting time between each plot update. Defaults to 0.2.
         """
 
-        # 1) get the edge times to build a time-annotated path
-        timed_path: List[Tuple(ShapelyPoint, float)] = [(sol_path[0], start_time)]
-
-        for idx in range(len(sol_path) - 1):
-            curr_vertex = sol_path[idx]
-            curr_time = timed_path[-1][1]
-            next_vertex = sol_path[idx + 1]
-            distance = curr_vertex.distance(next_vertex)
-
-            timed_path.append((next_vertex, curr_time + distance))
-
-        goal_time = timed_path[-1][1]
-
-        # 2) iterate over the time-annotated path and plot the environment at each time
         # create a figure
         fig = plt.figure(figsize=(8, 8))
 
@@ -318,7 +308,11 @@ class EnvironmentInstance:
                     break
 
             # linearly interpolate between vertices to find current position
-            alpha = (time - prev_time) / (next_time - prev_time)
+            alpha = (
+                (time - prev_time) / (next_time - prev_time)
+                if next_time != prev_time
+                else 0
+            )
             curr_pos_x = prev_vertex.x + alpha * (next_vertex.x - prev_vertex.x)
             curr_pos_y = prev_vertex.y + alpha * (next_vertex.y - prev_vertex.y)
 
