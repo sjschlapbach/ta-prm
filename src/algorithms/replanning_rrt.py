@@ -6,15 +6,20 @@ from src.algorithms.rrt import RRT
 
 
 class ReplanningRRT:
-    # TODO: docstring
+    """Class representing the replanning framework for RRT / RRT*."""
 
     def __init__(
         self,
         env: EnvironmentInstance,
         seed: int = None,
     ):
-        # TODO: docstring
+        """
+        Initialize the framework.
 
+        Args:
+            env (EnvironmentInstance): The environment instance.
+            seed (int, optional): The random seed. Defaults to None.
+        """
         self.env = env
         self.seed = seed
 
@@ -29,8 +34,26 @@ class ReplanningRRT:
         prev_path: list,
         dynamic_obstacles: bool,
     ):
-        # TODO: docstring
+        """
+        Run the replanner with RRT / RRT* depending on the rewiring parameter.
+        The function plans a path from start to goal using RRT / RRT*, considering all
+        static and dynamic obstacles in the environment, which are visible at the time of
+        the query. In case of a collision with a dynamic obstacle, the function triggers
+        replanning from the last collision-free point with an updated query time.
 
+        Args:
+            samples (int): The number of samples to generate.
+            stepsize (int): The step size for traversing the path.
+            start (Tuple[int, int]): The starting point coordinates.
+            goal (Tuple[int, int]): The goal point coordinates.
+            query_time (int): The query time.
+            rewiring (bool): Flag indicating whether to perform rewiring.
+            prev_path (list): The previous path.
+            dynamic_obstacles (bool): Flag indicating whether to consider dynamic obstacles.
+
+        Returns:
+            list: The final path.
+        """
         # create tree - obstacles active at query_time will be considered as static obstacles
         print("Planning path...")
         rrt = RRT(
@@ -139,8 +162,15 @@ class ReplanningRRT:
         stepsize: float = 1,
         waiting_time: float = 0.2,
     ):
-        # TODO: docstring
+        """
+        Simulate the result of repeated planning.
 
+        Args:
+            start_time (float): The start time of the simulation.
+            sol_path (List[ShapelyPoint]): The solution path.
+            stepsize (float, optional): The step size for traversing the path. Defaults to 1.
+            waiting_time (float, optional): The waiting time between steps. Defaults to 0.2.
+        """
         # compute a time-annotated path
         timed_path: List[Tuple(ShapelyPoint, float)] = [(sol_path[0], start_time)]
 
