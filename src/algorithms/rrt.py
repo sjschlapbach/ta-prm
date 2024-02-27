@@ -19,6 +19,7 @@ class RRT:
     - seed (int): The seed for the random number generator.
     - rewiring (bool): Whether to use the RRT* algorithm (default: False).
     - quiet (bool): Whether to suppress output messages.
+    - consider_dynamic (bool): Whether to consider dynamic obstacles active at the given query time (default: False).
 
     Attributes:
     - tree (dict): A dictionary representing the tree structure.
@@ -42,6 +43,7 @@ class RRT:
         seed: int = None,
         rewiring: bool = False,
         quiet: bool = False,
+        consider_dynamic: bool = False,
     ):
         # set the nummpy random seed if specified
         if seed is not None:
@@ -108,7 +110,9 @@ class RRT:
             # check if edge is (static) collision-free, and if so, add the new node to the tree
             # dynamic obstacles are not considered during building phase of RRT graph
             if self.__check_connection_collision_free(
-                neighbor=xnearest, candidate=candidate
+                neighbor=xnearest,
+                candidate=candidate,
+                query_time=query_time if consider_dynamic else None,
             ):
                 self.__connect_new_sample(
                     xnearest=xnearest,
@@ -130,7 +134,9 @@ class RRT:
         )
 
         if self.__check_connection_collision_free(
-            neighbor=xnearest, candidate=goal_node
+            neighbor=xnearest,
+            candidate=goal_node,
+            query_time=query_time if consider_dynamic else None,
         ):
             self.__connect_new_sample(
                 xnearest=xnearest,
@@ -228,13 +234,18 @@ class RRT:
 
         return closest, distance, xnear
 
-    def __check_connection_collision_free(self, neighbor: int, candidate: ShapelyPoint):
+    def __check_connection_collision_free(
+        self, neighbor: int, candidate: ShapelyPoint, query_time: float = None
+    ):
         """
         Checks if the connection between the neighbor node and the candidate node is collision-free.
 
         Args:
             neighbor (int): Index of the neighbor node in the tree.
             candidate (ShapelyPoint): The candidate node to connect with the neighbor node.
+            query_time (float): The time at which the query is made
+                (optional, only determined whether or not to check for dynamic obstacles,
+                 which are visible at this point in time).
 
         Returns:
             bool: True if the connection is collision-free, False otherwise.
@@ -245,7 +256,9 @@ class RRT:
         )
 
         # check for static collisions
-        collision_free, _ = self.env.static_collision_free_ln(edge)
+        collision_free, _ = self.env.static_collision_free_ln(
+            line=edge, query_time=query_time
+        )
         if not collision_free:
             return False
         else:

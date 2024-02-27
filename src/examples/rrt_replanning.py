@@ -39,7 +39,7 @@ def dynamic_rrt(rrt_star: bool = False, seed: int = None):
     goal_coords = (98, 98)
 
     # iterative planning with replanning triggered on collision
-    replanning_rrt(
+    path = replanning_rrt(
         samples=1000,
         env_inst=env_instance,
         stepsize=1,
@@ -49,7 +49,10 @@ def dynamic_rrt(rrt_star: bool = False, seed: int = None):
         seed=seed,
         rewiring=rrt_star,
         prev_path=[ShapelyPoint(start_coords)],
+        dynamic_obstacles=True,
     )
+
+    return path
 
 
 def replanning_rrt(
@@ -62,8 +65,10 @@ def replanning_rrt(
     seed: int = None,
     rewiring: bool = False,
     prev_path: List[tuple] = [],
+    dynamic_obstacles: bool = True,
 ):
     # create tree - obstacles active at query_time will be considered as static obstacles
+    print("Planning path...")
     rrt = RRT(
         start=start,
         goal=goal,
@@ -72,7 +77,9 @@ def replanning_rrt(
         query_time=query_time,
         seed=seed,
         rewiring=rewiring,
+        consider_dynamic=dynamic_obstacles,
     )
+    print("Found path with respect to all visible obstacles.")
 
     # compute solution path
     sol_path = rrt.rrt_find_path()
@@ -156,12 +163,17 @@ def replanning_rrt(
             seed=seed,
             rewiring=rewiring,
             prev_path=new_path,
+            dynamic_obstacles=dynamic_obstacles,
         )
+
+        return new_path
 
 
 if __name__ == "__main__":
     # run the RRT re-planning example (= trigger replanning in case of collision with dynamic obstacle)
-    dynamic_rrt(rrt_star=False, seed=0)
+    rrt_path = dynamic_rrt(rrt_star=False, seed=0)
+    print(rrt_path)
 
-    # run the RRT* re-planning example (= trigger replanning in case of collision with dynamic obstacle)
-    dynamic_rrt(rrt_star=True, seed=0)
+    # TODO: re-introduce RRT* with replanning
+    # # run the RRT* re-planning example (= trigger replanning in case of collision with dynamic obstacle)
+    # dynamic_rrt(rrt_star=True, seed=0)
