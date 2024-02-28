@@ -33,6 +33,8 @@ class ReplanningRRT:
         rewiring: bool,
         prev_path: list,
         dynamic_obstacles: bool,
+        replannings: int = 0,
+        quiet: bool = False,
     ):
         """
         Run the replanner with RRT / RRT* depending on the rewiring parameter.
@@ -50,12 +52,16 @@ class ReplanningRRT:
             rewiring (bool): Flag indicating whether to perform rewiring.
             prev_path (list): The previous path.
             dynamic_obstacles (bool): Flag indicating whether to consider dynamic obstacles.
+            quiet (bool, optional): Flag indicating whether to suppress output. Defaults to False.
 
         Returns:
             list: The final path.
+            int: Total number of RRT planning runs.
         """
         # create tree - obstacles active at query_time will be considered as static obstacles
-        print("Planning path...")
+        if not quiet:
+            print("Planning path...")
+
         rrt = RRT(
             start=start,
             goal=goal,
@@ -66,30 +72,35 @@ class ReplanningRRT:
             rewiring=rewiring,
             consider_dynamic=dynamic_obstacles,
         )
-        print("Found path with respect to all visible obstacles.")
+
+        if not quiet:
+            print("Found path with respect to all visible obstacles.")
 
         # compute solution path
         sol_path = rrt.rrt_find_path()
 
         # traverse path and check if recomputation is required along each edge with respect to the dynamic obstacles
-        print("Validating path...")
+        if not quiet:
+            print("Validating path...")
         collision_free, save_idx, save_time = rrt.validate_path(
             path=sol_path, start_time=query_time
         )
 
         if collision_free:
-            print("Path is collision free.")
+            if not quiet:
+                print("Path is collision free.")
             final_path = prev_path + [
                 rrt.tree[sol_path[idx]]["position"] for idx in range(1, len(sol_path))
             ]
 
-            return final_path
+            return final_path, replannings + 1
 
         else:
-            print(
-                "Path is not collision free, with first collision at edge with starting point: ",
-                rrt.tree[save_idx]["position"],
-            )
+            if not quiet:
+                print(
+                    "Path is not collision free, with first collision at edge with starting point: ",
+                    rrt.tree[sol_path[save_idx]]["position"],
+                )
 
             # add all points up to the collision point to the final path (coordinates)
             new_path = prev_path + [
@@ -130,19 +141,20 @@ class ReplanningRRT:
                     "No collision-free point found on edge. Possibly, the step resolution is too large."
                 )
 
-            print(
-                "Checked edge with collision, last save point: ",
-                last_save,
-                " at time: ",
-                last_time,
-                "--> triggering replanning...",
-            )
+            if not quiet:
+                print(
+                    "Checked edge with collision, last save point: ",
+                    last_save,
+                    " at time: ",
+                    last_time,
+                    "--> triggering replanning...",
+                )
 
             # add the collision point to the path
             new_path += [last_save]
 
             # recompute path from last save point
-            new_path = self.run(
+            new_path, replannings = self.run(
                 samples=samples,
                 stepsize=stepsize,
                 start=(last_save.x, last_save.y),
@@ -151,9 +163,11 @@ class ReplanningRRT:
                 rewiring=rewiring,
                 prev_path=new_path,
                 dynamic_obstacles=dynamic_obstacles,
+                replannings=replannings,
+                quiet=quiet,
             )
 
-            return new_path
+            return new_path, replannings + 1
 
     def simulate(
         self,
@@ -193,3 +207,19 @@ class ReplanningRRT:
             stepsize=stepsize,
             waiting_time=waiting_time,
         )
+
+    def get_path_cost(self, sol_path: List[ShapelyPoint]):
+        """
+        Compute the cost of the path.
+
+        Args:
+            sol_path (List[ShapelyPoint]): The solution path.
+
+        Returns:
+            float: The path cost.
+        """
+        cost = 0
+        for i in range(len(sol_path) - 1):
+            cost += sol_path[i].distance(sol_path[i + 1])
+
+        return cost

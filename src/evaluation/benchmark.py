@@ -1,6 +1,7 @@
 import numpy as np
 
 from src.evaluation.sample_benchmark import sample_benchmark
+from src.evaluation.sample_benchmark import sample_benchmark_results
 
 
 if __name__ == "__main__":
@@ -14,8 +15,8 @@ if __name__ == "__main__":
 
     # ! Benchmark selection
     sampling = True
-    obstacles = True
-    pruning = True
+    obstacles = False
+    pruning = False
 
     # ! Basic seed for reproducibility
     # TODO: for certain seeds, RRT cannot see that the goal node is only blocked dynamically - not used for evaluation -> but note in paper!!
@@ -51,8 +52,8 @@ if __name__ == "__main__":
 
         # Results: (algorithm, sample): (preptime, runtime, path_cost)[]
         sample_benchmarks = sample_benchmark(specifications, samples, reruns, seed)
-        print(sample_benchmarks)  # TODO: remove
-        print("Sample benchmarking completed.")
+        print("Sample benchmarking completed:")
+        sample_benchmark_results(sample_benchmarks, samples)
 
     ###########################################################
     # OBSTACLE BENCHMARKING - track runtime and path cost with increasing number of dynamic obstacles

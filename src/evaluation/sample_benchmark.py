@@ -1,10 +1,13 @@
-from pandas import Interval
-import random
 import time
+import random
+import statistics
+from pandas import Interval
+from shapely.geometry import Point as ShapelyPoint
 
 from src.algorithms.graph import Graph
 from src.algorithms.ta_prm import TAPRM
 from src.algorithms.rrt import RRT
+from src.algorithms.replanning_rrt import ReplanningRRT
 from src.envs.environment import Environment
 from src.envs.environment_instance import EnvironmentInstance
 
@@ -128,36 +131,45 @@ def sample_benchmark(specifications, samples, reruns, seed):
             ]
 
             ####################################################################
+            # run RRT and RRT* algorithms
+            # initialize replanning framework
+            replanner = ReplanningRRT(env=env, seed=seed)
+
             # run RRT algorithm (without rewiring)
             start = time.time()
-            rrt = RRT(
+            sol_path, rrt_runs = replanner.run(
+                samples=sample,
+                stepsize=specifications["stepsize"],
                 start=specifications["start_coords"],
                 goal=specifications["goal_coords"],
-                env=env,
-                num_samples=sample,
+                query_time=specifications["start_time"],
                 rewiring=False,
-                seed=seed,
+                prev_path=[ShapelyPoint(*specifications["start_coords"])],
+                dynamic_obstacles=True,
+                quiet=True,
             )
-            sol_path = rrt.rrt_find_path()
             runtime_rrt = time.time() - start
-            pathcost = rrt.get_path_cost(sol_path)
-            collector_rrt = collector_rrt + [(None, runtime_rrt, pathcost)]
+            pathcost = replanner.get_path_cost(sol_path)
+            collector_rrt = collector_rrt + [(rrt_runs, runtime_rrt, pathcost)]
 
-            ####################################################################
             # run RRT* algorithm (with rewiring)
             start = time.time()
-            rrt = RRT(
+            sol_path, rrt_star_runs = replanner.run(
+                samples=sample,
+                stepsize=specifications["stepsize"],
                 start=specifications["start_coords"],
                 goal=specifications["goal_coords"],
-                env=env,
-                num_samples=sample,
+                query_time=specifications["start_time"],
                 rewiring=True,
-                seed=seed,
+                prev_path=[ShapelyPoint(*specifications["start_coords"])],
+                dynamic_obstacles=True,
+                quiet=True,
             )
-            sol_path = rrt.rrt_find_path()
             runtime_rrt_star = time.time() - start
-            pathcost = rrt.get_path_cost(sol_path)
-            collector_rrt_star = collector_rrt_star + [(None, runtime_rrt, pathcost)]
+            pathcost = replanner.get_path_cost(sol_path)
+            collector_rrt_star = collector_rrt_star + [
+                (rrt_star_runs, runtime_rrt_star, pathcost)
+            ]
 
         results[(1, sample)] = collector_taprm
         results[(2, sample)] = collector_taprm_pruned
@@ -165,3 +177,90 @@ def sample_benchmark(specifications, samples, reruns, seed):
         results[(4, sample)] = collector_rrt_star
 
     return results
+
+
+def sample_benchmark_results(results, samples):
+    print()
+    print("Vanilla TA-PRM results:")
+    for sample in samples:
+        result = results[(1, sample)]
+        aggregate_taprm_results(sample, result)
+    print()
+
+    print("TA-PRM with pruning results:")
+    for sample in samples:
+        result = results[(2, sample)]
+        aggregate_taprm_results(sample, result)
+    print()
+
+    print("RRT results:")
+    for sample in samples:
+        result = results[(3, sample)]
+        aggregate_rrt_results(sample, result)
+    print()
+
+    print("RRT* results:")
+    for sample in samples:
+        result = results[(4, sample)]
+        aggregate_rrt_results(sample, result)
+    print()
+
+    print()
+
+
+def aggregate_taprm_results(sample, results):
+    # This function simplified and aggregates the TA-PRM results (preparation time, runtime, path cost)
+
+    preptimes = [x[0] for x in results]
+    runtimes = [x[1] for x in results]
+    pathcosts = [x[2] for x in results]
+    avg_prep = round(statistics.mean(preptimes), 5)
+    std_prep = round(statistics.stdev(preptimes), 5)
+    avg_runtime = round(statistics.mean(runtimes), 5)
+    std_runtime = round(statistics.stdev(runtimes), 5)
+    avg_cost = round(statistics.mean(pathcosts), 5)
+    std_cost = round(statistics.stdev(pathcosts), 5)
+    print(
+        f"Samples: {sample},",
+        avg_prep,
+        "\u00B1",
+        std_prep,
+        "preparation time;",
+        avg_runtime,
+        "\u00B1",
+        std_runtime,
+        "runtime;",
+        avg_cost,
+        "\u00B1",
+        std_cost,
+        "path cost",
+    )
+
+
+def aggregate_rrt_results(sample, results):
+    # This function simplified and aggregates the RRT results (runtime, path cost)
+
+    rrt_runs = [x[0] for x in results]
+    runtimes = [x[1] for x in results]
+    pathcosts = [x[2] for x in results]
+    avg_runs = round(statistics.mean(rrt_runs), 5)
+    std_runs = round(statistics.stdev(rrt_runs), 5)
+    avg_runtime = round(statistics.mean(runtimes), 5)
+    std_runtime = round(statistics.stdev(runtimes), 5)
+    avg_cost = round(statistics.mean(pathcosts), 5)
+    std_cost = round(statistics.stdev(pathcosts), 5)
+    print(
+        f"Samples: {sample},",
+        avg_runs,
+        "\u00B1",
+        std_runs,
+        "runs;",
+        avg_runtime,
+        "\u00B1",
+        std_runtime,
+        "runtime;",
+        avg_cost,
+        "\u00B1",
+        std_cost,
+        "path cost",
+    )

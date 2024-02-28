@@ -53,7 +53,7 @@ def plot_rrt_replanning(plotting: bool = True):
     waiting_time = 0.1
 
     # run the RRT re-planning example (= trigger replanning in case of collision with dynamic obstacle)
-    rrt_path = replanner.run(
+    rrt_path, runs = replanner.run(
         samples=samples,
         stepsize=stepsize,
         start=start_coords,
@@ -68,7 +68,7 @@ def plot_rrt_replanning(plotting: bool = True):
     )
 
     # run the RRT re-planning example (= trigger replanning in case of collision with dynamic obstacle)
-    rrt_path = replanner.run(
+    rrt_path, runs = replanner.run(
         samples=samples,
         stepsize=stepsize,
         start=start_coords,
