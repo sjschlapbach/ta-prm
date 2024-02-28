@@ -347,6 +347,24 @@ class RRT:
                 markersize=6,
             )
 
+    def get_path_cost(self, path: List[int]):
+        """
+        Computes the cost of the given path.
+
+        Args:
+            path (List[int]): The path for which to compute the cost.
+
+        Returns:
+            float: The cost of the path.
+        """
+        cost = 0
+        for i in range(len(path) - 1):
+            parent = self.tree[path[i]]["position"]
+            child = self.tree[path[i + 1]]["position"]
+            cost += parent.distance(child)
+
+        return cost
+
     def __connect_new_sample(
         self,
         xnearest: int,
