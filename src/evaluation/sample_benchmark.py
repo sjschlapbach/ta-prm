@@ -83,7 +83,7 @@ def sample_benchmark(specifications, samples, obstacles, reruns, seed):
     # track number of runs discarded due to potential unavailability of start and goal
     discarded_start_goal_runs = 0
     # track number of runs discarded due to dynamic collision issue on replanning with RRT
-    discarded_rrt_validation_runs = 0
+    failed_replanning_runs = 0
 
     for sample in samples:
         collector_taprm = []
@@ -196,6 +196,19 @@ def sample_benchmark(specifications, samples, obstacles, reruns, seed):
                 quiet=True,
             )
             runtime_rrt = time.time() - start
+
+            if sol_path == -1:
+                print(
+                    "RRT - Sample:",
+                    sample,
+                    "Rerun:",
+                    rerun,
+                    "Path Cost: None (replanning issue)",
+                )
+                failed_replanning_runs += 1
+                seed_idx += 1
+                continue
+
             pathcost_rrt = replanner.get_path_cost(sol_path)
             print("RRT - Sample:", sample, "Rerun:", rerun, "Path Cost:", pathcost_rrt)
 
@@ -213,6 +226,19 @@ def sample_benchmark(specifications, samples, obstacles, reruns, seed):
                 quiet=True,
             )
             runtime_rrt_star = time.time() - start
+
+            if sol_path == -1:
+                print(
+                    "RRT* - Sample:",
+                    sample,
+                    "Rerun:",
+                    rerun,
+                    "Path Cost: None (replanning issue)",
+                )
+                failed_replanning_runs += 1
+                seed_idx += 1
+                continue
+
             pathcost_rrt_star = replanner.get_path_cost(sol_path)
             print(
                 "RRT* - Sample:",

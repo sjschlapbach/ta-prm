@@ -34,7 +34,9 @@ class ReplanningRRT:
         prev_path: list,
         dynamic_obstacles: bool,
         replannings: int = 0,
+        return_on_replan_failure: bool = False,
         quiet: bool = False,
+        in_recursion: bool = False,
     ):
         """
         Run the replanner with RRT / RRT* depending on the rewiring parameter.
@@ -52,6 +54,8 @@ class ReplanningRRT:
             rewiring (bool): Flag indicating whether to perform rewiring.
             prev_path (list): The previous path.
             dynamic_obstacles (bool): Flag indicating whether to consider dynamic obstacles.
+            replannings (int, optional): The number of replannings. Defaults to 0.
+            return_on_replan_failure (bool, optional): Flag indicating whether to return on replan failure. Defaults to False.
             quiet (bool, optional): Flag indicating whether to suppress output. Defaults to False.
 
         Returns:
@@ -138,6 +142,11 @@ class ReplanningRRT:
                     break
 
             if last_save is None:
+                if in_recursion:
+                    # to skip issues where RRT fails due an obstacle popping up around a point
+                    # currently considered to be save towards the goal
+                    return -1, replannings
+
                 raise ValueError(
                     "No collision-free point found on edge. Possibly, the step resolution is too large."
                 )
@@ -166,6 +175,7 @@ class ReplanningRRT:
                 dynamic_obstacles=dynamic_obstacles,
                 replannings=replannings,
                 quiet=quiet,
+                in_recursion=True,
             )
 
             return new_path, replannings + 1
