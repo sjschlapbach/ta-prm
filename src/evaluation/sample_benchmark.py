@@ -78,6 +78,265 @@ def create_environment(specifications, seed, obstacles, dynamic_obs_only: bool =
     return env_inst
 
 
+def run_algorithms(
+    specifications,
+    total_runs,
+    discarded_start_goal_runs,
+    failed_replanning_runs,
+    rrt_goal_connection_failures,
+    sample,
+    obstacles,
+    reruns,
+    seeds,
+    dynamic_obs_only,
+):
+    # keep track of valid reruns
+    seed_idx = 0
+    rerun = 0
+
+    # track the results of the different algorithm runs
+    collector_taprm = []
+    collector_taprm_pruned = []
+    collector_rrt = []
+    collector_rrt_star = []
+
+    while rerun < reruns:
+        # Note: different seeds will result in different obstacle distributions
+        # and different algorithm results
+        seed = seeds[seed_idx]
+        total_runs += 1
+
+        ####################################################################
+        # initialize random environment with static and dynamic obstacles
+        env = create_environment(
+            specifications=specifications,
+            seed=seed,
+            obstacles=obstacles,
+            dynamic_obs_only=dynamic_obs_only,
+        )
+
+        ####################################################################
+        # run RRT and RRT* algorithms
+        # initialize replanning framework
+        replanner = ReplanningRRT(env=env, seed=seed)
+
+        # run RRT algorithm (without rewiring)
+        start = time.time()
+        try:
+            sol_path, rrt_runs = replanner.run(
+                samples=sample,
+                stepsize=specifications["stepsize"],
+                start=specifications["start_coords"],
+                goal=specifications["goal_coords"],
+                query_time=specifications["start_time"],
+                rewiring=False,
+                prev_path=[ShapelyPoint(*specifications["start_coords"])],
+                dynamic_obstacles=True,
+                quiet=True,
+            )
+            runtime_rrt = time.time() - start
+        except RuntimeError as e:
+            if (
+                str(e)
+                == "Goal node is not reachable from the tree or not collision free."
+            ):
+                print(
+                    "RRT - Sample:",
+                    sample,
+                    "Rerun:",
+                    rerun,
+                    "Path Cost: None (goal node not connected)",
+                )
+                print("Skipping seed...")
+                print()
+                rrt_goal_connection_failures += 1
+                seed_idx += 1
+                continue
+
+            elif (
+                str(e) == "Edge from new starting point is in collision on replanning."
+            ):
+                print(
+                    "RRT - Sample:",
+                    sample,
+                    "Rerun:",
+                    rerun,
+                    "Path Cost: None (replanning issue)",
+                )
+                print("Skipping seed...")
+                print()
+                failed_replanning_runs += 1
+                seed_idx += 1
+                continue
+
+            else:
+                raise e
+
+        pathcost_rrt = replanner.get_path_cost(sol_path)
+        print("RRT - Sample:", sample, "Rerun:", rerun, "Path Cost:", pathcost_rrt)
+
+        # run RRT* algorithm (with rewiring)
+        try:
+            start = time.time()
+            sol_path, rrt_star_runs = replanner.run(
+                samples=sample,
+                stepsize=specifications["stepsize"],
+                start=specifications["start_coords"],
+                goal=specifications["goal_coords"],
+                query_time=specifications["start_time"],
+                rewiring=True,
+                prev_path=[ShapelyPoint(*specifications["start_coords"])],
+                dynamic_obstacles=True,
+                quiet=True,
+            )
+            runtime_rrt_star = time.time() - start
+        except RuntimeError as e:
+            if (
+                str(e)
+                == "Goal node is not reachable from the tree or not collision free."
+            ):
+                print(
+                    "RRT* - Sample:",
+                    sample,
+                    "Rerun:",
+                    rerun,
+                    "Path Cost: None (goal node not connected)",
+                )
+                print("Skipping seed...")
+                print()
+                rrt_goal_connection_failures += 1
+                seed_idx += 1
+                continue
+
+            elif (
+                str(e) == "Edge from new starting point is in collision on replanning."
+            ):
+                print(
+                    "RRT* - Sample:",
+                    sample,
+                    "Rerun:",
+                    rerun,
+                    "Path Cost: None (replanning issue)",
+                )
+                print("Skipping seed...")
+                print()
+                failed_replanning_runs += 1
+                seed_idx += 1
+                continue
+
+            else:
+                raise e
+
+        pathcost_rrt_star = replanner.get_path_cost(sol_path)
+        print(
+            "RRT* - Sample:",
+            sample,
+            "Rerun:",
+            rerun,
+            "Path Cost:",
+            pathcost_rrt_star,
+        )
+
+        ####################################################################
+        # run TA-PRM with and without temporal pruning (rounded to integers)
+        temporal_precision = 0
+        start = time.time()
+
+        # Prepare the TA-PRM graph
+        graph = Graph(
+            num_samples=sample,
+            env=env,
+            seed=seed,
+            quiet=True,
+        )
+        preptime_p1 = time.time() - start
+
+        # if start and/or goal node are in static collision, skip this seed
+        # RRT / RRT* might not be able to find solutions in these scenarios,
+        # not allow for comparability
+        # (not counting towards algorithm preparation time)
+        start_coords = specifications["start_coords"]
+        goal_coords = specifications["goal_coords"]
+        start_pt = ShapelyPoint(start_coords[0], start_coords[1])
+        goal_pt = ShapelyPoint(goal_coords[0], goal_coords[1])
+        if not graph.env.static_collision_free(
+            point=start_pt, check_all_dynamic=True
+        ) or not graph.env.static_collision_free(point=goal_pt, check_all_dynamic=True):
+            print("Start or goal node in collision - skipping seed")
+            seed_idx += 1
+            discarded_start_goal_runs += 1
+            continue
+
+        # connect start and goal node to the roadmap
+        start = time.time()
+        graph.connect_start(coords=start_coords)
+        graph.connect_goal(coords=goal_coords, quiet=True)
+        ta_prm = TAPRM(graph=graph)
+        preptime_p2 = time.time() - start
+        preptime = preptime_p1 + preptime_p2
+
+        # run the vanilla TA-PRM algorithm
+        start = time.time()
+        success, path, max_length_open, expansions = ta_prm.plan(
+            start_time=specifications["start_time"], quiet=True
+        )
+        runtime_taprm = time.time() - start
+        pathcost_taprm = graph.path_cost(path)
+        print(
+            "Vanilla TA-PRM - Sample:",
+            sample,
+            "Rerun:",
+            rerun,
+            "Path Cost:",
+            pathcost_taprm,
+        )
+
+        # run the TA-PRM algorithm with temporal pruning
+        start = time.time()
+        success, path, max_length_open, expansions = ta_prm.plan_temporal(
+            start_time=specifications["start_time"],
+            quiet=True,
+            temporal_precision=temporal_precision,
+        )
+        runtime_taprm_pruned = time.time() - start
+        pathcost_taprm_pruning = graph.path_cost(path)
+        print(
+            "TA-PRM with pruning - Sample:",
+            sample,
+            "Rerun:",
+            rerun,
+            "Path Cost:",
+            pathcost_taprm_pruning,
+        )
+
+        # collect all results
+        collector_taprm = collector_taprm + [(preptime, runtime_taprm, pathcost_taprm)]
+        collector_taprm_pruned = collector_taprm_pruned + [
+            (preptime, runtime_taprm_pruned, pathcost_taprm_pruning)
+        ]
+        collector_rrt = collector_rrt + [(rrt_runs, runtime_rrt, pathcost_rrt)]
+        collector_rrt_star = collector_rrt_star + [
+            (rrt_star_runs, runtime_rrt_star, pathcost_rrt_star)
+        ]
+        print("Successfully collected results for rerun", rerun)
+        print()
+
+        # increment rerun counter
+        rerun += 1
+        seed_idx += 1
+
+    return (
+        total_runs,
+        discarded_start_goal_runs,
+        failed_replanning_runs,
+        rrt_goal_connection_failures,
+        collector_taprm,
+        collector_taprm_pruned,
+        collector_rrt,
+        collector_rrt_star,
+    )
+
+
 def sample_benchmark(
     specifications, samples, obstacles, reruns, seed, dynamic_obs_only: bool = False
 ):
@@ -95,245 +354,27 @@ def sample_benchmark(
     rrt_goal_connection_failures = 0
 
     for sample in samples:
-        collector_taprm = []
-        collector_taprm_pruned = []
-        collector_rrt = []
-        collector_rrt_star = []
-
-        # keep track of valid reruns
-        seed_idx = 0
-        rerun = 0
-
-        while rerun < reruns:
-            # Note: different seeds will result in different obstacle distributions
-            # and different algorithm results
-            seed = seeds[seed_idx]
-            total_runs += 1
-
-            ####################################################################
-            # initialize random environment with static and dynamic obstacles
-            env = create_environment(
-                specifications=specifications,
-                seed=seed,
-                obstacles=obstacles,
-                dynamic_obs_only=dynamic_obs_only,
-            )
-
-            ####################################################################
-            # run RRT and RRT* algorithms
-            # initialize replanning framework
-            replanner = ReplanningRRT(env=env, seed=seed)
-
-            # run RRT algorithm (without rewiring)
-            start = time.time()
-            try:
-                sol_path, rrt_runs = replanner.run(
-                    samples=sample,
-                    stepsize=specifications["stepsize"],
-                    start=specifications["start_coords"],
-                    goal=specifications["goal_coords"],
-                    query_time=specifications["start_time"],
-                    rewiring=False,
-                    prev_path=[ShapelyPoint(*specifications["start_coords"])],
-                    dynamic_obstacles=True,
-                    quiet=True,
-                )
-                runtime_rrt = time.time() - start
-            except RuntimeError as e:
-                if (
-                    str(e)
-                    == "Goal node is not reachable from the tree or not collision free."
-                ):
-                    print(
-                        "RRT - Sample:",
-                        sample,
-                        "Rerun:",
-                        rerun,
-                        "Path Cost: None (goal node not connected)",
-                    )
-                    print("Skipping seed...")
-                    print()
-                    rrt_goal_connection_failures += 1
-                    seed_idx += 1
-                    continue
-
-                elif (
-                    str(e)
-                    == "Edge from new starting point is in collision on replanning."
-                ):
-                    print(
-                        "RRT - Sample:",
-                        sample,
-                        "Rerun:",
-                        rerun,
-                        "Path Cost: None (replanning issue)",
-                    )
-                    print("Skipping seed...")
-                    print()
-                    failed_replanning_runs += 1
-                    seed_idx += 1
-                    continue
-
-                else:
-                    raise e
-
-            pathcost_rrt = replanner.get_path_cost(sol_path)
-            print("RRT - Sample:", sample, "Rerun:", rerun, "Path Cost:", pathcost_rrt)
-
-            # run RRT* algorithm (with rewiring)
-            try:
-                start = time.time()
-                sol_path, rrt_star_runs = replanner.run(
-                    samples=sample,
-                    stepsize=specifications["stepsize"],
-                    start=specifications["start_coords"],
-                    goal=specifications["goal_coords"],
-                    query_time=specifications["start_time"],
-                    rewiring=True,
-                    prev_path=[ShapelyPoint(*specifications["start_coords"])],
-                    dynamic_obstacles=True,
-                    quiet=True,
-                )
-                runtime_rrt_star = time.time() - start
-            except RuntimeError as e:
-                if (
-                    str(e)
-                    == "Goal node is not reachable from the tree or not collision free."
-                ):
-                    print(
-                        "RRT* - Sample:",
-                        sample,
-                        "Rerun:",
-                        rerun,
-                        "Path Cost: None (goal node not connected)",
-                    )
-                    print("Skipping seed...")
-                    print()
-                    rrt_goal_connection_failures += 1
-                    seed_idx += 1
-                    continue
-
-                elif (
-                    str(e)
-                    == "Edge from new starting point is in collision on replanning."
-                ):
-                    print(
-                        "RRT* - Sample:",
-                        sample,
-                        "Rerun:",
-                        rerun,
-                        "Path Cost: None (replanning issue)",
-                    )
-                    print("Skipping seed...")
-                    print()
-                    failed_replanning_runs += 1
-                    seed_idx += 1
-                    continue
-
-                else:
-                    raise e
-
-            pathcost_rrt_star = replanner.get_path_cost(sol_path)
-            print(
-                "RRT* - Sample:",
-                sample,
-                "Rerun:",
-                rerun,
-                "Path Cost:",
-                pathcost_rrt_star,
-            )
-
-            ####################################################################
-            # run TA-PRM with and without temporal pruning (rounded to integers)
-            temporal_precision = 0
-            start = time.time()
-
-            # Prepare the TA-PRM graph
-            graph = Graph(
-                num_samples=sample,
-                env=env,
-                seed=seed,
-                quiet=True,
-            )
-            preptime_p1 = time.time() - start
-
-            # if start and/or goal node are in static collision, skip this seed
-            # RRT / RRT* might not be able to find solutions in these scenarios,
-            # not allow for comparability
-            # (not counting towards algorithm preparation time)
-            start_coords = specifications["start_coords"]
-            goal_coords = specifications["goal_coords"]
-            start_pt = ShapelyPoint(start_coords[0], start_coords[1])
-            goal_pt = ShapelyPoint(goal_coords[0], goal_coords[1])
-            if not graph.env.static_collision_free(
-                point=start_pt, check_all_dynamic=True
-            ) or not graph.env.static_collision_free(
-                point=goal_pt, check_all_dynamic=True
-            ):
-                print("Start or goal node in collision - skipping seed")
-                seed_idx += 1
-                discarded_start_goal_runs += 1
-                continue
-
-            # connect start and goal node to the roadmap
-            start = time.time()
-            graph.connect_start(coords=start_coords)
-            graph.connect_goal(coords=goal_coords, quiet=True)
-            ta_prm = TAPRM(graph=graph)
-            preptime_p2 = time.time() - start
-            preptime = preptime_p1 + preptime_p2
-
-            # run the vanilla TA-PRM algorithm
-            start = time.time()
-            success, path, max_length_open, expansions = ta_prm.plan(
-                start_time=specifications["start_time"], quiet=True
-            )
-            runtime_taprm = time.time() - start
-            pathcost_taprm = graph.path_cost(path)
-            print(
-                "Vanilla TA-PRM - Sample:",
-                sample,
-                "Rerun:",
-                rerun,
-                "Path Cost:",
-                pathcost_taprm,
-            )
-
-            # run the TA-PRM algorithm with temporal pruning
-            start = time.time()
-            success, path, max_length_open, expansions = ta_prm.plan_temporal(
-                start_time=specifications["start_time"],
-                quiet=True,
-                temporal_precision=temporal_precision,
-            )
-            runtime_taprm_pruned = time.time() - start
-            pathcost_taprm_pruning = graph.path_cost(path)
-            print(
-                "TA-PRM with pruning - Sample:",
-                sample,
-                "Rerun:",
-                rerun,
-                "Path Cost:",
-                pathcost_taprm_pruning,
-            )
-
-            # collect all results
-            collector_taprm = collector_taprm + [
-                (preptime, runtime_taprm, pathcost_taprm)
-            ]
-            collector_taprm_pruned = collector_taprm_pruned + [
-                (preptime, runtime_taprm_pruned, pathcost_taprm_pruning)
-            ]
-            collector_rrt = collector_rrt + [(rrt_runs, runtime_rrt, pathcost_rrt)]
-            collector_rrt_star = collector_rrt_star + [
-                (rrt_star_runs, runtime_rrt_star, pathcost_rrt_star)
-            ]
-            print("Successfully collected results for rerun", rerun)
-            print()
-
-            # increment rerun counter
-            rerun += 1
-            seed_idx += 1
+        (
+            total_runs,
+            discarded_start_goal_runs,
+            failed_replanning_runs,
+            rrt_goal_connection_failures,
+            collector_taprm,
+            collector_taprm_pruned,
+            collector_rrt,
+            collector_rrt_star,
+        ) = run_algorithms(
+            specifications,
+            total_runs,
+            discarded_start_goal_runs,
+            failed_replanning_runs,
+            rrt_goal_connection_failures,
+            sample,
+            obstacles,
+            reruns,
+            seeds,
+            dynamic_obs_only,
+        )
 
         results[(1, sample)] = collector_taprm
         results[(2, sample)] = collector_taprm_pruned

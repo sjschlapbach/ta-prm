@@ -1,2 +1,4 @@
 from .sample_benchmark import sample_benchmark
 from .sample_benchmark import sample_benchmark_results
+from .sample_benchmark import create_environment
+from .obstacle_benchmark import obstacle_benchmark
