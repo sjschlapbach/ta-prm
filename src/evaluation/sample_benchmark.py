@@ -78,6 +78,13 @@ def sample_benchmark(specifications, samples, obstacles, reruns, seed):
     seeds = random.sample(range(0, 100000), 10 * reruns)
     results = {}
 
+    # track the number of total runs and discarded runs
+    total_runs = 0
+    # track number of runs discarded due to potential unavailability of start and goal
+    discarded_start_goal_runs = 0
+    # track number of runs discarded due to dynamic collision issue on replanning with RRT
+    discarded_rrt_validation_runs = 0
+
     for sample in samples:
         collector_taprm = []
         collector_taprm_pruned = []
@@ -125,6 +132,7 @@ def sample_benchmark(specifications, samples, obstacles, reruns, seed):
             ):
                 print("Start or goal node in collision - skipping seed")
                 seed_idx += 1
+                discarded_start_goal_runs += 1
                 continue
 
             # connect start and goal node to the roadmap
@@ -141,15 +149,14 @@ def sample_benchmark(specifications, samples, obstacles, reruns, seed):
                 start_time=specifications["start_time"], quiet=True
             )
             runtime_taprm = time.time() - start
-            pathcost = graph.path_cost(path)
-            collector_taprm = collector_taprm + [(preptime, runtime_taprm, pathcost)]
+            pathcost_taprm = graph.path_cost(path)
             print(
                 "Vanilla TA-PRM - Sample:",
                 sample,
                 "Rerun:",
                 rerun,
                 "Path Cost:",
-                pathcost,
+                pathcost_taprm,
             )
 
             # run the TA-PRM algorithm with temporal pruning
@@ -160,17 +167,14 @@ def sample_benchmark(specifications, samples, obstacles, reruns, seed):
                 temporal_precision=temporal_precision,
             )
             runtime_taprm_pruned = time.time() - start
-            pathcost = graph.path_cost(path)
-            collector_taprm_pruned = collector_taprm_pruned + [
-                (preptime, runtime_taprm_pruned, pathcost)
-            ]
+            pathcost_taprm_pruning = graph.path_cost(path)
             print(
                 "TA-PRM with pruning - Sample:",
                 sample,
                 "Rerun:",
                 rerun,
                 "Path Cost:",
-                pathcost,
+                pathcost_taprm_pruning,
             )
 
             ####################################################################
@@ -192,9 +196,8 @@ def sample_benchmark(specifications, samples, obstacles, reruns, seed):
                 quiet=True,
             )
             runtime_rrt = time.time() - start
-            pathcost = replanner.get_path_cost(sol_path)
-            collector_rrt = collector_rrt + [(rrt_runs, runtime_rrt, pathcost)]
-            print("RRT - Sample:", sample, "Rerun:", rerun, "Path Cost:", pathcost)
+            pathcost_rrt = replanner.get_path_cost(sol_path)
+            print("RRT - Sample:", sample, "Rerun:", rerun, "Path Cost:", pathcost_rrt)
 
             # run RRT* algorithm (with rewiring)
             start = time.time()
@@ -210,11 +213,27 @@ def sample_benchmark(specifications, samples, obstacles, reruns, seed):
                 quiet=True,
             )
             runtime_rrt_star = time.time() - start
-            pathcost = replanner.get_path_cost(sol_path)
-            collector_rrt_star = collector_rrt_star + [
-                (rrt_star_runs, runtime_rrt_star, pathcost)
+            pathcost_rrt_star = replanner.get_path_cost(sol_path)
+            print(
+                "RRT* - Sample:",
+                sample,
+                "Rerun:",
+                rerun,
+                "Path Cost:",
+                pathcost_rrt_star,
+            )
+
+            # collect all results
+            collector_taprm = collector_taprm + [
+                (preptime, runtime_taprm, pathcost_taprm)
             ]
-            print("RRT* - Sample:", sample, "Rerun:", rerun, "Path Cost:", pathcost)
+            collector_taprm_pruned = collector_taprm_pruned + [
+                (preptime, runtime_taprm_pruned, pathcost_taprm_pruning)
+            ]
+            collector_rrt = collector_rrt + [(rrt_runs, runtime_rrt, pathcost_rrt)]
+            collector_rrt_star = collector_rrt_star + [
+                (rrt_star_runs, runtime_rrt_star, pathcost_rrt_star)
+            ]
 
             # increment rerun counter
             rerun += 1

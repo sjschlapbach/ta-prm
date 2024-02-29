@@ -6,6 +6,10 @@ from src.evaluation.sample_benchmark import sample_benchmark
 from src.evaluation.sample_benchmark import sample_benchmark_results
 
 
+def remap_keys(mapping):
+    return [{"key": k, "value": v} for k, v in mapping.items()]
+
+
 if __name__ == "__main__":
     print("Starting benchmarking...")
 
@@ -36,7 +40,7 @@ if __name__ == "__main__":
         "obstacle_maximum": 3,
         "min_radius": 2,
         "max_radius": 80,
-        "stepsize": 0.1,
+        "stepsize": 1,
     }
 
     # ? How many reruns per scenario should be performed to compute average values?
@@ -51,7 +55,7 @@ if __name__ == "__main__":
         print("Running sample benchmark...")
         # Note: 25% of the obstacles will be static, 75% dynamic
         obstacles = 50
-        samples = [50, 100, 200, 300]
+        samples = [50, 100, 200]
 
         # Results: (algorithm, sample): (preptime, runtime, path_cost)[]
         sample_benchmarks = sample_benchmark(
@@ -60,12 +64,12 @@ if __name__ == "__main__":
         print("Sample benchmarking completed:")
         sample_benchmark_results(sample_benchmarks, samples)
 
-        # TODO: save the results in a JSON file
-        # if not os.path.exists("results"):
-        #     os.makedirs("results")
+        # save the results in a JSON file
+        if not os.path.exists("results"):
+            os.makedirs("results")
 
-        # with open("results/sample_benchmarks.json", "w") as file:
-        #     json.dump(sample_benchmarks, file)
+        with open("results/sample_benchmarks.json", "w") as file:
+            json.dump(remap_keys(sample_benchmarks), file)
 
     ###########################################################
     # OBSTACLE BENCHMARKING - track runtime and path cost with increasing number of dynamic obstacles
