@@ -33,16 +33,17 @@ def sample_benchmark(
             collector_rrt,
             collector_rrt_star,
         ) = run_algorithms(
-            specifications,
-            total_runs,
-            discarded_start_goal_runs,
-            failed_replanning_runs,
-            rrt_goal_connection_failures,
-            sample,
-            obstacles,
-            reruns,
-            seeds,
-            dynamic_obs_only,
+            specifications=specifications,
+            total_runs=total_runs,
+            discarded_start_goal_runs=discarded_start_goal_runs,
+            failed_replanning_runs=failed_replanning_runs,
+            rrt_goal_connection_failures=rrt_goal_connection_failures,
+            samples=sample,
+            obstacles=obstacles,
+            reruns=reruns,
+            seeds=seeds,
+            dynamic_obs_only=dynamic_obs_only,
+            quantitiy_print="Samples: " + str(sample),
         )
 
         results[(1, sample)] = collector_taprm

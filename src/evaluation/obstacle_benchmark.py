@@ -1,4 +1,5 @@
-from src.evaluation.sample_benchmark import create_environment
+import random
+from src.evaluation.helpers import run_algorithms
 
 
 def obstacle_benchmark(specifications, samples, obstacles, reruns, seed):
@@ -15,16 +16,40 @@ def obstacle_benchmark(specifications, samples, obstacles, reruns, seed):
     # track the number of times the goal node could not be connected to the RRT tree
     rrt_goal_connection_failures = 0
 
-    for obstacle in obstacles:
-        collector_taprm = []
-        collector_taprm_pruned = []
-        collector_rrt = []
-        collector_rrt_star = []
+    for num_obstacles in obstacles:
+        (
+            total_runs,
+            discarded_start_goal_runs,
+            failed_replanning_runs,
+            rrt_goal_connection_failures,
+            collector_taprm,
+            collector_taprm_pruned,
+            collector_rrt,
+            collector_rrt_star,
+        ) = run_algorithms(
+            specifications=specifications,
+            total_runs=total_runs,
+            discarded_start_goal_runs=discarded_start_goal_runs,
+            failed_replanning_runs=failed_replanning_runs,
+            rrt_goal_connection_failures=rrt_goal_connection_failures,
+            samples=samples,
+            obstacles=num_obstacles,
+            reruns=reruns,
+            seeds=seeds,
+            dynamic_obs_only=True,
+            quantitiy_print="Obstacles: " + str(num_obstacles),
+        )
 
-        # keep track of valid reruns
-        seed_idx = 0
-        rerun = 0
+        results[(1, num_obstacles)] = collector_taprm
+        results[(2, num_obstacles)] = collector_taprm_pruned
+        results[(3, num_obstacles)] = collector_rrt
+        results[(4, num_obstacles)] = collector_rrt_star
 
-        while rerun < reruns:
-            # TODO: possibly re-use the same function as in sample_benchmark
-            pass
+    print()
+    print("Total runs:", total_runs)
+    print("Discarded start/goal runs:", discarded_start_goal_runs)
+    print("Failed replanning runs:", failed_replanning_runs)
+    print("Goal connection failures:", rrt_goal_connection_failures)
+    print()
+
+    return results

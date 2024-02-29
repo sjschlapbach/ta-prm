@@ -3,6 +3,7 @@ import json
 import numpy as np
 
 from src.evaluation.sample_benchmark import sample_benchmark
+from src.evaluation.obstacle_benchmark import obstacle_benchmark
 from src.evaluation.helpers import aggregate_benchmark_results
 
 
@@ -20,8 +21,8 @@ if __name__ == "__main__":
     # 4) RRT* with dynamic obstacle replanning and rewiring
 
     # ! Benchmark selection
-    sampling = True
-    obstacles = False
+    sampling = False
+    obstacles = True
     pruning = False
 
     # ! Basic seed for reproducibility
@@ -43,7 +44,7 @@ if __name__ == "__main__":
     }
 
     # ? How many reruns per scenario should be performed to compute average values?
-    reruns = 4  # TODO: change to larger number
+    reruns = 1  # TODO: change to larger number
 
     # ? Specifications
     ###########################################################
@@ -82,7 +83,13 @@ if __name__ == "__main__":
         obstacles = [10, 20, 50, 100, 200]
 
         # Results: (algorithm, obstacles): (preptime, runtime, path_cost)[]
-        obstacle_benchmarks = {}
+        obstacle_benchmarks = obstacle_benchmark(
+            specifications=specifications,
+            samples=samples,
+            obstacles=obstacles,
+            reruns=reruns,
+            seed=seed,
+        )
         print("Obstacle benchmarking completed.")
 
     ###########################################################

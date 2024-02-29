@@ -19,6 +19,7 @@ def create_environment(specifications, seed, obstacles, dynamic_obs_only: bool =
     # create environment with random obstacles (25% static obstacles, 75% dynamic obstacles)
     env = Environment()
     if dynamic_obs_only:
+        static_obstacles = 0
         points = obstacles // 3
         lines = obstacles // 3
         polygons = obstacles - points - lines
@@ -84,11 +85,12 @@ def run_algorithms(
     discarded_start_goal_runs,
     failed_replanning_runs,
     rrt_goal_connection_failures,
-    sample,
+    samples,
     obstacles,
     reruns,
     seeds,
     dynamic_obs_only,
+    quantitiy_print,
 ):
     # keep track of valid reruns
     seed_idx = 0
@@ -124,7 +126,7 @@ def run_algorithms(
         start = time.time()
         try:
             sol_path, rrt_runs = replanner.run(
-                samples=sample,
+                samples=samples,
                 stepsize=specifications["stepsize"],
                 start=specifications["start_coords"],
                 goal=specifications["goal_coords"],
@@ -141,8 +143,8 @@ def run_algorithms(
                 == "Goal node is not reachable from the tree or not collision free."
             ):
                 print(
-                    "RRT - Sample:",
-                    sample,
+                    "RRT -",
+                    quantitiy_print,
                     "Rerun:",
                     rerun,
                     "Path Cost: None (goal node not connected)",
@@ -157,8 +159,8 @@ def run_algorithms(
                 str(e) == "Edge from new starting point is in collision on replanning."
             ):
                 print(
-                    "RRT - Sample:",
-                    sample,
+                    "RRT -",
+                    quantitiy_print,
                     "Rerun:",
                     rerun,
                     "Path Cost: None (replanning issue)",
@@ -173,13 +175,13 @@ def run_algorithms(
                 raise e
 
         pathcost_rrt = replanner.get_path_cost(sol_path)
-        print("RRT - Sample:", sample, "Rerun:", rerun, "Path Cost:", pathcost_rrt)
+        print("RRT -", quantitiy_print, "Rerun:", rerun, "Path Cost:", pathcost_rrt)
 
         # run RRT* algorithm (with rewiring)
         try:
             start = time.time()
             sol_path, rrt_star_runs = replanner.run(
-                samples=sample,
+                samples=samples,
                 stepsize=specifications["stepsize"],
                 start=specifications["start_coords"],
                 goal=specifications["goal_coords"],
@@ -196,8 +198,8 @@ def run_algorithms(
                 == "Goal node is not reachable from the tree or not collision free."
             ):
                 print(
-                    "RRT* - Sample:",
-                    sample,
+                    "RRT* -",
+                    quantitiy_print,
                     "Rerun:",
                     rerun,
                     "Path Cost: None (goal node not connected)",
@@ -212,8 +214,8 @@ def run_algorithms(
                 str(e) == "Edge from new starting point is in collision on replanning."
             ):
                 print(
-                    "RRT* - Sample:",
-                    sample,
+                    "RRT* -",
+                    quantitiy_print,
                     "Rerun:",
                     rerun,
                     "Path Cost: None (replanning issue)",
@@ -229,8 +231,8 @@ def run_algorithms(
 
         pathcost_rrt_star = replanner.get_path_cost(sol_path)
         print(
-            "RRT* - Sample:",
-            sample,
+            "RRT* -",
+            quantitiy_print,
             "Rerun:",
             rerun,
             "Path Cost:",
@@ -244,7 +246,7 @@ def run_algorithms(
 
         # Prepare the TA-PRM graph
         graph = Graph(
-            num_samples=sample,
+            num_samples=samples,
             env=env,
             seed=seed,
             quiet=True,
@@ -283,8 +285,8 @@ def run_algorithms(
         runtime_taprm = time.time() - start
         pathcost_taprm = graph.path_cost(path)
         print(
-            "Vanilla TA-PRM - Sample:",
-            sample,
+            "Vanilla TA-PRM -",
+            quantitiy_print,
             "Rerun:",
             rerun,
             "Path Cost:",
@@ -301,8 +303,8 @@ def run_algorithms(
         runtime_taprm_pruned = time.time() - start
         pathcost_taprm_pruning = graph.path_cost(path)
         print(
-            "TA-PRM with pruning - Sample:",
-            sample,
+            "TA-PRM with pruning -",
+            quantitiy_print,
             "Rerun:",
             rerun,
             "Path Cost:",
