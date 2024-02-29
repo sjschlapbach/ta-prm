@@ -101,8 +101,8 @@ class ReplanningRRT:
             next_node = rrt.tree[sol_path[save_idx + 1]]["position"]
             delta_distance = next_node.distance(save_node)
             num_steps = int(delta_distance / stepsize)
-            x_step = abs(next_node.x - save_node.x) / num_steps
-            y_step = abs(next_node.y - save_node.y) / num_steps
+            x_step = (next_node.x - save_node.x) / num_steps
+            y_step = (next_node.y - save_node.y) / num_steps
 
             # track the position and time of the last node, which is not in collision
             last_save = None
