@@ -47,8 +47,7 @@ if __name__ == "__main__":
     # (fixed number of static obstacles)
     if sampling:
         print("Running sample benchmark...")
-        # TODO: samples = [50, 100, 500, 1000]
-        samples = [50, 100]
+        samples = [50, 100, 500, 1000]
 
         # Results: (algorithm, sample): (preptime, runtime, path_cost)[]
         sample_benchmarks = sample_benchmark(specifications, samples, reruns, seed)
