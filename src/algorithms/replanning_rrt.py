@@ -111,15 +111,16 @@ class ReplanningRRT:
             save_node = new_path[-1]
             next_node = rrt.tree[sol_path[save_idx + 1]]["position"]
             delta_distance = next_node.distance(save_node)
-            x_step = (next_node.x - save_node.x) / delta_distance
-            y_step = (next_node.y - save_node.y) / delta_distance
+            num_steps = int(delta_distance / stepsize)
+            x_step = abs(next_node.x - save_node.x) / num_steps
+            y_step = abs(next_node.y - save_node.y) / num_steps
 
             # track the position and time of the last node, which is not in collision
             last_save = None
             last_time = save_time
 
             # iterate over the edge and check
-            for i in range(1, int(delta_distance / stepsize)):
+            for i in range(1, num_steps):
                 sample = ShapelyPoint(
                     save_node.x + i * x_step, save_node.y + i * y_step
                 )

@@ -63,9 +63,14 @@ def plot_rrt_replanning(plotting: bool = True):
         prev_path=[ShapelyPoint(*start_coords)],
         dynamic_obstacles=True,
     )
-    replanner.simulate(
-        start_time=0, sol_path=rrt_path, stepsize=stepsize, waiting_time=waiting_time
-    )
+
+    if plotting:
+        replanner.simulate(
+            start_time=0,
+            sol_path=rrt_path,
+            stepsize=stepsize,
+            waiting_time=waiting_time,
+        )
 
     # run the RRT re-planning example (= trigger replanning in case of collision with dynamic obstacle)
     rrt_path, runs = replanner.run(
