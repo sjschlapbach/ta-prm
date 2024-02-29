@@ -113,16 +113,16 @@ class ReplanningRRT:
                 sample = ShapelyPoint(
                     save_node.x + i * x_step, save_node.y + i * y_step
                 )
+                sample_time = last_time + stepsize
 
                 # check if the sample is in collision
-                last_time += stepsize
                 collision_free = self.env.static_collision_free(
-                    point=sample, query_time=last_time
+                    point=sample, query_time=sample_time
                 )
 
                 if collision_free:
                     last_save = sample
-                    last_time = last_time
+                    last_time = sample_time
                 else:
                     break
 
