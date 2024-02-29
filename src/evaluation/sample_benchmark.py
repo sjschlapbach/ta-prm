@@ -12,33 +12,38 @@ from src.envs.environment import Environment
 from src.envs.environment_instance import EnvironmentInstance
 
 
-def create_environment(specifications, seed, obstacles):
+def create_environment(specifications, seed, obstacles, dynamic_obs_only: bool = False):
     # This function creates an environment instance with random obstacles
     # according to the specifications (both static and dynamic).
 
     # create environment with random obstacles (25% static obstacles, 75% dynamic obstacles)
     env = Environment()
-    static_obstacles = obstacles // 4
-    points = obstacles // 4
-    lines = obstacles // 4
-    polygons = obstacles - points - lines - static_obstacles
+    if dynamic_obs_only:
+        points = obstacles // 3
+        lines = obstacles // 3
+        polygons = obstacles - points - lines
+    else:
+        static_obstacles = obstacles // 4
+        points = obstacles // 4
+        lines = obstacles // 4
+        polygons = obstacles - points - lines - static_obstacles
 
-    env.add_random_obstacles(
-        num_points=0,
-        num_lines=0,
-        num_polygons=static_obstacles,
-        min_x=specifications["x_range"][0],
-        max_x=specifications["x_range"][1],
-        min_y=specifications["y_range"][0],
-        max_y=specifications["y_range"][1],
-        min_interval=specifications["scenario_start"],
-        max_interval=specifications["scenario_end"],
-        max_size=specifications["obstacle_maximum"],
-        min_radius=specifications["min_radius"],
-        max_radius=specifications["max_radius"],
-        seed=seed,
-        only_static=True,
-    )
+        env.add_random_obstacles(
+            num_points=0,
+            num_lines=0,
+            num_polygons=static_obstacles,
+            min_x=specifications["x_range"][0],
+            max_x=specifications["x_range"][1],
+            min_y=specifications["y_range"][0],
+            max_y=specifications["y_range"][1],
+            min_interval=specifications["scenario_start"],
+            max_interval=specifications["scenario_end"],
+            max_size=specifications["obstacle_maximum"],
+            min_radius=specifications["min_radius"],
+            max_radius=specifications["max_radius"],
+            seed=seed,
+            only_static=True,
+        )
 
     env.add_random_obstacles(
         num_points=points,
@@ -73,7 +78,9 @@ def create_environment(specifications, seed, obstacles):
     return env_inst
 
 
-def sample_benchmark(specifications, samples, obstacles, reruns, seed):
+def sample_benchmark(
+    specifications, samples, obstacles, reruns, seed, dynamic_obs_only: bool = False
+):
     random.seed(seed)
     seeds = random.sample(range(0, 100000), 10 * reruns)
     results = {}
@@ -103,8 +110,14 @@ def sample_benchmark(specifications, samples, obstacles, reruns, seed):
             seed = seeds[seed_idx]
             total_runs += 1
 
+            ####################################################################
             # initialize random environment with static and dynamic obstacles
-            env = create_environment(specifications, seed, obstacles=obstacles)
+            env = create_environment(
+                specifications=specifications,
+                seed=seed,
+                obstacles=obstacles,
+                dynamic_obs_only=dynamic_obs_only,
+            )
 
             ####################################################################
             # run RRT and RRT* algorithms

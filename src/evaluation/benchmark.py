@@ -25,7 +25,6 @@ if __name__ == "__main__":
     pruning = False
 
     # ! Basic seed for reproducibility
-    # TODO: for certain seeds, RRT cannot see that the goal node is only blocked dynamically - not used for evaluation -> but note in paper!!
     seed = 0
 
     # ! Specify workspace and task
@@ -44,8 +43,7 @@ if __name__ == "__main__":
     }
 
     # ? How many reruns per scenario should be performed to compute average values?
-    reruns = 4
-    # TODO: reruns = 20
+    reruns = 4  # TODO: change to larger number
 
     # ? Specifications
     ###########################################################
@@ -59,7 +57,12 @@ if __name__ == "__main__":
 
         # Results: (algorithm, sample): (preptime, runtime, path_cost)[]
         sample_benchmarks = sample_benchmark(
-            specifications, samples, obstacles, reruns, seed
+            specifications=specifications,
+            samples=samples,
+            obstacles=obstacles,
+            reruns=reruns,
+            seed=seed,
+            dynamic_obs_only=False,
         )
         print("Sample benchmarking completed:")
         sample_benchmark_results(sample_benchmarks, samples)
@@ -75,6 +78,7 @@ if __name__ == "__main__":
     # OBSTACLE BENCHMARKING - track runtime and path cost with increasing number of dynamic obstacles
     if obstacles:
         print("Running obstacle benchmark...")
+        samples = 100
         obstacles = [10, 20, 50, 100, 200]
 
         # Results: (algorithm, obstacles): (preptime, runtime, path_cost)[]
