@@ -66,16 +66,25 @@ class ReplanningRRT:
         if not quiet:
             print("Planning path...")
 
-        rrt = RRT(
-            start=start,
-            goal=goal,
-            env=self.env,
-            num_samples=samples,
-            query_time=query_time,
-            seed=self.seed,
-            rewiring=rewiring,
-            consider_dynamic=dynamic_obstacles,
-        )
+        try:
+            rrt = RRT(
+                start=start,
+                goal=goal,
+                env=self.env,
+                num_samples=samples,
+                query_time=query_time,
+                seed=self.seed,
+                rewiring=rewiring,
+                consider_dynamic=dynamic_obstacles,
+            )
+        except ValueError as e:
+            if (
+                str(e)
+                == "Goal node is not reachable from the tree or not collision free."
+            ):
+                return -2, replannings
+            else:
+                raise e
 
         if not quiet:
             print("Found path with respect to all visible obstacles.")

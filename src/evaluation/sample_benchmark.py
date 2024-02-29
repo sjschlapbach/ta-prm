@@ -84,6 +84,8 @@ def sample_benchmark(specifications, samples, obstacles, reruns, seed):
     discarded_start_goal_runs = 0
     # track number of runs discarded due to dynamic collision issue on replanning with RRT
     failed_replanning_runs = 0
+    # track the number of times the goal node could not be connected to the RRT tree
+    rrt_goal_connection_failures = 0
 
     for sample in samples:
         collector_taprm = []
@@ -102,6 +104,104 @@ def sample_benchmark(specifications, samples, obstacles, reruns, seed):
 
             # initialize random environment with static and dynamic obstacles
             env = create_environment(specifications, seed, obstacles=obstacles)
+
+            ####################################################################
+            # run RRT and RRT* algorithms
+            # initialize replanning framework
+            replanner = ReplanningRRT(env=env, seed=seed)
+
+            # run RRT algorithm (without rewiring)
+            start = time.time()
+            sol_path, rrt_runs = replanner.run(
+                samples=sample,
+                stepsize=specifications["stepsize"],
+                start=specifications["start_coords"],
+                goal=specifications["goal_coords"],
+                query_time=specifications["start_time"],
+                rewiring=False,
+                prev_path=[ShapelyPoint(*specifications["start_coords"])],
+                dynamic_obstacles=True,
+                quiet=True,
+            )
+            runtime_rrt = time.time() - start
+
+            if sol_path == -1:
+                print(
+                    "RRT - Sample:",
+                    sample,
+                    "Rerun:",
+                    rerun,
+                    "Path Cost: None (replanning issue)",
+                )
+                print("Skipping seed...")
+                print()
+                failed_replanning_runs += 1
+                seed_idx += 1
+                continue
+            elif sol_path == -2:
+                print(
+                    "RRT - Sample:",
+                    sample,
+                    "Rerun:",
+                    rerun,
+                    "Path Cost: None (goal node not connected)",
+                )
+                print("Skipping seed...")
+                print()
+                rrt_goal_connection_failures += 1
+                seed_idx += 1
+                continue
+
+            pathcost_rrt = replanner.get_path_cost(sol_path)
+            print("RRT - Sample:", sample, "Rerun:", rerun, "Path Cost:", pathcost_rrt)
+
+            # run RRT* algorithm (with rewiring)
+            start = time.time()
+            sol_path, rrt_star_runs = replanner.run(
+                samples=sample,
+                stepsize=specifications["stepsize"],
+                start=specifications["start_coords"],
+                goal=specifications["goal_coords"],
+                query_time=specifications["start_time"],
+                rewiring=True,
+                prev_path=[ShapelyPoint(*specifications["start_coords"])],
+                dynamic_obstacles=True,
+                quiet=True,
+            )
+            runtime_rrt_star = time.time() - start
+
+            if sol_path == -1:
+                print(
+                    "RRT* - Sample:",
+                    sample,
+                    "Rerun:",
+                    rerun,
+                    "Path Cost: None (replanning issue)",
+                )
+                failed_replanning_runs += 1
+                seed_idx += 1
+                continue
+            elif sol_path == -2:
+                print(
+                    "RRT* - Sample:",
+                    sample,
+                    "Rerun:",
+                    rerun,
+                    "Path Cost: None (goal node not connected)",
+                )
+                rrt_goal_connection_failures += 1
+                seed_idx += 1
+                continue
+
+            pathcost_rrt_star = replanner.get_path_cost(sol_path)
+            print(
+                "RRT* - Sample:",
+                sample,
+                "Rerun:",
+                rerun,
+                "Path Cost:",
+                pathcost_rrt_star,
+            )
 
             ####################################################################
             # run TA-PRM with and without temporal pruning (rounded to integers)
@@ -177,78 +277,6 @@ def sample_benchmark(specifications, samples, obstacles, reruns, seed):
                 pathcost_taprm_pruning,
             )
 
-            ####################################################################
-            # run RRT and RRT* algorithms
-            # initialize replanning framework
-            replanner = ReplanningRRT(env=env, seed=seed)
-
-            # run RRT algorithm (without rewiring)
-            start = time.time()
-            sol_path, rrt_runs = replanner.run(
-                samples=sample,
-                stepsize=specifications["stepsize"],
-                start=specifications["start_coords"],
-                goal=specifications["goal_coords"],
-                query_time=specifications["start_time"],
-                rewiring=False,
-                prev_path=[ShapelyPoint(*specifications["start_coords"])],
-                dynamic_obstacles=True,
-                quiet=True,
-            )
-            runtime_rrt = time.time() - start
-
-            if sol_path == -1:
-                print(
-                    "RRT - Sample:",
-                    sample,
-                    "Rerun:",
-                    rerun,
-                    "Path Cost: None (replanning issue)",
-                )
-                failed_replanning_runs += 1
-                seed_idx += 1
-                continue
-
-            pathcost_rrt = replanner.get_path_cost(sol_path)
-            print("RRT - Sample:", sample, "Rerun:", rerun, "Path Cost:", pathcost_rrt)
-
-            # run RRT* algorithm (with rewiring)
-            start = time.time()
-            sol_path, rrt_star_runs = replanner.run(
-                samples=sample,
-                stepsize=specifications["stepsize"],
-                start=specifications["start_coords"],
-                goal=specifications["goal_coords"],
-                query_time=specifications["start_time"],
-                rewiring=True,
-                prev_path=[ShapelyPoint(*specifications["start_coords"])],
-                dynamic_obstacles=True,
-                quiet=True,
-            )
-            runtime_rrt_star = time.time() - start
-
-            if sol_path == -1:
-                print(
-                    "RRT* - Sample:",
-                    sample,
-                    "Rerun:",
-                    rerun,
-                    "Path Cost: None (replanning issue)",
-                )
-                failed_replanning_runs += 1
-                seed_idx += 1
-                continue
-
-            pathcost_rrt_star = replanner.get_path_cost(sol_path)
-            print(
-                "RRT* - Sample:",
-                sample,
-                "Rerun:",
-                rerun,
-                "Path Cost:",
-                pathcost_rrt_star,
-            )
-
             # collect all results
             collector_taprm = collector_taprm + [
                 (preptime, runtime_taprm, pathcost_taprm)
@@ -260,6 +288,8 @@ def sample_benchmark(specifications, samples, obstacles, reruns, seed):
             collector_rrt_star = collector_rrt_star + [
                 (rrt_star_runs, runtime_rrt_star, pathcost_rrt_star)
             ]
+            print("Successfully collected results for rerun", rerun)
+            print()
 
             # increment rerun counter
             rerun += 1
