@@ -73,9 +73,9 @@ def create_environment(specifications, seed, obstacles):
     return env_inst
 
 
-def sample_benchmark(specifications, samples, reruns, seed):
+def sample_benchmark(specifications, samples, obstacles, reruns, seed):
     random.seed(seed)
-    seeds = random.sample(range(0, 100000), reruns)
+    seeds = random.sample(range(0, 100000), 10 * reruns)
     results = {}
 
     for sample in samples:
@@ -84,12 +84,17 @@ def sample_benchmark(specifications, samples, reruns, seed):
         collector_rrt = []
         collector_rrt_star = []
 
-        for rerun in range(reruns):
-            # TODO - Note: setting different seeds for each rerun will result in different path costs
-            seed = seeds[rerun]
+        # keep track of valid reruns
+        seed_idx = 0
+        rerun = 0
+
+        while rerun < reruns:
+            # Note: different seeds will result in different obstacle distributions
+            # and different algorithm results
+            seed = seeds[seed_idx]
 
             # initialize random environment with static and dynamic obstacles
-            env = create_environment(specifications, seed, obstacles=100)
+            env = create_environment(specifications, seed, obstacles=obstacles)
 
             ####################################################################
             # run TA-PRM with and without temporal pruning (rounded to integers)
@@ -103,10 +108,32 @@ def sample_benchmark(specifications, samples, reruns, seed):
                 seed=seed,
                 quiet=True,
             )
-            graph.connect_start(coords=specifications["start_coords"])
-            graph.connect_goal(coords=specifications["goal_coords"], quiet=True)
+            preptime_p1 = time.time() - start
+
+            # if start and/or goal node are in static collision, skip this seed
+            # RRT / RRT* might not be able to find solutions in these scenarios,
+            # not allow for comparability
+            # (not counting towards algorithm preparation time)
+            start_coords = specifications["start_coords"]
+            goal_coords = specifications["goal_coords"]
+            start_pt = ShapelyPoint(start_coords[0], start_coords[1])
+            goal_pt = ShapelyPoint(goal_coords[0], goal_coords[1])
+            if not graph.env.static_collision_free(
+                point=start_pt, check_all_dynamic=True
+            ) or not graph.env.static_collision_free(
+                point=goal_pt, check_all_dynamic=True
+            ):
+                print("Start or goal node in collision - skipping seed")
+                seed_idx += 1
+                continue
+
+            # connect start and goal node to the roadmap
+            start = time.time()
+            graph.connect_start(coords=start_coords)
+            graph.connect_goal(coords=goal_coords, quiet=True)
             ta_prm = TAPRM(graph=graph)
-            preptime = time.time() - start
+            preptime_p2 = time.time() - start
+            preptime = preptime_p1 + preptime_p2
 
             # run the vanilla TA-PRM algorithm
             start = time.time()
@@ -116,6 +143,14 @@ def sample_benchmark(specifications, samples, reruns, seed):
             runtime_taprm = time.time() - start
             pathcost = graph.path_cost(path)
             collector_taprm = collector_taprm + [(preptime, runtime_taprm, pathcost)]
+            print(
+                "Vanilla TA-PRM - Sample:",
+                sample,
+                "Rerun:",
+                rerun,
+                "Path Cost:",
+                pathcost,
+            )
 
             # run the TA-PRM algorithm with temporal pruning
             start = time.time()
@@ -129,6 +164,14 @@ def sample_benchmark(specifications, samples, reruns, seed):
             collector_taprm_pruned = collector_taprm_pruned + [
                 (preptime, runtime_taprm_pruned, pathcost)
             ]
+            print(
+                "TA-PRM with pruning - Sample:",
+                sample,
+                "Rerun:",
+                rerun,
+                "Path Cost:",
+                pathcost,
+            )
 
             ####################################################################
             # run RRT and RRT* algorithms
@@ -151,6 +194,7 @@ def sample_benchmark(specifications, samples, reruns, seed):
             runtime_rrt = time.time() - start
             pathcost = replanner.get_path_cost(sol_path)
             collector_rrt = collector_rrt + [(rrt_runs, runtime_rrt, pathcost)]
+            print("RRT - Sample:", sample, "Rerun:", rerun, "Path Cost:", pathcost)
 
             # run RRT* algorithm (with rewiring)
             start = time.time()
@@ -170,6 +214,11 @@ def sample_benchmark(specifications, samples, reruns, seed):
             collector_rrt_star = collector_rrt_star + [
                 (rrt_star_runs, runtime_rrt_star, pathcost)
             ]
+            print("RRT* - Sample:", sample, "Rerun:", rerun, "Path Cost:", pathcost)
+
+            # increment rerun counter
+            rerun += 1
+            seed_idx += 1
 
         results[(1, sample)] = collector_taprm
         results[(2, sample)] = collector_taprm_pruned

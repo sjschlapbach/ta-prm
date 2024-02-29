@@ -341,7 +341,10 @@ class EnvironmentInstance:
             plt.clf()
 
     def static_collision_free(
-        self, point: ShapelyPoint, query_time: float = None
+        self,
+        point: ShapelyPoint,
+        query_time: float = None,
+        check_all_dynamic: bool = False,
     ) -> bool:
         """
         Check if a given point is in collision with any static obstacle in the environment.
@@ -351,6 +354,7 @@ class EnvironmentInstance:
         Args:
             shape (ShapelyPoint): The point to check for collision.
             query_time (float, optional): The time at which the query is made. Dynamic obstacles at this time are considered to be visible and treated as static obstacles. Defaults to None.
+            check_all_dynamic (bool, optional): A boolean value indicating if all dynamic obstacles should be checked for collision independent of the specification of a query_time. Defaults to False.
 
         Returns:
             bool: False if the point is in collision with any obstacle, True otherwise.
@@ -366,7 +370,7 @@ class EnvironmentInstance:
             if obstacle.check_collision(shape=point):
                 return False
 
-        if query_time is not None:
+        if query_time is not None or check_all_dynamic:
             dynamic_ids = self.dynamic_idx[cell_x][cell_y]
 
             for key in dynamic_ids:
