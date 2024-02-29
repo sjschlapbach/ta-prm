@@ -3,7 +3,7 @@ import json
 import numpy as np
 
 from src.evaluation.sample_benchmark import sample_benchmark
-from src.evaluation.sample_benchmark import sample_benchmark_results
+from src.evaluation.helpers import aggregate_benchmark_results
 
 
 def remap_keys(mapping):
@@ -65,7 +65,7 @@ if __name__ == "__main__":
             dynamic_obs_only=False,
         )
         print("Sample benchmarking completed:")
-        sample_benchmark_results(sample_benchmarks, samples)
+        aggregate_benchmark_results(sample_benchmarks, samples)
 
         # save the results in a JSON file
         if not os.path.exists("results"):
