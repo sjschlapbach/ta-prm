@@ -155,7 +155,7 @@ class EnvironmentInstance:
                         counter += 1
                         continue
 
-                raise ValueError(
+                raise RuntimeError(
                     "Obstacle was not added to any obstacle list, despite being active"
                 )
 

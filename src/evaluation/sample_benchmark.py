@@ -101,6 +101,7 @@ def sample_benchmark(specifications, samples, obstacles, reruns, seed):
             # Note: different seeds will result in different obstacle distributions
             # and different algorithm results
             seed = seeds[seed_idx]
+            total_runs += 1
 
             # initialize random environment with static and dynamic obstacles
             env = create_environment(specifications, seed, obstacles=obstacles)
@@ -112,86 +113,112 @@ def sample_benchmark(specifications, samples, obstacles, reruns, seed):
 
             # run RRT algorithm (without rewiring)
             start = time.time()
-            sol_path, rrt_runs = replanner.run(
-                samples=sample,
-                stepsize=specifications["stepsize"],
-                start=specifications["start_coords"],
-                goal=specifications["goal_coords"],
-                query_time=specifications["start_time"],
-                rewiring=False,
-                prev_path=[ShapelyPoint(*specifications["start_coords"])],
-                dynamic_obstacles=True,
-                quiet=True,
-            )
-            runtime_rrt = time.time() - start
+            try:
+                sol_path, rrt_runs = replanner.run(
+                    samples=sample,
+                    stepsize=specifications["stepsize"],
+                    start=specifications["start_coords"],
+                    goal=specifications["goal_coords"],
+                    query_time=specifications["start_time"],
+                    rewiring=False,
+                    prev_path=[ShapelyPoint(*specifications["start_coords"])],
+                    dynamic_obstacles=True,
+                    quiet=True,
+                )
+                runtime_rrt = time.time() - start
+            except RuntimeError as e:
+                if (
+                    str(e)
+                    == "Goal node is not reachable from the tree or not collision free."
+                ):
+                    print(
+                        "RRT - Sample:",
+                        sample,
+                        "Rerun:",
+                        rerun,
+                        "Path Cost: None (goal node not connected)",
+                    )
+                    print("Skipping seed...")
+                    print()
+                    rrt_goal_connection_failures += 1
+                    seed_idx += 1
+                    continue
 
-            if sol_path == -1:
-                print(
-                    "RRT - Sample:",
-                    sample,
-                    "Rerun:",
-                    rerun,
-                    "Path Cost: None (replanning issue)",
-                )
-                print("Skipping seed...")
-                print()
-                failed_replanning_runs += 1
-                seed_idx += 1
-                continue
-            elif sol_path == -2:
-                print(
-                    "RRT - Sample:",
-                    sample,
-                    "Rerun:",
-                    rerun,
-                    "Path Cost: None (goal node not connected)",
-                )
-                print("Skipping seed...")
-                print()
-                rrt_goal_connection_failures += 1
-                seed_idx += 1
-                continue
+                elif (
+                    str(e)
+                    == "Edge from new starting point is in collision on replanning."
+                ):
+                    print(
+                        "RRT - Sample:",
+                        sample,
+                        "Rerun:",
+                        rerun,
+                        "Path Cost: None (replanning issue)",
+                    )
+                    print("Skipping seed...")
+                    print()
+                    failed_replanning_runs += 1
+                    seed_idx += 1
+                    continue
+
+                else:
+                    raise e
 
             pathcost_rrt = replanner.get_path_cost(sol_path)
             print("RRT - Sample:", sample, "Rerun:", rerun, "Path Cost:", pathcost_rrt)
 
             # run RRT* algorithm (with rewiring)
-            start = time.time()
-            sol_path, rrt_star_runs = replanner.run(
-                samples=sample,
-                stepsize=specifications["stepsize"],
-                start=specifications["start_coords"],
-                goal=specifications["goal_coords"],
-                query_time=specifications["start_time"],
-                rewiring=True,
-                prev_path=[ShapelyPoint(*specifications["start_coords"])],
-                dynamic_obstacles=True,
-                quiet=True,
-            )
-            runtime_rrt_star = time.time() - start
+            try:
+                start = time.time()
+                sol_path, rrt_star_runs = replanner.run(
+                    samples=sample,
+                    stepsize=specifications["stepsize"],
+                    start=specifications["start_coords"],
+                    goal=specifications["goal_coords"],
+                    query_time=specifications["start_time"],
+                    rewiring=True,
+                    prev_path=[ShapelyPoint(*specifications["start_coords"])],
+                    dynamic_obstacles=True,
+                    quiet=True,
+                )
+                runtime_rrt_star = time.time() - start
+            except RuntimeError as e:
+                if (
+                    str(e)
+                    == "Goal node is not reachable from the tree or not collision free."
+                ):
+                    print(
+                        "RRT* - Sample:",
+                        sample,
+                        "Rerun:",
+                        rerun,
+                        "Path Cost: None (goal node not connected)",
+                    )
+                    print("Skipping seed...")
+                    print()
+                    rrt_goal_connection_failures += 1
+                    seed_idx += 1
+                    continue
 
-            if sol_path == -1:
-                print(
-                    "RRT* - Sample:",
-                    sample,
-                    "Rerun:",
-                    rerun,
-                    "Path Cost: None (replanning issue)",
-                )
-                failed_replanning_runs += 1
-                seed_idx += 1
-                continue
-            elif sol_path == -2:
-                print(
-                    "RRT* - Sample:",
-                    sample,
-                    "Rerun:",
-                    rerun,
-                    "Path Cost: None (goal node not connected)",
-                )
-                rrt_goal_connection_failures += 1
-                seed_idx += 1
-                continue
+                elif (
+                    str(e)
+                    == "Edge from new starting point is in collision on replanning."
+                ):
+                    print(
+                        "RRT* - Sample:",
+                        sample,
+                        "Rerun:",
+                        rerun,
+                        "Path Cost: None (replanning issue)",
+                    )
+                    print("Skipping seed...")
+                    print()
+                    failed_replanning_runs += 1
+                    seed_idx += 1
+                    continue
+
+                else:
+                    raise e
 
             pathcost_rrt_star = replanner.get_path_cost(sol_path)
             print(
@@ -300,11 +327,17 @@ def sample_benchmark(specifications, samples, obstacles, reruns, seed):
         results[(3, sample)] = collector_rrt
         results[(4, sample)] = collector_rrt_star
 
+    print()
+    print("Total runs:", total_runs)
+    print("Discarded start/goal runs:", discarded_start_goal_runs)
+    print("Failed replanning runs:", failed_replanning_runs)
+    print("Goal connection failures:", rrt_goal_connection_failures)
+    print()
+
     return results
 
 
 def sample_benchmark_results(results, samples):
-    print()
     print("Vanilla TA-PRM results:")
     for sample in samples:
         result = results[(1, sample)]

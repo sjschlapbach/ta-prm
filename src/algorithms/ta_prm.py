@@ -42,13 +42,13 @@ class TAPRM:
 
         if start is not None:
             if self.graph.start is not None:
-                raise ValueError("Start node already specified.")
+                raise RuntimeError("Start node already specified.")
 
             self.graph.connect_start(start)
 
         if goal is not None:
             if self.graph.goal is not None:
-                raise ValueError("Goal node already specified.")
+                raise RuntimeError("Goal node already specified.")
 
             self.graph.connect_goal(goal)
 
@@ -67,7 +67,7 @@ class TAPRM:
 
         # raise an error if start or goal node are not specified
         if self.graph.start is None or self.graph.goal is None:
-            raise ValueError("Start or goal node not specified.")
+            raise RuntimeError("Start or goal node not specified.")
 
         # initialize open list with start node - heapq sorts according to first element of tuple
         # tuples have the form (cost_to_come + heuristic, cost_to_come, node_idx, time, path)
@@ -175,7 +175,7 @@ class TAPRM:
                         )
                         print(open_list)
 
-        raise ValueError(
+        raise RuntimeError(
             "No valid path found from start to goal within the specified scenario horizon."
         )
 
@@ -204,7 +204,7 @@ class TAPRM:
 
         # raise an error if start or goal node are not specified
         if self.graph.start is None or self.graph.goal is None:
-            raise ValueError("Start or goal node not specified.")
+            raise RuntimeError("Start or goal node not specified.")
 
         # initialize open list with start node - heapq sorts according to first element of tuple
         # tuples have the form (cost_to_come + heuristic, cost_to_come, node_idx, time, rounded_time, path)
@@ -431,6 +431,6 @@ class TAPRM:
                         )
                         print(open_list)
 
-        raise ValueError(
+        raise RuntimeError(
             "No valid path found from start to goal within the specified scenario horizon."
         )

@@ -53,7 +53,7 @@ class RRT:
         if not env.static_collision_free(
             ShapelyPoint(start[0], start[1]), query_time=query_time
         ):
-            raise ValueError(
+            raise RuntimeError(
                 "start node is in collision with obstacles visible at query time."
             )
 
@@ -150,7 +150,7 @@ class RRT:
             )
 
         else:
-            raise ValueError(
+            raise RuntimeError(
                 "Goal node is not reachable from the tree or not collision free."
             )
 

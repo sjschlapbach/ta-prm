@@ -66,25 +66,16 @@ class ReplanningRRT:
         if not quiet:
             print("Planning path...")
 
-        try:
-            rrt = RRT(
-                start=start,
-                goal=goal,
-                env=self.env,
-                num_samples=samples,
-                query_time=query_time,
-                seed=self.seed,
-                rewiring=rewiring,
-                consider_dynamic=dynamic_obstacles,
-            )
-        except ValueError as e:
-            if (
-                str(e)
-                == "Goal node is not reachable from the tree or not collision free."
-            ):
-                return -2, replannings
-            else:
-                raise e
+        rrt = RRT(
+            start=start,
+            goal=goal,
+            env=self.env,
+            num_samples=samples,
+            query_time=query_time,
+            seed=self.seed,
+            rewiring=rewiring,
+            consider_dynamic=dynamic_obstacles,
+        )
 
         if not quiet:
             print("Found path with respect to all visible obstacles.")
@@ -154,9 +145,11 @@ class ReplanningRRT:
                 if in_recursion:
                     # to skip issues where RRT fails due an obstacle popping up around a point
                     # currently considered to be save towards the goal
-                    return -1, replannings
+                    raise RuntimeError(
+                        "Edge from new starting point is in collision on replanning."
+                    )
 
-                raise ValueError(
+                raise RuntimeError(
                     "No collision-free point found on edge. Possibly, the step resolution is too large."
                 )
 

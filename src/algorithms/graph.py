@@ -133,18 +133,18 @@ class Graph:
             coords (Tuple[float, float]): The coordinates of the start node.
 
         Raises:
-            ValueError: If the start node is not collision-free or could not be connected to any other node.
+            RuntimeError: If the start node is not collision-free or could not be connected to any other node.
         """
         # create shapely point
         start_pt = ShapelyPoint(coords[0], coords[1])
 
         # start and goal node cannot be the same
         if self.goal is not None and self.vertices[self.goal] == start_pt:
-            raise ValueError("Start and goal node cannot be the same.")
+            raise RuntimeError("Start and goal node cannot be the same.")
 
         # check if start node is collision free
         if not self.env.static_collision_free(start_pt):
-            raise ValueError("Start node is not collision free.")
+            raise RuntimeError("Start node is not collision free.")
 
         # extract index of start node, which will be inserted
         self.start = len(self.vertices)
@@ -164,7 +164,7 @@ class Graph:
 
         # check if the start node was connected to any other node
         if not success or len(self.connections[self.start]) == 0:
-            raise ValueError("Start node could not be connected to any other node.")
+            raise RuntimeError("Start node could not be connected to any other node.")
 
     def connect_goal(
         self, coords: ShapelyPoint, quiet: bool = False, override_distance: float = None
@@ -177,18 +177,18 @@ class Graph:
             quiet (bool): If True, disables verbose print statements / progress bars.
 
         Raises:
-            ValueError: If the goal node is not collision-free or could not be connected to any other node.
+            RuntimeError: If the goal node is not collision-free or could not be connected to any other node.
         """
         # create shapely point
         goal_pt = ShapelyPoint(coords[0], coords[1])
 
         # start and goal node cannot be the same
         if self.start is not None and self.vertices[self.start] == goal_pt:
-            raise ValueError("Start and goal node cannot be the same.")
+            raise RuntimeError("Start and goal node cannot be the same.")
 
         # check if goal node is collision free
         if not self.env.static_collision_free(goal_pt):
-            raise ValueError("Goal node is not collision free.")
+            raise RuntimeError("Goal node is not collision free.")
 
         # extract index of goal node, which will be inserted
         self.goal = len(self.vertices)
@@ -208,7 +208,7 @@ class Graph:
 
         # check if the goal node was connected to any other node
         if not success or len(self.connections[self.goal]) == 0:
-            raise ValueError("Goal node could not be connected to any other node.")
+            raise RuntimeError("Goal node could not be connected to any other node.")
 
         # compute the heuristic cost-to-go values for all nodes
         if not quiet:
