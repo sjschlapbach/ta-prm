@@ -84,7 +84,8 @@ def run_algorithms(
     total_runs,
     discarded_start_goal_runs,
     failed_replanning_runs,
-    rrt_goal_connection_failures,
+    no_start_goal_connection,
+    rrt_exceeded_max_connection_trials,
     samples,
     obstacles,
     reruns,
@@ -153,37 +154,36 @@ def run_algorithms(
                 quiet=True,
             )
             runtime_rrt = time.time() - start
+
         except RuntimeError as e:
             if (
                 str(e)
                 == "Goal node is not reachable from the tree or not collision free."
             ):
-                print(
-                    "RRT -",
-                    quantitiy_print,
-                    "Rerun:",
-                    rerun,
-                    "Path Cost: None (goal node not connected)",
-                )
+                print("RRT -", quantitiy_print, "(goal node not connected)")
                 print("Skipping seed...")
                 print()
-                rrt_goal_connection_failures += 1
+                no_start_goal_connection += 1
                 seed_idx += 1
                 continue
 
             elif (
                 str(e) == "Edge from new starting point is in collision on replanning."
             ):
-                print(
-                    "RRT -",
-                    quantitiy_print,
-                    "Rerun:",
-                    rerun,
-                    "Path Cost: None (replanning issue)",
-                )
+                print("RRT -", quantitiy_print, "(replanning issue)")
                 print("Skipping seed...")
                 print()
                 failed_replanning_runs += 1
+                seed_idx += 1
+                continue
+
+            elif (
+                str(e) == "Exceeded maximum number of connection trials for new sample."
+            ):
+                print("RRT -", quantitiy_print, "Rerun:", rerun)
+                print("Skipping seed...")
+                print()
+                rrt_exceeded_max_connection_trials += 1
                 seed_idx += 1
                 continue
 
@@ -213,32 +213,30 @@ def run_algorithms(
                 str(e)
                 == "Goal node is not reachable from the tree or not collision free."
             ):
-                print(
-                    "RRT* -",
-                    quantitiy_print,
-                    "Rerun:",
-                    rerun,
-                    "Path Cost: None (goal node not connected)",
-                )
+                print("RRT* -", quantitiy_print, "(goal node not connected)")
                 print("Skipping seed...")
                 print()
-                rrt_goal_connection_failures += 1
+                no_start_goal_connection += 1
                 seed_idx += 1
                 continue
 
             elif (
                 str(e) == "Edge from new starting point is in collision on replanning."
             ):
-                print(
-                    "RRT* -",
-                    quantitiy_print,
-                    "Rerun:",
-                    rerun,
-                    "Path Cost: None (replanning issue)",
-                )
+                print("RRT* -", quantitiy_print, "(replanning issue)")
                 print("Skipping seed...")
                 print()
                 failed_replanning_runs += 1
+                seed_idx += 1
+                continue
+
+            elif (
+                str(e) == "Exceeded maximum number of connection trials for new sample."
+            ):
+                print("RRT* -", quantitiy_print, "Rerun:", rerun)
+                print("Skipping seed...")
+                print()
+                rrt_exceeded_max_connection_trials += 1
                 seed_idx += 1
                 continue
 
@@ -271,8 +269,24 @@ def run_algorithms(
 
         # connect start and goal node to the roadmap
         start = time.time()
-        graph.connect_start(coords=start_coords)
-        graph.connect_goal(coords=goal_coords, quiet=True)
+        try:
+            graph.connect_start(coords=start_coords)
+        except RuntimeError as e:
+            print("TA-PRM: Start node not connected to roadmap - skipping seed")
+            print()
+            no_start_goal_connection += 1
+            seed_idx += 1
+            continue
+
+        try:
+            graph.connect_goal(coords=goal_coords, quiet=True)
+        except RuntimeError as e:
+            print("TA-PRM: Goal node not connected to roadmap - skipping seed")
+            print()
+            no_start_goal_connection += 1
+            seed_idx += 1
+            continue
+
         ta_prm = TAPRM(graph=graph)
         preptime_p2 = time.time() - start
         preptime = preptime_p1 + preptime_p2
@@ -331,7 +345,8 @@ def run_algorithms(
         total_runs,
         discarded_start_goal_runs,
         failed_replanning_runs,
-        rrt_goal_connection_failures,
+        no_start_goal_connection,
+        rrt_exceeded_max_connection_trials,
         collector_taprm,
         collector_taprm_pruned,
         collector_rrt,

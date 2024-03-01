@@ -43,8 +43,25 @@ class RRT:
         seed: int = None,
         rewiring: bool = False,
         quiet: bool = False,
+        max_connection_trials: int = 100,
         consider_dynamic: bool = False,
     ):
+        """
+        Initializes the RRT tree / optionally with rewiring for RRT*.
+
+        Arguments:
+        - start (Tuple[float, float]): The coordinates of the start node.
+        - goal (Tuple[float, float]): The coordinates of the goal node.
+        - env (EnvironmentInstance): An instance of the environment.
+        - query_time (float): The time at which the query is made (optional, only determined whether or not to check for dynamic obstacles, which are visible at this point in time).
+        - num_samples (int): The number of samples to build the tree.
+        - seed (int): The seed for the random number generator.
+        - rewiring (bool): Whether to use the RRT* algorithm (default: False).
+        - quiet (bool): Whether to suppress output messages.
+        - max_connection_trials (int): The maximum number of connection trials to attempt per new sample
+        - consider_dynamic (bool): Whether to consider dynamic obstacles active at the given query time (default: False).
+        """
+
         # set the nummpy random seed if specified
         if seed is not None:
             np.random.seed(seed)
@@ -97,6 +114,7 @@ class RRT:
             self.gammaPRM = None
 
         # build the tree up to the required number of samples
+        sampling_attempts = 0
         while next_sample <= num_samples + 1:
             x_candidate = np.random.uniform(env.dim_x[0], env.dim_x[1])
             y_candidate = np.random.uniform(env.dim_y[0], env.dim_y[1])
@@ -126,6 +144,14 @@ class RRT:
 
                 # increment after successful sample addition
                 next_sample += 1
+                sampling_attempts = 0
+
+            else:
+                sampling_attempts += 1
+                if sampling_attempts > max_connection_trials:
+                    raise RuntimeError(
+                        "Exceeded maximum number of connection trials for new sample."
+                    )
 
         # connect goal to the tree as well
         self.goal = next_sample

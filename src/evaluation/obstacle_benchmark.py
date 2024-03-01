@@ -13,15 +13,19 @@ def obstacle_benchmark(specifications, samples, obstacles, reruns, seed):
     discarded_start_goal_runs = 0
     # track number of runs discarded due to dynamic collision issue on replanning with RRT
     failed_replanning_runs = 0
-    # track the number of times the goal node could not be connected to the RRT tree
-    rrt_goal_connection_failures = 0
+    # track the number of times the start or goal node could not be connected to the RRT tree / TA-PRM roadmap
+    # (caused by probabilistic completeness and fixed sample sizes for comparability)
+    no_start_goal_connection = 0
+    # track the number of times the maximum number of connection trials was exceeded
+    rrt_exceeded_max_connection_trials = 0
 
     for num_obstacles in obstacles:
         (
             total_runs,
             discarded_start_goal_runs,
             failed_replanning_runs,
-            rrt_goal_connection_failures,
+            no_start_goal_connection,
+            rrt_exceeded_max_connection_trials,
             collector_taprm,
             collector_taprm_pruned,
             collector_rrt,
@@ -31,7 +35,8 @@ def obstacle_benchmark(specifications, samples, obstacles, reruns, seed):
             total_runs=total_runs,
             discarded_start_goal_runs=discarded_start_goal_runs,
             failed_replanning_runs=failed_replanning_runs,
-            rrt_goal_connection_failures=rrt_goal_connection_failures,
+            no_start_goal_connection=no_start_goal_connection,
+            rrt_exceeded_max_connection_trials=rrt_exceeded_max_connection_trials,
             samples=samples,
             obstacles=num_obstacles,
             reruns=reruns,
@@ -49,7 +54,11 @@ def obstacle_benchmark(specifications, samples, obstacles, reruns, seed):
     print("Total runs:", total_runs)
     print("Discarded start/goal runs:", discarded_start_goal_runs)
     print("Failed replanning runs:", failed_replanning_runs)
-    print("Goal connection failures:", rrt_goal_connection_failures)
+    print(
+        "Start/Goal not connected - probabilistic completeness limitation:",
+        no_start_goal_connection,
+    )
+    print("Exceeded max connection trials (RRT):", rrt_exceeded_max_connection_trials)
     print()
 
     return results

@@ -123,7 +123,7 @@ class ReplanningRRT:
             last_save = None
             last_time = save_time
 
-            # iterate over the edge and check
+            # iterate over the edge and check for the last save point on it
             for i in range(1, num_steps):
                 sample = ShapelyPoint(
                     save_node.x + i * x_step, save_node.y + i * y_step
@@ -142,16 +142,22 @@ class ReplanningRRT:
                     break
 
             if last_save is None:
-                if in_recursion:
+                if (save_node.x, save_node.y) != start:
+                    # if the last save node is not the start node, replan from the last save point
+                    last_save = save_node
+                    last_time = save_time
+
+                elif in_recursion:
                     # to skip issues where RRT fails due an obstacle popping up around a point
                     # currently considered to be save towards the goal
                     raise RuntimeError(
                         "Edge from new starting point is in collision on replanning."
                     )
 
-                raise RuntimeError(
-                    "No collision-free point found on edge. Possibly, the step resolution is too large."
-                )
+                else:
+                    raise RuntimeError(
+                        "No collision-free point found on edge. Possibly, the step resolution is too large."
+                    )
 
             if not quiet:
                 print(
