@@ -1,6 +1,7 @@
 import time
 import random
 import statistics
+import numpy as np
 from pandas import Interval
 from shapely.geometry import Point as ShapelyPoint
 
@@ -86,9 +87,11 @@ def run_algorithms(
     failed_replanning_runs,
     prob_completness_failures,
     rrt_exceeded_max_connection_trials,
+    taprm_timeouts,
     samples,
     obstacles,
     reruns,
+    timeout,
     seeds,
     dynamic_obs_only,
     quantitiy_print,
@@ -295,7 +298,7 @@ def run_algorithms(
         try:
             start = time.time()
             success, path, max_length_open, expansions = ta_prm.plan(
-                start_time=specifications["start_time"], quiet=True
+                start_time=specifications["start_time"], timeout=timeout, quiet=True
             )
             runtime_taprm = time.time() - start
 
@@ -318,6 +321,20 @@ def run_algorithms(
             else:
                 raise e
 
+        except TimeoutError:
+            print(
+                "Vanilla TA-PRM -",
+                quantitiy_print,
+                "Rerun:",
+                rerun,
+                "Timeout reached",
+            )
+            taprm_timeouts[(str(np.inf), samples, obstacles)] = (
+                taprm_timeouts.get((str(np.inf), samples, obstacles), 0) + 1
+            )
+            seed_idx += 1
+            continue
+
         pathcost_taprm = graph.path_cost(path)
         print(
             "Vanilla TA-PRM -",
@@ -333,8 +350,9 @@ def run_algorithms(
             start = time.time()
             success, path, max_length_open, expansions = ta_prm.plan_temporal(
                 start_time=specifications["start_time"],
-                quiet=True,
+                timeout=timeout,
                 temporal_precision=temporal_precision,
+                quiet=True,
             )
             runtime_taprm_pruned = time.time() - start
 
@@ -356,6 +374,20 @@ def run_algorithms(
 
             else:
                 raise e
+
+        except TimeoutError:
+            print(
+                "TA-PRM with pruning -",
+                quantitiy_print,
+                "Rerun:",
+                rerun,
+                "Timeout reached",
+            )
+            taprm_timeouts[(str(temporal_precision), samples, obstacles)] = (
+                taprm_timeouts.get((str(temporal_precision), samples, obstacles), 0) + 1
+            )
+            seed_idx += 1
+            continue
 
         pathcost_taprm_pruning = graph.path_cost(path)
         print(
@@ -389,6 +421,7 @@ def run_algorithms(
         failed_replanning_runs,
         prob_completness_failures,
         rrt_exceeded_max_connection_trials,
+        taprm_timeouts,
         collector_taprm,
         collector_taprm_pruned,
         collector_rrt,

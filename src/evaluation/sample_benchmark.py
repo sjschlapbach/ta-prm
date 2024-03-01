@@ -7,7 +7,13 @@ from src.evaluation.helpers import (
 
 
 def sample_benchmark(
-    specifications, samples, obstacles, reruns, seed, dynamic_obs_only: bool = False
+    specifications,
+    samples,
+    obstacles,
+    reruns,
+    timeouts,
+    seed,
+    dynamic_obs_only: bool = False,
 ):
     random.seed(seed)
     seeds = random.sample(range(0, 100000), 10 * reruns)
@@ -24,14 +30,18 @@ def sample_benchmark(
     prob_completness_failures = 0
     # track the number of times the maximum number of connection trials was exceeded
     rrt_exceeded_max_connection_trials = 0
+    # number of timeouts for TA-PRM (with and without temporal pruning)
+    # collected as {(pruning_param, #samples, #obstacles): number_of_timeouts, ...}
+    taprm_timeouts = {}
 
-    for sample in samples:
+    for idx, sample in enumerate(samples):
         (
             total_runs,
             discarded_start_goal_runs,
             failed_replanning_runs,
             prob_completness_failures,
             rrt_exceeded_max_connection_trials,
+            taprm_timeouts,
             collector_taprm,
             collector_taprm_pruned,
             collector_rrt,
@@ -43,9 +53,11 @@ def sample_benchmark(
             failed_replanning_runs=failed_replanning_runs,
             prob_completness_failures=prob_completness_failures,
             rrt_exceeded_max_connection_trials=rrt_exceeded_max_connection_trials,
+            taprm_timeouts=taprm_timeouts,
             samples=sample,
             obstacles=obstacles,
             reruns=reruns,
+            timeout=timeouts[idx],
             seeds=seeds,
             dynamic_obs_only=dynamic_obs_only,
             quantitiy_print="Samples: " + str(sample),
@@ -65,6 +77,28 @@ def sample_benchmark(
         prob_completness_failures,
     )
     print("Exceeded max connection trials (RRT):", rrt_exceeded_max_connection_trials)
+
+    for key, value in taprm_timeouts.items():
+        print(
+            "Timeouts for TA-PRM with pruning parameter",
+            key[0],
+            ",",
+            key[1],
+            "samples and",
+            key[2],
+            "obstacles:",
+            value,
+        )
     print()
 
-    return results
+    # collect analytics results to be save alongside results
+    analytics = {
+        "total_runs": total_runs,
+        "discarded_start_goal_runs": discarded_start_goal_runs,
+        "failed_replanning_runs": failed_replanning_runs,
+        "prob_completness_failures": prob_completness_failures,
+        "rrt_exceeded_max_connection_trials": rrt_exceeded_max_connection_trials,
+        "taprm_timeouts": taprm_timeouts,
+    }
+
+    return results, analytics

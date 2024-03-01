@@ -2,7 +2,7 @@ import random
 from src.evaluation.helpers import run_algorithms
 
 
-def obstacle_benchmark(specifications, samples, obstacles, reruns, seed):
+def obstacle_benchmark(specifications, samples, obstacles, reruns, timeouts, seed):
     random.seed(seed)
     seeds = random.sample(range(0, 100000), 10 * reruns)
     results = {}
@@ -18,14 +18,18 @@ def obstacle_benchmark(specifications, samples, obstacles, reruns, seed):
     prob_completness_failures = 0
     # track the number of times the maximum number of connection trials was exceeded
     rrt_exceeded_max_connection_trials = 0
+    # number of timeouts for TA-PRM (with and without temporal pruning)
+    # collected as {(pruning_param, #samples, #obstacles): number_of_timeouts, ...}
+    taprm_timeouts = {}
 
-    for num_obstacles in obstacles:
+    for idx, num_obstacles in enumerate(obstacles):
         (
             total_runs,
             discarded_start_goal_runs,
             failed_replanning_runs,
             prob_completness_failures,
             rrt_exceeded_max_connection_trials,
+            taprm_timeouts,
             collector_taprm,
             collector_taprm_pruned,
             collector_rrt,
@@ -37,9 +41,11 @@ def obstacle_benchmark(specifications, samples, obstacles, reruns, seed):
             failed_replanning_runs=failed_replanning_runs,
             prob_completness_failures=prob_completness_failures,
             rrt_exceeded_max_connection_trials=rrt_exceeded_max_connection_trials,
+            taprm_timeouts=taprm_timeouts,
             samples=samples,
             obstacles=num_obstacles,
             reruns=reruns,
+            timeout=timeouts[idx],
             seeds=seeds,
             dynamic_obs_only=True,
             quantitiy_print="Obstacles: " + str(num_obstacles),
@@ -61,4 +67,27 @@ def obstacle_benchmark(specifications, samples, obstacles, reruns, seed):
     print("Exceeded max connection trials (RRT):", rrt_exceeded_max_connection_trials)
     print()
 
-    return results
+    for key, value in taprm_timeouts.items():
+        print(
+            "Timeouts for TA-PRM with pruning parameter",
+            key[0],
+            ",",
+            key[1],
+            "samples and",
+            key[2],
+            "obstacles:",
+            value,
+        )
+    print()
+
+    # collect analytics results to be save alongside results
+    analytics = {
+        "total_runs": total_runs,
+        "discarded_start_goal_runs": discarded_start_goal_runs,
+        "failed_replanning_runs": failed_replanning_runs,
+        "prob_completness_failures": prob_completness_failures,
+        "rrt_exceeded_max_connection_trials": rrt_exceeded_max_connection_trials,
+        "taprm_timeouts": taprm_timeouts,
+    }
+
+    return results, analytics

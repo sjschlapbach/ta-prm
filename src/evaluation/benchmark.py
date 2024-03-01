@@ -56,12 +56,16 @@ if __name__ == "__main__":
         obstacles = 50
         samples = [50, 100, 200]
 
+        # set the timeouts to fixed values for each sample number (in seconds)
+        timeouts = [60, 120, 120]
+
         # Results: (algorithm, sample): (preptime, runtime, path_cost)[]
-        sample_benchmarks = sample_benchmark(
+        sample_benchmarks, sample_analytics = sample_benchmark(
             specifications=specifications,
             samples=samples,
             obstacles=obstacles,
             reruns=reruns,
+            timeouts=timeouts,
             seed=seed,
             dynamic_obs_only=False,
         )
@@ -77,6 +81,14 @@ if __name__ == "__main__":
         ) as file:
             json.dump(remap_keys(sample_benchmarks), file)
 
+        with open(
+            "results/sample_analytics_" + str(reruns) + "_reruns.json", "w"
+        ) as file:
+            sample_analytics["taprm_timeouts"] = remap_keys(
+                sample_analytics["taprm_timeouts"]
+            )
+            json.dump(remap_keys(sample_analytics), file)
+
     ###########################################################
     # OBSTACLE BENCHMARKING - track runtime and path cost with increasing number of dynamic obstacles
     if obstacles_benchmark:
@@ -85,12 +97,16 @@ if __name__ == "__main__":
         samples = 100
         obstacles = [10, 20, 50, 100, 200]
 
+        # set the timeouts to fixed values for each obstacle number (in seconds)
+        timeouts = [60, 120, 120, 120, 120]
+
         # Results: (algorithm, obstacles): (preptime, runtime, path_cost)[]
-        obstacle_benchmarks = obstacle_benchmark(
+        obstacle_benchmarks, obstacle_analytics = obstacle_benchmark(
             specifications=specifications,
             samples=samples,
             obstacles=obstacles,
             reruns=reruns,
+            timeouts=timeouts,
             seed=seed,
         )
         print("Obstacle benchmarking completed:")
@@ -104,6 +120,14 @@ if __name__ == "__main__":
             "results/obstacle_benchmarks_" + str(reruns) + "_reruns.json", "w"
         ) as file:
             json.dump(remap_keys(obstacle_benchmarks), file)
+
+        with open(
+            "results/obstacle_analytics_" + str(reruns) + "_reruns.json", "w"
+        ) as file:
+            obstacle_analytics["taprm_timeouts"] = remap_keys(
+                obstacle_analytics["taprm_timeouts"]
+            )
+            json.dump(remap_keys(obstacle_analytics), file)
 
     ###########################################################
     # Pruning benchmarking - track the performance for increased pruning levels (compared against vanilla TA-PRM)

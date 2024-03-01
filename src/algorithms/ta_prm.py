@@ -1,3 +1,4 @@
+import time
 from typing import Tuple
 from heapq import heappush, heappop, heapify, _siftdown
 from pandas import Interval
@@ -52,13 +53,20 @@ class TAPRM:
 
             self.graph.connect_goal(goal)
 
-    def plan(self, start_time: float, logging: bool = False, quiet: bool = False):
+    def plan(
+        self,
+        start_time: float,
+        logging: bool = False,
+        timeout: float = None,
+        quiet: bool = False,
+    ):
         """
         Plans a path from the start node to the goal node using the TA-PRM algorithm.
 
         Args:
             start_time (float): The start time for the planning process.
             logging (bool, optional): Flag indicating whether to enable logging. Defaults to False.
+            timeout (float, optional): The maximum time allowed for the planning process. Defaults to None.
             quiet (bool, optional): Flag indicating whether to suppress output. Defaults to False.
 
         Returns:
@@ -86,7 +94,12 @@ class TAPRM:
         # track the maximum length of the open list over time
         max_open_list = 1
 
-        while open_list:
+        # set start time for timeout of planning procedure
+        timeout_start = time.time() if timeout is not None else None
+
+        while open_list and (
+            timeout is None or (time.time() - timeout_start) < timeout
+        ):
             # track the maximum length of the open list over time
             max_open_list = max(max_open_list, len(open_list))
 
@@ -175,6 +188,9 @@ class TAPRM:
                         )
                         print(open_list)
 
+        if timeout is not None and (time.time() - timeout_start) >= timeout:
+            raise TimeoutError("Planning process timed out.")
+
         raise RuntimeError(
             "No valid path found from start to goal within the specified scenario horizon."
         )
@@ -184,6 +200,7 @@ class TAPRM:
         start_time: float,
         temporal_precision: int,
         logging: bool = False,
+        timeout: float = None,
         quiet: bool = False,
     ):
         """
@@ -194,9 +211,10 @@ class TAPRM:
 
         Args:
             start_time (float): The start time for the planning process.
-            logging (bool, optional): Flag indicating whether to enable logging. Defaults to False.
-            quiet (bool, optional): Flag indicating whether to suppress output. Defaults to False.
             temporal_precision (int): The number of decimal digits considered in the temporal dimension.
+            logging (bool, optional): Flag indicating whether to enable logging. Defaults to False.
+            timeout (float, optional): The maximum time allowed for the planning process. Defaults to None.
+            quiet (bool, optional): Flag indicating whether to suppress output. Defaults to False.
 
         Returns:
             tuple: A tuple containing a boolean indicating whether a path was found and the path (vertex ids) itself.
@@ -239,7 +257,12 @@ class TAPRM:
         # update the index of the next element to be added to the open list
         ol_idx += 1
 
-        while open_list:
+        # set start time for timeout of planning procedure
+        timeout_start = time.time() if timeout is not None else None
+
+        while open_list and (
+            timeout is None or (time.time() - timeout_start) < timeout
+        ):
             # track the maximum length of the open list over time
             max_open_list = max(max_open_list, len(open_list))
 
@@ -430,6 +453,9 @@ class TAPRM:
                             "Current open list is (format - cost + heuristic, cost-to-come, id, time, path): "
                         )
                         print(open_list)
+
+        if timeout is not None and (time.time() - timeout_start) >= timeout:
+            raise TimeoutError("Planning process timed out.")
 
         raise RuntimeError(
             "No valid path found from start to goal within the specified scenario horizon."
