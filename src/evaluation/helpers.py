@@ -84,7 +84,7 @@ def run_algorithms(
     total_runs,
     discarded_start_goal_runs,
     failed_replanning_runs,
-    no_start_goal_connection,
+    prob_completness_failures,
     rrt_exceeded_max_connection_trials,
     samples,
     obstacles,
@@ -163,7 +163,7 @@ def run_algorithms(
                 print("RRT -", quantitiy_print, "(goal node not connected)")
                 print("Skipping seed...")
                 print()
-                no_start_goal_connection += 1
+                prob_completness_failures += 1
                 seed_idx += 1
                 continue
 
@@ -216,7 +216,7 @@ def run_algorithms(
                 print("RRT* -", quantitiy_print, "(goal node not connected)")
                 print("Skipping seed...")
                 print()
-                no_start_goal_connection += 1
+                prob_completness_failures += 1
                 seed_idx += 1
                 continue
 
@@ -274,7 +274,7 @@ def run_algorithms(
         except RuntimeError as e:
             print("TA-PRM: Start node not connected to roadmap - skipping seed")
             print()
-            no_start_goal_connection += 1
+            prob_completness_failures += 1
             seed_idx += 1
             continue
 
@@ -283,7 +283,7 @@ def run_algorithms(
         except RuntimeError as e:
             print("TA-PRM: Goal node not connected to roadmap - skipping seed")
             print()
-            no_start_goal_connection += 1
+            prob_completness_failures += 1
             seed_idx += 1
             continue
 
@@ -292,11 +292,32 @@ def run_algorithms(
         preptime = preptime_p1 + preptime_p2
 
         # run the vanilla TA-PRM algorithm
-        start = time.time()
-        success, path, max_length_open, expansions = ta_prm.plan(
-            start_time=specifications["start_time"], quiet=True
-        )
-        runtime_taprm = time.time() - start
+        try:
+            start = time.time()
+            success, path, max_length_open, expansions = ta_prm.plan(
+                start_time=specifications["start_time"], quiet=True
+            )
+            runtime_taprm = time.time() - start
+
+        except RuntimeError as e:
+            if (
+                str(e)
+                == "No valid path found from start to goal within the specified scenario horizon."
+            ):
+                print(
+                    "Vanilla TA-PRM -",
+                    quantitiy_print,
+                    "(no valid path found / probabilistic completeness limitation)",
+                )
+                print("Skipping seed...")
+                print()
+                prob_completness_failures += 1
+                seed_idx += 1
+                continue
+
+            else:
+                raise e
+
         pathcost_taprm = graph.path_cost(path)
         print(
             "Vanilla TA-PRM -",
@@ -308,13 +329,34 @@ def run_algorithms(
         )
 
         # run the TA-PRM algorithm with temporal pruning
-        start = time.time()
-        success, path, max_length_open, expansions = ta_prm.plan_temporal(
-            start_time=specifications["start_time"],
-            quiet=True,
-            temporal_precision=temporal_precision,
-        )
-        runtime_taprm_pruned = time.time() - start
+        try:
+            start = time.time()
+            success, path, max_length_open, expansions = ta_prm.plan_temporal(
+                start_time=specifications["start_time"],
+                quiet=True,
+                temporal_precision=temporal_precision,
+            )
+            runtime_taprm_pruned = time.time() - start
+
+        except RuntimeError as e:
+            if (
+                str(e)
+                == "No valid path found from start to goal within the specified scenario horizon."
+            ):
+                print(
+                    "TA-PRM with pruning -",
+                    quantitiy_print,
+                    "(no valid path found / probabilistic completeness limitation)",
+                )
+                print("Skipping seed...")
+                print()
+                prob_completness_failures += 1
+                seed_idx += 1
+                continue
+
+            else:
+                raise e
+
         pathcost_taprm_pruning = graph.path_cost(path)
         print(
             "TA-PRM with pruning -",
@@ -345,7 +387,7 @@ def run_algorithms(
         total_runs,
         discarded_start_goal_runs,
         failed_replanning_runs,
-        no_start_goal_connection,
+        prob_completness_failures,
         rrt_exceeded_max_connection_trials,
         collector_taprm,
         collector_taprm_pruned,

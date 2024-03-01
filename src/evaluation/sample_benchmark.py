@@ -21,7 +21,7 @@ def sample_benchmark(
     failed_replanning_runs = 0
     # track the number of times the start or goal node could not be connected to the RRT tree / TA-PRM roadmap
     # (caused by probabilistic completeness and fixed sample sizes for comparability)
-    no_start_goal_connection = 0
+    prob_completness_failures = 0
     # track the number of times the maximum number of connection trials was exceeded
     rrt_exceeded_max_connection_trials = 0
 
@@ -30,7 +30,7 @@ def sample_benchmark(
             total_runs,
             discarded_start_goal_runs,
             failed_replanning_runs,
-            no_start_goal_connection,
+            prob_completness_failures,
             rrt_exceeded_max_connection_trials,
             collector_taprm,
             collector_taprm_pruned,
@@ -41,7 +41,7 @@ def sample_benchmark(
             total_runs=total_runs,
             discarded_start_goal_runs=discarded_start_goal_runs,
             failed_replanning_runs=failed_replanning_runs,
-            no_start_goal_connection=no_start_goal_connection,
+            prob_completness_failures=prob_completness_failures,
             rrt_exceeded_max_connection_trials=rrt_exceeded_max_connection_trials,
             samples=sample,
             obstacles=obstacles,
@@ -61,8 +61,8 @@ def sample_benchmark(
     print("Discarded start/goal runs:", discarded_start_goal_runs)
     print("Failed replanning runs:", failed_replanning_runs)
     print(
-        "Start/Goal not connected - probabilistic completeness limitation:",
-        no_start_goal_connection,
+        "Start/Goal not connected or no valid path found on roadmap - probabilistic completeness limitation:",
+        prob_completness_failures,
     )
     print("Exceeded max connection trials (RRT):", rrt_exceeded_max_connection_trials)
     print()
