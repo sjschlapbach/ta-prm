@@ -117,6 +117,22 @@ def run_algorithms(
             dynamic_obs_only=dynamic_obs_only,
         )
 
+        # if start and/or goal node are in static collision, skip this seed
+        # RRT / RRT* might not be able to find solutions in these scenarios,
+        # not allow for comparability
+        # (not counting towards algorithm preparation time)
+        start_coords = specifications["start_coords"]
+        goal_coords = specifications["goal_coords"]
+        start_pt = ShapelyPoint(start_coords[0], start_coords[1])
+        goal_pt = ShapelyPoint(goal_coords[0], goal_coords[1])
+        if not env.static_collision_free(
+            point=start_pt, check_all_dynamic=True
+        ) or not env.static_collision_free(point=goal_pt, check_all_dynamic=True):
+            print("Start or goal node in collision - skipping seed")
+            seed_idx += 1
+            discarded_start_goal_runs += 1
+            continue
+
         ####################################################################
         # run RRT and RRT* algorithms
         # initialize replanning framework
@@ -252,22 +268,6 @@ def run_algorithms(
             quiet=True,
         )
         preptime_p1 = time.time() - start
-
-        # if start and/or goal node are in static collision, skip this seed
-        # RRT / RRT* might not be able to find solutions in these scenarios,
-        # not allow for comparability
-        # (not counting towards algorithm preparation time)
-        start_coords = specifications["start_coords"]
-        goal_coords = specifications["goal_coords"]
-        start_pt = ShapelyPoint(start_coords[0], start_coords[1])
-        goal_pt = ShapelyPoint(goal_coords[0], goal_coords[1])
-        if not graph.env.static_collision_free(
-            point=start_pt, check_all_dynamic=True
-        ) or not graph.env.static_collision_free(point=goal_pt, check_all_dynamic=True):
-            print("Start or goal node in collision - skipping seed")
-            seed_idx += 1
-            discarded_start_goal_runs += 1
-            continue
 
         # connect start and goal node to the roadmap
         start = time.time()
