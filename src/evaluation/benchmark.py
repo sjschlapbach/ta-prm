@@ -21,9 +21,9 @@ if __name__ == "__main__":
     # 4) RRT* with dynamic obstacle replanning and rewiring
 
     # ! Benchmark selection
-    sampling = False
-    obstacles = True
-    pruning = False
+    sampling_benchmark = True
+    obstacles_benchmark = True
+    pruning_benchmark = False
 
     # ! Basic seed for reproducibility
     seed = 0
@@ -44,13 +44,13 @@ if __name__ == "__main__":
     }
 
     # ? How many reruns per scenario should be performed to compute average values?
-    reruns = 1  # TODO: change to larger number
+    reruns = 4  # TODO: change to larger number
 
     # ? Specifications
     ###########################################################
     # Sample benchmarking - track runtime and path cost with increasing number of samples
     # (fixed number of static obstacles)
-    if sampling:
+    if sampling_benchmark:
         print("Running sample benchmark...")
         # Note: 25% of the obstacles will be static, 75% dynamic
         obstacles = 50
@@ -66,19 +66,22 @@ if __name__ == "__main__":
             dynamic_obs_only=False,
         )
         print("Sample benchmarking completed:")
-        aggregate_benchmark_results(sample_benchmarks, samples)
+        aggregate_benchmark_results(sample_benchmarks, samples, None)
 
         # save the results in a JSON file
         if not os.path.exists("results"):
             os.makedirs("results")
 
-        with open("results/sample_benchmarks.json", "w") as file:
+        with open(
+            "results/sample_benchmarks_" + str(reruns) + "_reruns.json", "w"
+        ) as file:
             json.dump(remap_keys(sample_benchmarks), file)
 
     ###########################################################
     # OBSTACLE BENCHMARKING - track runtime and path cost with increasing number of dynamic obstacles
-    if obstacles:
+    if obstacles_benchmark:
         print("Running obstacle benchmark...")
+        specifications["max_radius"] = 40
         samples = 100
         obstacles = [10, 20, 50, 100, 200]
 
@@ -90,11 +93,21 @@ if __name__ == "__main__":
             reruns=reruns,
             seed=seed,
         )
-        print("Obstacle benchmarking completed.")
+        print("Obstacle benchmarking completed:")
+        aggregate_benchmark_results(obstacle_benchmarks, None, obstacles)
+
+        # save the results in a JSON file
+        if not os.path.exists("results"):
+            os.makedirs("results")
+
+        with open(
+            "results/obstacle_benchmarks_" + str(reruns) + "_reruns.json", "w"
+        ) as file:
+            json.dump(remap_keys(obstacle_benchmarks), file)
 
     ###########################################################
     # Pruning benchmarking - track the performance for increased pruning levels (compared against vanilla TA-PRM)
-    if pruning:
+    if pruning_benchmark:
         print("Running pruning benchmark...")
         samples = 100
         pruning = [np.inf, 0, -1, -2]  # np.inf = vanilla TA-PRM

@@ -339,33 +339,59 @@ def run_algorithms(
     )
 
 
-def aggregate_benchmark_results(results, samples):
-    print("Vanilla TA-PRM results:")
-    for sample in samples:
-        result = results[(1, sample)]
-        taprm_statistics(sample, result)
-    print()
+def aggregate_benchmark_results(results, samples, obstacles):
+    if samples is not None:
+        print("Vanilla TA-PRM results:")
+        for sample in samples:
+            result = results[(1, sample)]
+            taprm_statistics(sample, None, result)
+        print()
 
-    print("TA-PRM with pruning results:")
-    for sample in samples:
-        result = results[(2, sample)]
-        taprm_statistics(sample, result)
-    print()
+        print("TA-PRM with pruning results:")
+        for sample in samples:
+            result = results[(2, sample)]
+            taprm_statistics(sample, None, result)
+        print()
 
-    print("RRT results:")
-    for sample in samples:
-        result = results[(3, sample)]
-        rrt_statistics(sample, result)
-    print()
+        print("RRT results:")
+        for sample in samples:
+            result = results[(3, sample)]
+            rrt_statistics(sample, None, result)
+        print()
 
-    print("RRT* results:")
-    for sample in samples:
-        result = results[(4, sample)]
-        rrt_statistics(sample, result)
-    print()
+        print("RRT* results:")
+        for sample in samples:
+            result = results[(4, sample)]
+            rrt_statistics(sample, None, result)
+        print()
+
+    elif obstacles is not None:
+        print("Vanilla TA-PRM results:")
+        for obstacle in obstacles:
+            result = results[(1, obstacle)]
+            taprm_statistics(None, obstacle, result)
+        print()
+
+        print("TA-PRM with pruning results:")
+        for obstacle in obstacles:
+            result = results[(2, obstacle)]
+            taprm_statistics(None, obstacle, result)
+        print()
+
+        print("RRT results:")
+        for obstacle in obstacles:
+            result = results[(3, obstacle)]
+            rrt_statistics(None, obstacle, result)
+        print()
+
+        print("RRT* results:")
+        for obstacle in obstacles:
+            result = results[(4, obstacle)]
+            rrt_statistics(None, obstacle, result)
+        print()
 
 
-def taprm_statistics(sample, results):
+def taprm_statistics(sample, obstacle, results):
     # This function simplified and aggregates the TA-PRM results (preparation time, runtime, path cost)
 
     preptimes = [x[0] for x in results]
@@ -377,24 +403,43 @@ def taprm_statistics(sample, results):
     std_runtime = round(statistics.stdev(runtimes), 5)
     avg_cost = round(statistics.mean(pathcosts), 5)
     std_cost = round(statistics.stdev(pathcosts), 5)
-    print(
-        f"Samples: {sample},",
-        avg_prep,
-        "\u00B1",
-        std_prep,
-        "preparation time;",
-        avg_runtime,
-        "\u00B1",
-        std_runtime,
-        "runtime;",
-        avg_cost,
-        "\u00B1",
-        std_cost,
-        "path cost",
-    )
+
+    if sample is not None:
+        print(
+            f"Samples: {sample},",
+            avg_prep,
+            "\u00B1",
+            std_prep,
+            "preparation time;",
+            avg_runtime,
+            "\u00B1",
+            std_runtime,
+            "runtime;",
+            avg_cost,
+            "\u00B1",
+            std_cost,
+            "path cost",
+        )
+
+    elif obstacle is not None:
+        print(
+            f"Obstacles: {obstacle},",
+            avg_prep,
+            "\u00B1",
+            std_prep,
+            "preparation time;",
+            avg_runtime,
+            "\u00B1",
+            std_runtime,
+            "runtime;",
+            avg_cost,
+            "\u00B1",
+            std_cost,
+            "path cost",
+        )
 
 
-def rrt_statistics(sample, results):
+def rrt_statistics(sample, obstacle, results):
     # This function simplified and aggregates the RRT results (runtime, path cost)
 
     rrt_runs = [x[0] for x in results]
@@ -406,18 +451,37 @@ def rrt_statistics(sample, results):
     std_runtime = round(statistics.stdev(runtimes), 5)
     avg_cost = round(statistics.mean(pathcosts), 5)
     std_cost = round(statistics.stdev(pathcosts), 5)
-    print(
-        f"Samples: {sample},",
-        avg_runs,
-        "\u00B1",
-        std_runs,
-        "runs;",
-        avg_runtime,
-        "\u00B1",
-        std_runtime,
-        "runtime;",
-        avg_cost,
-        "\u00B1",
-        std_cost,
-        "path cost",
-    )
+
+    if sample is not None:
+        print(
+            f"Samples: {sample},",
+            avg_runs,
+            "\u00B1",
+            std_runs,
+            "runs;",
+            avg_runtime,
+            "\u00B1",
+            std_runtime,
+            "runtime;",
+            avg_cost,
+            "\u00B1",
+            std_cost,
+            "path cost",
+        )
+
+    elif obstacle is not None:
+        print(
+            f"Obstacles: {obstacle},",
+            avg_runs,
+            "\u00B1",
+            std_runs,
+            "runs;",
+            avg_runtime,
+            "\u00B1",
+            std_runtime,
+            "runtime;",
+            avg_cost,
+            "\u00B1",
+            std_cost,
+            "path cost",
+        )
