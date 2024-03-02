@@ -580,7 +580,6 @@ def rrt_statistics(sample, obstacle, results):
 def print_analytics(analytics):
     # This function prints the analytics results for the benchmarking runs
 
-    print()
     print("Total runs:", analytics["total_runs"])
     print("Discarded start/goal runs:", analytics["discarded_start_goal_runs"])
     print("Failed replanning runs:", analytics["failed_replanning_runs"])
@@ -608,4 +607,45 @@ def print_analytics(analytics):
     print()
 
 
-# TODO: add loader functions to print the results from the JSON file
+def results_from_file(data, samples: bool = False, obstacles: bool = False):
+    # Parse the saved benchmark results from the JSON file and print them
+
+    benchmark_dict = {}
+    if samples:
+        samples = set()
+        for item in data:
+            benchmark_dict[(int(item["key"][0]), int(item["key"][1]))] = item["value"]
+            samples.add(int(item["key"][1]))
+        samples = sorted(list(samples))
+        obstacles = None
+
+    elif obstacles:
+        obstacles = set()
+        for item in data:
+            benchmark_dict[(int(item["key"][0]), int(item["key"][1]))] = item["value"]
+            obstacles.add(int(item["key"][1]))
+        obstacles = sorted(list(obstacles))
+        samples = None
+
+    else:
+        raise ValueError("Either samples or obstacles must be True.")
+
+    aggregate_benchmark_results(benchmark_dict, samples, obstacles)
+
+
+def analytics_from_file(data):
+    # Parse the saved analytics results from the JSON file and print them
+
+    analytics_dict = {}
+    for item in data:
+        analytics_dict[item["key"]] = item["value"]
+
+    # parse the timeouts dictionary to a nested dictionary with keys (pruning, #samples, #obstacles)
+    timeout_dict = {}
+    for timeout in analytics_dict["taprm_timeouts"]:
+        timeout_dict[
+            (float(timeout["key"][0]), int(timeout["key"][1]), int(timeout["key"][2]))
+        ] = timeout["value"]
+    analytics_dict["taprm_timeouts"] = timeout_dict
+
+    print_analytics(analytics_dict)
