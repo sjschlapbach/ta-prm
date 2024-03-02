@@ -4,7 +4,7 @@ import numpy as np
 
 from src.evaluation.sample_benchmark import sample_benchmark
 from src.evaluation.obstacle_benchmark import obstacle_benchmark
-from src.evaluation.helpers import aggregate_benchmark_results
+from src.evaluation.helpers import aggregate_benchmark_results, print_analytics
 
 
 def remap_keys(mapping):
@@ -70,6 +70,7 @@ if __name__ == "__main__":
             dynamic_obs_only=False,
         )
         print("Sample benchmarking completed:")
+        print_analytics(sample_analytics)
         aggregate_benchmark_results(sample_benchmarks, samples, None)
 
         # save the results in a JSON file
@@ -110,6 +111,7 @@ if __name__ == "__main__":
             seed=seed,
         )
         print("Obstacle benchmarking completed:")
+        print_analytics(obstacle_analytics)
         aggregate_benchmark_results(obstacle_benchmarks, None, obstacles)
 
         # save the results in a JSON file

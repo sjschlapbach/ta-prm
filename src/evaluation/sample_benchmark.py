@@ -68,29 +68,6 @@ def sample_benchmark(
         results[(3, sample)] = collector_rrt
         results[(4, sample)] = collector_rrt_star
 
-    print()
-    print("Total runs:", total_runs)
-    print("Discarded start/goal runs:", discarded_start_goal_runs)
-    print("Failed replanning runs:", failed_replanning_runs)
-    print(
-        "Start/Goal not connected or no valid path found on roadmap - probabilistic completeness limitation:",
-        prob_completness_failures,
-    )
-    print("Exceeded max connection trials (RRT):", rrt_exceeded_max_connection_trials)
-
-    for key, value in taprm_timeouts.items():
-        print(
-            "Timeouts for TA-PRM with pruning parameter",
-            key[0],
-            ",",
-            key[1],
-            "samples and",
-            key[2],
-            "obstacles:",
-            value,
-        )
-    print()
-
     # collect analytics results to be save alongside results
     analytics = {
         "total_runs": total_runs,

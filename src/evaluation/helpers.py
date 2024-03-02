@@ -577,4 +577,35 @@ def rrt_statistics(sample, obstacle, results):
         )
 
 
+def print_analytics(analytics):
+    # This function prints the analytics results for the benchmarking runs
+
+    print()
+    print("Total runs:", analytics["total_runs"])
+    print("Discarded start/goal runs:", analytics["discarded_start_goal_runs"])
+    print("Failed replanning runs:", analytics["failed_replanning_runs"])
+    print(
+        "Start/Goal not connected or no valid path found on roadmap - probabilistic completeness limitation:",
+        analytics["prob_completness_failures"],
+    )
+    print(
+        "Exceeded max connection trials (RRT):",
+        analytics["rrt_exceeded_max_connection_trials"],
+    )
+    print()
+
+    for key, value in analytics["taprm_timeouts"].items():
+        print(
+            "Timeouts for TA-PRM with pruning parameter",
+            key[0],
+            ",",
+            key[1],
+            "samples and",
+            key[2],
+            "obstacles:",
+            value,
+        )
+    print()
+
+
 # TODO: add loader functions to print the results from the JSON file
