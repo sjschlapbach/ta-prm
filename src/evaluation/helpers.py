@@ -575,3 +575,6 @@ def rrt_statistics(sample, obstacle, results):
             std_cost,
             "path cost",
         )
+
+
+# TODO: add loader functions to print the results from the JSON file

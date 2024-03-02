@@ -44,7 +44,7 @@ if __name__ == "__main__":
     }
 
     # ? How many reruns per scenario should be performed to compute average values?
-    reruns = 4  # TODO: change to larger number
+    reruns = 100
 
     # ? Specifications
     ###########################################################
@@ -138,6 +138,7 @@ if __name__ == "__main__":
         obstacles = [10, 50, 100, 200]
 
         # Results: (pruning, obstacles): (preptime, runtime, path_cost)[]
+        # TODO: implement pruning benchmarking
         pruning_benchmarks = {}
         print("Pruning benchmarking completed.")
 
