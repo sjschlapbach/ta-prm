@@ -111,7 +111,7 @@ class Line(Geometry):
             bool: True if collision occurs, False otherwise.
 
         Raises:
-            ValueError: If the shape type is not supported.
+            TypeError: If the shape type is not supported.
         """
         if self.is_active(query_time, query_interval):
             if isinstance(shape, Point):
@@ -121,7 +121,7 @@ class Line(Geometry):
             elif isinstance(shape, Polygon):
                 distance = self.geometry.distance(shape)
             else:
-                raise ValueError(
+                raise TypeError(
                     "Invalid shape type. Only LineString or Polygon are supported."
                 )
 

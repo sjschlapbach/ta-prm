@@ -102,7 +102,7 @@ class Polygon(Geometry):
             elif isinstance(shape, ShapelyPolygon):
                 distance = self.geometry.distance(shape)
             else:
-                raise ValueError(
+                raise TypeError(
                     "Invalid shape type. Only Point, LineString, or Polygon are supported."
                 )
 
