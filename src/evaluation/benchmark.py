@@ -44,7 +44,7 @@ if __name__ == "__main__":
     }
 
     # ? How many reruns per scenario should be performed to compute average values?
-    reruns = 4
+    reruns = 1000
 
     # ? Specifications
     ###########################################################
