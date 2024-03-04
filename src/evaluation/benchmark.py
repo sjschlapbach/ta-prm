@@ -167,12 +167,11 @@ if __name__ == "__main__":
         with open(
             "results/pruning_benchmarks_" + str(reruns) + "_reruns.json", "w"
         ) as file:
-            json.dump(remap_keys(results), file)
+            json.dump(results, file)
 
         with open(
             "results/pruning_analytics_" + str(reruns) + "_reruns.json", "w"
         ) as file:
-            analytics["timeouts"] = remap_keys(analytics["timeouts"])
-            json.dump(remap_keys(analytics), file)
+            json.dump(analytics, file)
 
     # TODO: think about adding a benchmark with a worst-case szenario for TA-PRM to compare vanilla and pruning versions

@@ -229,6 +229,3 @@ def aggregate_pruning_benchmark_results(results, samples, prunings):
         print("TA-PRM with Pruning Parameter:", pruning)
         taprm_statistics(samples, None, results=results[str(pruning)])
         print()
-
-
-# TODO: add functions to load analytics and results from file
