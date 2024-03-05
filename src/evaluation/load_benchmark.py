@@ -2,15 +2,19 @@ import os
 import json
 
 from src.evaluation.helpers import results_from_file, analytics_from_file
+from src.evaluation.pruning_benchmark import (
+    print_pruning_analytics,
+    aggregate_pruning_benchmark_results,
+)
 
 if __name__ == "__main__":
     # ? Benchmark selection
     sampling_benchmark = True
     obstacles_benchmark = True
-    pruning_benchmark = False
+    pruning_benchmark = True
 
     # ? Number of reruns, which were performed in the benchmark
-    reruns = 100
+    reruns = 1000
 
     print("Loading Benchmarks...")
     if sampling_benchmark:
@@ -70,7 +74,32 @@ if __name__ == "__main__":
         analytics_from_file(obstacle_analytics)
 
     if pruning_benchmark:
-        # TODO: Implement once pruning benchmark is available
-        pass
+        benchmark_file = "pruning_benchmarks_" + str(reruns) + "_reruns.json"
+        analytics_file = "pruning_analytics_" + str(reruns) + "_reruns.json"
+
+        # check if both files exist in the results folder
+        if not os.path.exists("results/" + benchmark_file) or not os.path.exists(
+            "results/" + analytics_file
+        ):
+            print("Pruning benchmark results not found.")
+            print("Please run the pruning benchmark first.")
+            exit()
+
+        # load the benchmark and analytics results
+        with open("results/" + benchmark_file, "r") as file:
+            pruning_benchmarks = json.load(file)
+
+        with open("results/" + analytics_file, "r") as file:
+            pruning_analytics = json.load(file)
+
+        print()
+        print("################################################################")
+        print("PRUNING BENCHMARK RESULTS:")
+        keys = list(pruning_benchmarks.keys())
+        aggregate_pruning_benchmark_results(pruning_benchmarks, 100, keys)
+
+        print()
+        print("PRUNING BENCHMARK ANALYTICS:")
+        print_pruning_analytics(pruning_analytics)
 
     print("Benchmark loading completed.")

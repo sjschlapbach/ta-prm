@@ -4,6 +4,11 @@ import numpy as np
 
 from src.evaluation.sample_benchmark import sample_benchmark
 from src.evaluation.obstacle_benchmark import obstacle_benchmark
+from src.evaluation.pruning_benchmark import (
+    pruning_benchmark,
+    print_pruning_analytics,
+    aggregate_pruning_benchmark_results,
+)
 from src.evaluation.helpers import aggregate_benchmark_results, print_analytics
 
 
@@ -23,7 +28,7 @@ if __name__ == "__main__":
     # ! Benchmark selection
     sampling_benchmark = True
     obstacles_benchmark = True
-    pruning_benchmark = False
+    pruning_benchmarking = True
 
     # ! Basic seed for reproducibility
     seed = 0
@@ -133,15 +138,40 @@ if __name__ == "__main__":
 
     ###########################################################
     # Pruning benchmarking - track the performance for increased pruning levels (compared against vanilla TA-PRM)
-    if pruning_benchmark:
+    if pruning_benchmarking:
         print("Running pruning benchmark...")
         samples = 100
-        pruning = [np.inf, 0, -1, -2]  # np.inf = vanilla TA-PRM
-        obstacles = [10, 50, 100, 200]
+        obstacles = 100
+        prunings = [np.inf, 1, 0, -1, -2]  # np.inf = vanilla TA-PRM
+        timeout = 240
 
-        # Results: (pruning, obstacles): (preptime, runtime, path_cost)[]
-        # TODO: implement pruning benchmarking
-        pruning_benchmarks = {}
+        # Results: {pruning: (preptime, runtime, path_cost)}[]
+        results, analytics = pruning_benchmark(
+            specifications=specifications,
+            prunings=prunings,
+            samples=samples,
+            obstacles=obstacles,
+            reruns=reruns,
+            taprm_timeout=timeout,
+            seed=seed,
+            dynamic_obs_only=True,
+        )
         print("Pruning benchmarking completed.")
+        print_pruning_analytics(analytics)
+        aggregate_pruning_benchmark_results(results, samples, prunings)
+
+        # save the results in a JSON file
+        if not os.path.exists("results"):
+            os.makedirs("results")
+
+        with open(
+            "results/pruning_benchmarks_" + str(reruns) + "_reruns.json", "w"
+        ) as file:
+            json.dump(results, file)
+
+        with open(
+            "results/pruning_analytics_" + str(reruns) + "_reruns.json", "w"
+        ) as file:
+            json.dump(analytics, file)
 
     # TODO: think about adding a benchmark with a worst-case szenario for TA-PRM to compare vanilla and pruning versions
