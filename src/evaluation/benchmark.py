@@ -143,7 +143,7 @@ if __name__ == "__main__":
         samples = 100
         obstacles = 100
         prunings = [np.inf, 1, 0, -1, -2]  # np.inf = vanilla TA-PRM
-        timeout = 240
+        timeout = 120
 
         # Results: {pruning: (preptime, runtime, path_cost)}[]
         results, analytics = pruning_benchmark(
