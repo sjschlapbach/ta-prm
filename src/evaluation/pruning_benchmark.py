@@ -115,6 +115,7 @@ def pruning_benchmark(
         ta_prm = TAPRM(graph=graph)
         preptime_p2 = time.time() - start
         preptime = preptime_p1 + preptime_p2
+        current_collector = {}
 
         try:
             for pruning_param in prunings:
@@ -154,12 +155,8 @@ def pruning_benchmark(
                     pathcost,
                 )
 
-                # collect all results
-                collectors[str(pruning_param)] = collectors[str(pruning_param)] + [
-                    (preptime, runtime, pathcost)
-                ]
-                print("Successfully collected results for rerun", rerun)
-                print()
+                # collect results
+                current_collector[str(pruning_param)] = [(preptime, runtime, pathcost)]
 
         except RuntimeError as e:
             if (
@@ -191,6 +188,15 @@ def pruning_benchmark(
             timeouts[str(pruning_param)] = timeouts.get(str(pruning_param), 0) + 1
             seed_idx += 1
             continue
+
+        print("Successfully collected results for rerun", rerun)
+        print()
+
+        # if all runs were successful, store the results in the global collector
+        for pruning_param in prunings:
+            collectors[str(pruning_param)] = (
+                collectors[str(pruning_param)] + current_collector[str(pruning_param)]
+            )
 
         # increment rerun counter
         rerun += 1
