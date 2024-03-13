@@ -279,30 +279,17 @@ if __name__ == "__main__":
             timed_path=timed_path_taprm_star,
             graph=graph,
         )
-        plt.plot(
-            curr_pos_taprm_star[0],
-            curr_pos_taprm_star[1],
-            color="red",
-            marker="o",
-            markersize=6,
-        )
 
         # plot TA-PRM path and current position
         plot_taprm_path(sol_path=path_taprm, graph=graph, color="blue", label="TA-PRM")
         curr_pos_taprm = get_current_pos_timed_path(
             time=plotting_time, timed_path=timed_path_taprm, graph=graph
         )
-        plt.plot(
-            curr_pos_taprm[0], curr_pos_taprm[1], color="red", marker="o", markersize=6
-        )
 
         # plot RRT path
         plot_rrt_path(sol_path=path_rrt, color="green", label="RRT")
         curr_pos_rrt = get_current_pos_timed_path(
             time=plotting_time, timed_path=timed_path_rrt, graph=graph
-        )
-        plt.plot(
-            curr_pos_rrt[0], curr_pos_rrt[1], color="red", marker="o", markersize=6
         )
 
         # plot RRT* path
@@ -315,6 +302,21 @@ if __name__ == "__main__":
             time=plotting_time,
             timed_path=timed_path_rrt_star,
             graph=graph,
+        )
+
+        # plot current positions on all algorithm paths
+        plt.plot(
+            curr_pos_taprm_star[0],
+            curr_pos_taprm_star[1],
+            color="red",
+            marker="o",
+            markersize=6,
+        )
+        plt.plot(
+            curr_pos_taprm[0], curr_pos_taprm[1], color="red", marker="o", markersize=6
+        )
+        plt.plot(
+            curr_pos_rrt[0], curr_pos_rrt[1], color="red", marker="o", markersize=6
         )
         plt.plot(
             curr_pos_rrt_star[0],
@@ -346,9 +348,15 @@ if __name__ == "__main__":
             format="svg",
         )
 
+        # add version with legend but no x axis labels
+        plt.xticks([])
+        plt.savefig(
+            f"results/illustrations/demo_illustration_{plotting_time}_legend_no_xlabels.svg",
+            format="svg",
+        )
+
         # hide the legend and scale on the x axis
         plt.legend().remove()
-        plt.xticks([])
         plt.savefig(
             f"results/illustrations/demo_illustration_{plotting_time}_no_legend_no_xlabels.svg",
             format="svg",
