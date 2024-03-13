@@ -350,7 +350,7 @@ if __name__ == "__main__":
         plt.legend().remove()
         plt.xticks([])
         plt.savefig(
-            f"results/illustrations/demo_illustration_{plotting_time}_no_legend_x_scaled.svg",
+            f"results/illustrations/demo_illustration_{plotting_time}_no_legend_no_xlabels.svg",
             format="svg",
         )
 
