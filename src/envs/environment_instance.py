@@ -709,7 +709,7 @@ class EnvironmentInstance:
                             point=end, query_time=query_interval.right
                         )
                         if not collision_free:
-                            return False, end, query_interval.right
+                            return False, last_save, last_save_time
                         elif not quiet:
                             print(
                                 "Detected false positive in dynamic edge collision check with subsampling."
