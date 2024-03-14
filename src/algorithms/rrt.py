@@ -196,13 +196,20 @@ class RRT:
         return path[::-1]
 
     def validate_path(
-        self, path: List[int], start_time: float = 0.0, stepsize: float = 1
+        self,
+        path: List[int],
+        start_time: float = 0.0,
+        stepsize: float = 1,
+        quiet: bool = False,
     ):
         """
         Validates the given path for collision with dynamics obstacles.
 
         Args:
             path (List[int]): The path to be validated.
+            start_time (float): The time at which the path starts (default: 0.0).
+            stepsize (float): The stepsize for checking dynamic obstacles (default: 1).
+            quiet (bool): Whether to suppress output messages (default: False).
 
         Returns:
             bool: True if the path is collision-free, False otherwise.
@@ -222,7 +229,10 @@ class RRT:
 
             # check for dynamic collisions
             collision_free, last_save, last_time = self.env.dynamic_collision_free_ln(
-                edge, Interval(time, edge_end_time, closed="both"), stepsize
+                edge,
+                Interval(time, edge_end_time, closed="both"),
+                stepsize=stepsize,
+                quiet=quiet,
             )
 
             if not collision_free:

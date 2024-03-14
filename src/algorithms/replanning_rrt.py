@@ -87,7 +87,9 @@ class ReplanningRRT:
         if not quiet:
             print("Validating path...")
         collision_free, save_idx, save_idx_time, last_save, last_time = (
-            rrt.validate_path(path=sol_path, start_time=query_time, stepsize=stepsize)
+            rrt.validate_path(
+                path=sol_path, start_time=query_time, stepsize=stepsize, quiet=quiet
+            )
         )
 
         if collision_free:
@@ -114,6 +116,7 @@ class ReplanningRRT:
             ]
 
             if last_save is None:
+                save_node = rrt.tree[sol_path[save_idx]]["position"]
                 if (save_node.x, save_node.y) != start:
                     # if the last save node is not the start node, replan from the last save point
                     last_save = save_node
