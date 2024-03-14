@@ -195,7 +195,9 @@ class RRT:
 
         return path[::-1]
 
-    def validate_path(self, path: List[int], start_time: float = 0.0):
+    def validate_path(
+        self, path: List[int], start_time: float = 0.0, stepsize: float = 1
+    ):
         """
         Validates the given path for collision with dynamics obstacles.
 
@@ -219,16 +221,16 @@ class RRT:
             edge = ShapelyLine([(parent.x, parent.y), (child.x, child.y)])
 
             # check for dynamic collisions
-            collision_free = self.env.dynamic_collision_free_ln(
-                edge, Interval(time, edge_end_time, closed="both")
+            collision_free, last_save, last_time = self.env.dynamic_collision_free_ln(
+                edge, Interval(time, edge_end_time, closed="both"), stepsize
             )
 
             if not collision_free:
-                return False, i, time
+                return False, i, time, last_save, last_time
 
             time = edge_end_time
 
-        return True, None, None
+        return True, None, None, None, None
 
     def __find_closest_neighbor(
         self, candidate: ShapelyPoint, rewiring: bool

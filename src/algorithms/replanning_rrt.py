@@ -86,8 +86,8 @@ class ReplanningRRT:
         # traverse path and check if recomputation is required along each edge with respect to the dynamic obstacles
         if not quiet:
             print("Validating path...")
-        collision_free, save_idx, save_time = rrt.validate_path(
-            path=sol_path, start_time=query_time
+        collision_free, save_idx, save_idx_time, last_save, last_time = (
+            rrt.validate_path(path=sol_path, start_time=query_time, stepsize=stepsize)
         )
 
         if collision_free:
@@ -104,6 +104,8 @@ class ReplanningRRT:
                 print(
                     "Path is not collision free, with first collision at edge with starting point: ",
                     rrt.tree[sol_path[save_idx]]["position"],
+                    "at time:",
+                    save_idx_time,
                 )
 
             # add all points up to the collision point to the final path (coordinates)
@@ -111,41 +113,11 @@ class ReplanningRRT:
                 rrt.tree[sol_path[i]]["position"] for i in range(1, save_idx + 1)
             ]
 
-            # follow the next edge with fixed size steps and save the last collision-free point
-            save_node = new_path[-1]
-            next_node = rrt.tree[sol_path[save_idx + 1]]["position"]
-            delta_distance = next_node.distance(save_node)
-            num_steps = int(delta_distance / stepsize)
-            x_step = (next_node.x - save_node.x) / num_steps
-            y_step = (next_node.y - save_node.y) / num_steps
-
-            # track the position and time of the last node, which is not in collision
-            last_save = None
-            last_time = save_time
-
-            # iterate over the edge and check for the last save point on it
-            for i in range(1, num_steps):
-                sample = ShapelyPoint(
-                    save_node.x + i * x_step, save_node.y + i * y_step
-                )
-                sample_time = last_time + stepsize
-
-                # check if the sample is in collision
-                collision_free = self.env.static_collision_free(
-                    point=sample, query_time=sample_time
-                )
-
-                if collision_free:
-                    last_save = sample
-                    last_time = sample_time
-                else:
-                    break
-
             if last_save is None:
                 if (save_node.x, save_node.y) != start:
                     # if the last save node is not the start node, replan from the last save point
                     last_save = save_node
-                    last_time = save_time
+                    last_time = save_idx_time
 
                 elif in_recursion:
                     # to skip issues where RRT fails due an obstacle popping up around a point

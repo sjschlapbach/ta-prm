@@ -627,7 +627,7 @@ class EnvironmentInstance:
             return False, False, intervals
 
     def dynamic_collision_free_ln(
-        self, line: ShapelyLine, query_interval: Interval
+        self, line: ShapelyLine, query_interval: Interval, stepsize: float = 1
     ) -> bool:
         """
         Check if a given line is in collision with any dynamic obstacle in the environment.
@@ -649,7 +649,7 @@ class EnvironmentInstance:
 
         # if no dynamic obstacles were found in the considered cells, return True
         if len(dynamic_ids) == 0:
-            return True
+            return True, None, None
 
         # if dynamic obstacles were found, check if the line is in collision with any of them
         for key in dynamic_ids:
@@ -657,9 +657,59 @@ class EnvironmentInstance:
 
             if obstacle.is_active(query_interval=query_interval):
                 if obstacle.check_collision(shape=line):
-                    return False
+                    # The line overlaps in time and space with obstacle -> POSSIBLE COLLISION
+                    # --> verify collision with subsampling
 
-        return True
+                    # keep track of last save subsample and time
+                    last_save = None
+                    last_save_time = query_interval.left
+
+                    # extract start and end points from line
+                    start = ShapelyPoint(line.coords[0][0], line.coords[0][1])
+                    end = ShapelyPoint(line.coords[1][0], line.coords[1][1])
+
+                    # apply subsampling to check for collision
+                    true_positive = False
+                    delta_distance = end.distance(start)
+                    num_steps = int(delta_distance / stepsize)
+                    x_step = (end.x - start.x) / num_steps
+                    y_step = (end.y - start.y) / num_steps
+
+                    for i in range(1, num_steps):
+                        sample = ShapelyPoint(
+                            start.x + i * x_step, start.y + i * y_step
+                        )
+                        sample_time = last_save_time + stepsize
+
+                        # check if the sample is in collision
+                        collision_free = self.static_collision_free(
+                            point=sample, query_time=sample_time
+                        )
+
+                        if collision_free:
+                            last_save = sample
+                            last_save_time = sample_time
+                        else:
+                            true_positive = True
+                            break
+
+                    # edge is in collision at some intermediary position
+                    if true_positive:
+                        return False, last_save, last_save_time
+
+                    else:
+                        # check if the end of the edge is in collision
+                        collision_free = self.static_collision_free(
+                            point=end, query_time=query_interval.right
+                        )
+                        if not collision_free:
+                            return False, end, query_interval.right
+                        else:
+                            print(
+                                "Detected false positive in dynamic edge collision check with subsampling."
+                            )
+
+        return True, None, None
 
     def get_static_obs_free_volume(self):
         """
