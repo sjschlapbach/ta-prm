@@ -627,7 +627,11 @@ class EnvironmentInstance:
             return False, False, intervals
 
     def dynamic_collision_free_ln(
-        self, line: ShapelyLine, query_interval: Interval, stepsize: float = 1
+        self,
+        line: ShapelyLine,
+        query_interval: Interval,
+        stepsize: float = 1,
+        quiet: bool = False,
     ) -> bool:
         """
         Check if a given line is in collision with any dynamic obstacle in the environment.
@@ -635,6 +639,8 @@ class EnvironmentInstance:
         Args:
             line (ShapelyLine): The line to check for collision.
             query_interval (Interval): The time interval for which the obstacles are active.
+            stepsize (float, optional): The step size for traversing the path. Defaults to 1.
+            quiet (bool, optional): A boolean value indicating if the function should print progress information. Defaults to False.
 
         Returns:
             bool: False if the line is in collision with any obstacle, True otherwise.
@@ -704,7 +710,7 @@ class EnvironmentInstance:
                         )
                         if not collision_free:
                             return False, end, query_interval.right
-                        else:
+                        elif not quiet:
                             print(
                                 "Detected false positive in dynamic edge collision check with subsampling."
                             )
