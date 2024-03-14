@@ -120,7 +120,7 @@ animations/
 tmp_images/
 plots/
 results/
-backup_results/
+submitted_results/
 
 # PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
 __pypackages__/
