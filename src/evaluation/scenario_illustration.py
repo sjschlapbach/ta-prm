@@ -127,8 +127,8 @@ if __name__ == "__main__":
 
     # ! Plotting settings
     plotting_start = 0
-    plotting_end = 125
-    plotting_step = 5
+    plotting_end = 122
+    plotting_step = 1
 
     # ? Setup specifications
     x_range = (0, 100)
@@ -330,6 +330,7 @@ if __name__ == "__main__":
         plt.text(2, 45, "$t = {}$".format(plotting_time), fontsize=12)
 
         # save figure without legend
+        fig.tight_layout()
         plt.savefig(
             f"results/illustrations/demo_illustration_{plotting_time}_no_legend.svg",
             format="svg",
@@ -343,6 +344,7 @@ if __name__ == "__main__":
             borderaxespad=0,
             ncol=4,
         )
+        fig.tight_layout()
         plt.savefig(
             f"results/illustrations/demo_illustration_{plotting_time}_legend.svg",
             format="svg",
@@ -350,6 +352,7 @@ if __name__ == "__main__":
 
         # add version with legend but no x axis labels
         plt.xticks([])
+        fig.tight_layout()
         plt.savefig(
             f"results/illustrations/demo_illustration_{plotting_time}_legend_no_xlabels.svg",
             format="svg",
@@ -357,6 +360,7 @@ if __name__ == "__main__":
 
         # hide the legend and scale on the x axis
         plt.legend().remove()
+        fig.tight_layout()
         plt.savefig(
             f"results/illustrations/demo_illustration_{plotting_time}_no_legend_no_xlabels.svg",
             format="svg",
