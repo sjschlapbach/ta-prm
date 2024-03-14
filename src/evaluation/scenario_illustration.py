@@ -123,21 +123,21 @@ if __name__ == "__main__":
     print("Starting scenario illustration...")
 
     # ! Basic seed for reproducibility
-    seed = 40
+    seed = 555
 
     # ! Plotting settings
     plotting_start = 0
-    plotting_end = 122
+    plotting_end = 116
     plotting_step = 1
 
     # ? Setup specifications
     x_range = (0, 100)
-    y_range = (0, 50)
+    y_range = (0, 40)
     scenario_start = 0
     scenario_end = 200
     start_coords = (2, 2)
     start_time = 0
-    goal_coords = (98, 48)
+    goal_coords = (98, 36)
     min_radius = 2
     max_radius = 8
     stepsize = 0.1
@@ -147,16 +147,16 @@ if __name__ == "__main__":
     obstacles = []
 
     # create static obstacles
-    poly1 = ShapelyPolygon([(50, 10), (60, 10), (60, 40), (50, 40)])
+    poly1 = ShapelyPolygon([(50, 8), (60, 8), (60, 32), (50, 32)])
     obs1 = Polygon(geometry=poly1)
     obstacles = obstacles + [obs1]
 
     # create dynamic obstacles
-    poly2 = ShapelyPolygon([(15, 0), (30, 0), (30, 25), (15, 25)])
+    poly2 = ShapelyPolygon([(15, 0), (30, 0), (30, 20), (15, 20)])
     obs2 = Polygon(geometry=poly2, time_interval=Interval(2, 10, closed="both"))
     obstacles = obstacles + [obs2]
 
-    poly3 = ShapelyPolygon([(75, 25), (95, 25), (95, 50), (75, 50)])
+    poly3 = ShapelyPolygon([(75, 20), (95, 20), (95, 40), (75, 40)])
     obs3 = Polygon(geometry=poly3, time_interval=Interval(40, 200, closed="both"))
     obstacles = obstacles + [obs3]
 
@@ -268,7 +268,7 @@ if __name__ == "__main__":
 
     # iterate from plotting_start to plotting_end with plotting_step
     for plotting_time in range(plotting_start, plotting_end, plotting_step):
-        fig = plt.figure(figsize=(6, 3))
+        fig = plt.figure(figsize=(6, 2.4))
         env.plot(fig=fig, query_time=plotting_time, show_inactive=True)
 
         # plot TA-PRM* path and current position
@@ -341,7 +341,7 @@ if __name__ == "__main__":
         )
 
         # add time to figure
-        plt.text(2, 45, "$t = {}$".format(plotting_time), fontsize=12)
+        plt.text(2, 35, "$t = {}$".format(plotting_time), fontsize=12)
 
         # save figure without legend
         fig.tight_layout()
