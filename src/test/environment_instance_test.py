@@ -1796,3 +1796,76 @@ class TestEnvironmentInstance:
         assert (
             abs(free_space - (10000 - math.pi - 20 - math.pi - 100 - 40 - math.pi)) < 1
         )
+
+    def test_dynamic_collision_free_line(self):
+        env_base = Environment()
+        obstacle = Polygon(
+            geometry=ShapelyPolygon([(10, 10), (20, 10), (20, 20), (10, 20)]),
+            radius=0.0,
+            time_interval=Interval(20, 30, closed="both"),
+        )
+        env_base.add_obstacles([obstacle])
+        env = EnvironmentInstance(
+            environment=env_base,
+            query_interval=Interval(0, 100, closed="both"),
+            scenario_range_x=(0, 100),
+            scenario_range_y=(0, 100),
+            resolution=10,
+        )
+
+        non_colliding_line = ShapelyLine([(0, 0), (5, 5)])
+        line = ShapelyLine([(5, 15), (25, 15)])
+        stepsize = 0.1
+
+        # Test 1: line is not in collision with obstacle at all
+        collision_free1, last_save, last_time = env.dynamic_collision_free_ln(
+            line=non_colliding_line,
+            query_interval=Interval(20, 30),
+            stepsize=stepsize,
+        )
+        assert collision_free1 == True
+        assert last_save is None
+        assert last_time is None
+
+        collision_free2, last_save, last_time = env.dynamic_collision_free_ln(
+            line=non_colliding_line,
+            query_interval=Interval(0, 20),
+            stepsize=stepsize,
+        )
+        assert collision_free2 == True
+        assert last_save is None
+        assert last_time is None
+
+        # Test 2: line with spatial intersection, but no overlap in temporal domain
+        collision_free3, last_save, last_time = env.dynamic_collision_free_ln(
+            line=line, query_interval=Interval(-10, 10), stepsize=stepsize
+        )
+        assert collision_free3 == True
+        assert last_save is None
+        assert last_time is None
+
+        # Test 3: line with spatial and temporal intersection, but only enters obstacle when inactive
+        collision_free4, last_save, last_time = env.dynamic_collision_free_ln(
+            line=line, query_interval=Interval(28, 48), stepsize=stepsize
+        )
+        assert collision_free4 == True
+        assert last_save is None
+        assert last_time is None
+
+        # Test 4: line with spatial and temporal intersection, and enters obstacle when active
+        collision_free5, last_save, last_time = env.dynamic_collision_free_ln(
+            line=line, query_interval=Interval(20, 40), stepsize=stepsize
+        )
+        assert collision_free5 == False
+        assert last_save is not None
+        assert last_save == ShapelyPoint(9.9, 15)
+        assert last_time is not None
+        assert (last_time - 24.9) < 1e-9
+
+        # Test 5: line with spatial and temporal intersection, and exits obstacle before active
+        collision_free6, last_save, last_time = env.dynamic_collision_free_ln(
+            line=line, query_interval=Interval(2, 22), stepsize=stepsize
+        )
+        assert collision_free6 == True
+        assert last_save is None
+        assert last_time is None
