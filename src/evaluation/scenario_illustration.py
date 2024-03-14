@@ -216,7 +216,7 @@ if __name__ == "__main__":
     replanner = ReplanningRRT(env=env, seed=seed)
 
     start = time.time()
-    path_rrt, runs_rrt = replanner.run(
+    path_rrt, runs_rrt, prev_paths_rrt = replanner.run(
         samples=samples,
         stepsize=stepsize,
         start=start_coords,
@@ -233,7 +233,7 @@ if __name__ == "__main__":
     print("Cost:", replanner.get_path_cost(sol_path=path_rrt))
 
     start = time.time()
-    path_rrt_star, runs_rrt_star = replanner.run(
+    path_rrt_star, runs_rrt_star, prev_paths_rrt_star = replanner.run(
         samples=samples,
         stepsize=stepsize,
         start=start_coords,
@@ -262,6 +262,10 @@ if __name__ == "__main__":
         sol_path=path_rrt_star, start_time=start_time
     )
 
+    # ensure that both RRT and RRT* used one replanning for plotting to work as expected
+    assert len(prev_paths_rrt) == 1
+    assert len(prev_paths_rrt_star) == 1
+
     # iterate from plotting_start to plotting_end with plotting_step
     for plotting_time in range(plotting_start, plotting_end, plotting_step):
         fig = plt.figure(figsize=(6, 3))
@@ -287,17 +291,27 @@ if __name__ == "__main__":
         )
 
         # plot RRT path
-        plot_rrt_path(sol_path=path_rrt, color="green", label="RRT")
+        if plotting_time < prev_paths_rrt[0][1]:
+            plot_rrt_path(sol_path=prev_paths_rrt[0][0], color="green", label="RRT")
+        else:
+            plot_rrt_path(sol_path=path_rrt, color="green", label="RRT")
+
         curr_pos_rrt = get_current_pos_timed_path(
             time=plotting_time, timed_path=timed_path_rrt, graph=graph
         )
 
         # plot RRT* path
-        plot_rrt_path(
-            sol_path=path_rrt_star,
-            color="black",
-            label="RRT*",
-        )
+        if plotting_time < prev_paths_rrt_star[0][1]:
+            plot_rrt_path(
+                sol_path=prev_paths_rrt_star[0][0], color="black", label="RRT*"
+            )
+        else:
+            plot_rrt_path(
+                sol_path=path_rrt_star,
+                color="black",
+                label="RRT*",
+            )
+
         curr_pos_rrt_star = get_current_pos_timed_path(
             time=plotting_time,
             timed_path=timed_path_rrt_star,
@@ -343,6 +357,7 @@ if __name__ == "__main__":
             mode="expand",
             borderaxespad=0,
             ncol=4,
+            fontsize=12,
         )
         fig.tight_layout()
         plt.savefig(
