@@ -37,7 +37,6 @@ class ReplanningRRT:
         return_on_replan_failure: bool = False,
         quiet: bool = False,
         in_recursion: bool = False,
-        prev_paths: list = [],
     ):
         """
         Run the replanner with RRT / RRT* depending on the rewiring parameter.
@@ -100,7 +99,7 @@ class ReplanningRRT:
                 rrt.tree[sol_path[idx]]["position"] for idx in range(1, len(sol_path))
             ]
 
-            return final_path, replannings + 1, prev_paths
+            return final_path, replannings + 1
 
         else:
             if not quiet:
@@ -147,13 +146,8 @@ class ReplanningRRT:
             # add the collision point to the path
             new_path += [last_save]
 
-            sol_nodes = [
-                rrt.tree[sol_path[i]]["position"] for i in range(0, len(sol_path))
-            ]
-            prev_paths = prev_paths + [(sol_nodes, last_time)]
-
             # recompute path from last save point
-            new_path, replannings, prev_paths = self.run(
+            new_path, replannings = self.run(
                 samples=samples,
                 stepsize=stepsize,
                 start=(last_save.x, last_save.y),
@@ -165,10 +159,9 @@ class ReplanningRRT:
                 replannings=replannings,
                 quiet=quiet,
                 in_recursion=True,
-                prev_paths=prev_paths,
             )
 
-            return new_path, replannings + 1, prev_paths
+            return new_path, replannings + 1
 
     def simulate(
         self,
