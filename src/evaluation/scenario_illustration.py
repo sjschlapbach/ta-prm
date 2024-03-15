@@ -123,7 +123,11 @@ if __name__ == "__main__":
     print("Starting scenario illustration...")
 
     # ! Basic seed for reproducibility
-    seed = 555
+    # seed = 2300  # GOOD RESULTS FOR ALL ALGORITHMS
+    # seed = 2630  # GOOD RESULTS FOR ALL ALGORITHMS
+    # seed = 4500  # FAVORITE
+    # seed = 5100  # OK RESULTS FOR ALL ALGORITHMS
+    seed = 34875
 
     # ! Plotting settings
     plotting_start = 0
@@ -153,7 +157,7 @@ if __name__ == "__main__":
 
     # create dynamic obstacles
     poly2 = ShapelyPolygon([(15, 0), (30, 0), (30, 20), (15, 20)])
-    obs2 = Polygon(geometry=poly2, time_interval=Interval(2, 10, closed="both"))
+    obs2 = Polygon(geometry=poly2, time_interval=Interval(0, 10, closed="both"))
     obstacles = obstacles + [obs2]
 
     poly3 = ShapelyPolygon([(75, 20), (95, 20), (95, 40), (75, 40)])
