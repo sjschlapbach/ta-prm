@@ -173,5 +173,3 @@ if __name__ == "__main__":
             "results/pruning_analytics_" + str(reruns) + "_reruns.json", "w"
         ) as file:
             json.dump(analytics, file)
-
-    # TODO: think about adding a benchmark with a worst-case szenario for TA-PRM to compare vanilla and pruning versions
