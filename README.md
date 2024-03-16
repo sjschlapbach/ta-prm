@@ -1,4 +1,4 @@
-# Time-Aware PRM
+# Time-Aware Probabilistic Roadmaps
 
 [![Python Testing](https://github.com/sjschlapbach/ta-prm/actions/workflows/python_testing.yml/badge.svg)](https://github.com/sjschlapbach/ta-prm/actions/workflows/python_testing.yml)
 [![Example Scripts](https://github.com/sjschlapbach/ta-prm/actions/workflows/python_scripts.yml/badge.svg)](https://github.com/sjschlapbach/ta-prm/actions/workflows/python_scripts.yml)
