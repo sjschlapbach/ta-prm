@@ -1,6 +1,8 @@
 from pandas import Interval
 from shapely.geometry import LineString as ShapelyLine
 import numpy as np
+import json
+import os
 
 from src.algorithms.graph import Graph
 from src.envs.environment import Environment
@@ -375,3 +377,83 @@ class TestGraph:
         # Test case 64: query interval is longer than all availabilities
         test_in64 = Interval(5, 250, closed="both")
         assert np.isinf(line4.get_cost(test_in64))
+
+    def test_save_load_timed_edge(self):
+        # Test case 1: timed edge, which is temporarily restricted
+        geometry = ShapelyLine([(0, 0), (100, 0)])
+        length = geometry.length
+        cost = 20
+        interval1 = Interval(10, 20, closed="both")
+        interval2 = Interval(40, 45, closed="both")
+        interval3 = Interval(60, 100, closed="both")
+        always_available = False
+
+        tedge1 = TimedEdge(
+            geometry=geometry,
+            availability=[interval1, interval2, interval3],
+            always_available=always_available,
+            cost=cost,
+        )
+
+        assert tedge1.geometry == geometry
+        assert tedge1.always_available == always_available
+        assert tedge1.cost == cost
+        assert tedge1.length == length
+        assert len(tedge1.availability) == 3
+        assert tedge1.availability[0] == interval1
+        assert tedge1.availability[1] == interval2
+        assert tedge1.availability[2] == interval3
+
+        json_edge = tedge1.export_to_json()
+
+        with open("test_edge_1.txt", "w") as f:
+            json.dump(json_edge, f)
+        with open("test_edge_1.txt", "r") as f:
+            tedge1_input = json.load(f)
+        os.remove("test_edge_1.txt")
+
+        tedge1_loaded = TimedEdge(geometry=None, availability=[], json_obj=tedge1_input)
+
+        assert tedge1_loaded.geometry == tedge1.geometry
+        assert len(tedge1_loaded.availability) == len(tedge1.availability)
+        assert tedge1_loaded.always_available == tedge1.always_available
+        assert tedge1_loaded.cost == tedge1.cost
+        assert tedge1_loaded.length == tedge1.length
+
+        for i in range(len(tedge1_loaded.availability)):
+            assert tedge1_loaded.availability[i] == tedge1.availability[i]
+
+        # Test case 2: timed edge, which is always available
+        geometry = ShapelyLine([(0, 0), (100, 0)])
+        length = geometry.length
+        cost = 20
+        always_available = True
+
+        tedge2 = TimedEdge(
+            geometry=geometry,
+            availability=[],
+            always_available=always_available,
+            cost=cost,
+        )
+
+        assert tedge2.geometry == geometry
+        assert tedge2.always_available == always_available
+        assert tedge2.cost == cost
+        assert tedge2.length == length
+        assert len(tedge2.availability) == 0
+
+        json_edge = tedge2.export_to_json()
+
+        with open("test_edge_2.txt", "w") as f:
+            json.dump(json_edge, f)
+        with open("test_edge_2.txt", "r") as f:
+            tedge2_input = json.load(f)
+        os.remove("test_edge_2.txt")
+
+        tedge2_loaded = TimedEdge(geometry=None, availability=[], json_obj=tedge2_input)
+
+        assert tedge2_loaded.geometry == tedge2.geometry
+        assert len(tedge2_loaded.availability) == len(tedge2.availability)
+        assert tedge2_loaded.always_available == tedge2.always_available
+        assert tedge2_loaded.cost == tedge2.cost
+        assert tedge2_loaded.length == tedge2.length
