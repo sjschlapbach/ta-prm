@@ -1,6 +1,8 @@
 from pandas import Interval
 from shapely.geometry import LineString as ShapelyLine
 import numpy as np
+import json
+import os
 
 from src.algorithms.graph import Graph
 from src.envs.environment import Environment
@@ -375,3 +377,182 @@ class TestGraph:
         # Test case 64: query interval is longer than all availabilities
         test_in64 = Interval(5, 250, closed="both")
         assert np.isinf(line4.get_cost(test_in64))
+
+    def test_save_load_timed_edge(self):
+        # Test case 1: timed edge, which is temporarily restricted
+        geometry = ShapelyLine([(0, 0), (100, 0)])
+        length = geometry.length
+        cost = 20
+        interval1 = Interval(10, 20, closed="both")
+        interval2 = Interval(40, 45, closed="both")
+        interval3 = Interval(60, 100, closed="both")
+        always_available = False
+
+        tedge1 = TimedEdge(
+            geometry=geometry,
+            availability=[interval1, interval2, interval3],
+            always_available=always_available,
+            cost=cost,
+        )
+
+        assert tedge1.geometry == geometry
+        assert tedge1.always_available == always_available
+        assert tedge1.cost == cost
+        assert tedge1.length == length
+        assert len(tedge1.availability) == 3
+        assert tedge1.availability[0] == interval1
+        assert tedge1.availability[1] == interval2
+        assert tedge1.availability[2] == interval3
+
+        json_edge = tedge1.export_to_json()
+
+        with open("test_edge_1.txt", "w") as f:
+            json.dump(json_edge, f)
+        with open("test_edge_1.txt", "r") as f:
+            tedge1_input = json.load(f)
+        os.remove("test_edge_1.txt")
+
+        tedge1_loaded = TimedEdge(geometry=None, availability=[], json_obj=tedge1_input)
+
+        assert tedge1_loaded.geometry == tedge1.geometry
+        assert len(tedge1_loaded.availability) == len(tedge1.availability)
+        assert tedge1_loaded.always_available == tedge1.always_available
+        assert tedge1_loaded.cost == tedge1.cost
+        assert tedge1_loaded.length == tedge1.length
+
+        for i in range(len(tedge1_loaded.availability)):
+            assert tedge1_loaded.availability[i] == tedge1.availability[i]
+
+        # Test case 2: timed edge, which is always available
+        geometry = ShapelyLine([(0, 0), (100, 0)])
+        length = geometry.length
+        cost = 20
+        always_available = True
+
+        tedge2 = TimedEdge(
+            geometry=geometry,
+            availability=[],
+            always_available=always_available,
+            cost=cost,
+        )
+
+        assert tedge2.geometry == geometry
+        assert tedge2.always_available == always_available
+        assert tedge2.cost == cost
+        assert tedge2.length == length
+        assert len(tedge2.availability) == 0
+
+        json_edge = tedge2.export_to_json()
+
+        with open("test_edge_2.json", "w") as f:
+            json.dump(json_edge, f)
+        with open("test_edge_2.json", "r") as f:
+            tedge2_input = json.load(f)
+        os.remove("test_edge_2.json")
+
+        tedge2_loaded = TimedEdge(geometry=None, availability=[], json_obj=tedge2_input)
+
+        assert tedge2_loaded.geometry == tedge2.geometry
+        assert len(tedge2_loaded.availability) == len(tedge2.availability)
+        assert tedge2_loaded.always_available == tedge2.always_available
+        assert tedge2_loaded.cost == tedge2.cost
+        assert tedge2_loaded.length == tedge2.length
+
+    def test_save_load_graph(self):
+        # time interval
+        interval_start = 0
+        interval_end = 100
+        x_range = (0, 300)
+        y_range = (0, 300)
+
+        # create environment with random obstacles
+        env = Environment()
+        env.add_random_obstacles(
+            num_points=100,
+            num_lines=100,
+            num_polygons=100,
+            min_x=x_range[0],
+            max_x=x_range[1],
+            min_y=y_range[0],
+            max_y=y_range[1],
+            min_interval=interval_start,
+            max_interval=interval_end,
+            random_recurrence=True,
+            seed=0,
+        )
+
+        # create environment instance
+        env_inst = EnvironmentInstance(
+            environment=env,
+            query_interval=Interval(interval_start, interval_end, closed="both"),
+            scenario_range_x=x_range,
+            scenario_range_y=y_range,
+        )
+
+        # default parameters
+        default_samples = 1000
+
+        # create graph
+        graph = Graph(
+            num_samples=default_samples,
+            seed=0,
+            env=env_inst,
+        )
+
+        # connect start and goal node
+        start_coords = (x_range[0] + 2, y_range[0] + 2)
+        goal_coords = (x_range[1] - 2, y_range[1] - 2)
+        graph.connect_start(coords=start_coords)
+        graph.connect_goal(coords=goal_coords)
+
+        # save graph
+        json_graph = graph.save("test_graph.json")
+
+        # load graph again
+        graph_loaded = Graph(env=env_inst, filename="test_graph.json")
+
+        # check that the content of the saved and loaded graph are the same
+        assert graph_loaded.num_vertices == graph.num_vertices
+        assert graph_loaded.start == graph.start
+        assert graph_loaded.goal == graph.goal
+
+        for key in graph.vertices.keys():
+            original_vertex = graph.vertices[key]
+            loaded_vertex = graph_loaded.vertices[key]
+            assert abs(original_vertex.x - loaded_vertex.x) < 1e-10
+            assert abs(original_vertex.y - loaded_vertex.y) < 1e-10
+
+        for key in graph.connections.keys():
+            std_connections = graph.connections[key]
+            loaded_connections = graph_loaded.connections[key]
+            assert len(std_connections) == len(loaded_connections)
+            for i in range(len(std_connections)):
+                assert std_connections[i] == (
+                    loaded_connections[i][0],
+                    loaded_connections[i][1],
+                )
+
+        for key in graph.heuristic.keys():
+            assert graph.heuristic[key] == graph_loaded.heuristic[key]
+
+        for key in graph.edges.keys():
+            assert graph.edges[key].geometry.equals_exact(
+                graph_loaded.edges[key].geometry, tolerance=1e-10
+            )
+            assert (
+                graph.edges[key].always_available
+                == graph_loaded.edges[key].always_available
+            )
+            assert graph.edges[key].cost == graph_loaded.edges[key].cost
+            assert graph.edges[key].length == graph_loaded.edges[key].length
+            assert len(graph.edges[key].availability) == len(
+                graph_loaded.edges[key].availability
+            )
+            for i in range(len(graph.edges[key].availability)):
+                assert (
+                    graph.edges[key].availability[i]
+                    == graph_loaded.edges[key].availability[i]
+                )
+
+        # remove saved graph
+        os.remove("test_graph.json")

@@ -1,10 +1,12 @@
 import cv2
 import datetime
 import os
+import json
 import shutil
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from shapely.geometry import LineString as ShapelyLine, Point as ShapelyPoint
+from shapely import wkt
 from typing import Tuple, List
 import numpy as np
 from scipy.stats import qmc
@@ -37,6 +39,9 @@ class Graph:
         connect_start: Connects the start node to the graph.
         connect_goal: Connects the goal node to the graph.
         path_cost: Calculates the cost of a given solution path.
+        simulate: Simulates the movement along a given solution path in the graph.
+        save: Saves the graph to a file.
+        load: Loads the graph from a file.
     """
 
     def __init__(
@@ -45,6 +50,7 @@ class Graph:
         num_samples: int = 1000,
         seed: int = None,
         quiet: bool = False,
+        filename: str = None,
     ):
         """
         Initializes a Graph object.
@@ -58,8 +64,16 @@ class Graph:
         # save the environment instance
         self.env = env
 
+        if filename is not None:
+            self.load(filename)
+            return
+
         # save other parameters
         self.num_vertices = num_samples
+
+        # if a seed is specified, set it
+        if seed is not None:
+            np.random.seed(seed)
 
         # initialize empty start and goal vertex indices
         self.start = None
@@ -81,7 +95,7 @@ class Graph:
         vertex_idx = 0
 
         # initialize edges, connections and heuristic dictionaries
-        # format {"edge_id": EdgeWithTemporalAvailability}
+        # format {"edge_id": TimedEdge}
         self.edges = {}
         # format {"node_id": [("neighbor_id", "edge_id"), ...]}, initialize empty
         self.connections = {}
@@ -129,18 +143,18 @@ class Graph:
             coords (Tuple[float, float]): The coordinates of the start node.
 
         Raises:
-            ValueError: If the start node is not collision-free or could not be connected to any other node.
+            RuntimeError: If the start node is not collision-free or could not be connected to any other node.
         """
         # create shapely point
         start_pt = ShapelyPoint(coords[0], coords[1])
 
         # start and goal node cannot be the same
         if self.goal is not None and self.vertices[self.goal] == start_pt:
-            raise ValueError("Start and goal node cannot be the same.")
+            raise RuntimeError("Start and goal node cannot be the same.")
 
         # check if start node is collision free
         if not self.env.static_collision_free(start_pt):
-            raise ValueError("Start node is not collision free.")
+            raise RuntimeError("Start node is not collision free.")
 
         # extract index of start node, which will be inserted
         self.start = len(self.vertices)
@@ -160,7 +174,7 @@ class Graph:
 
         # check if the start node was connected to any other node
         if not success or len(self.connections[self.start]) == 0:
-            raise ValueError("Start node could not be connected to any other node.")
+            raise RuntimeError("Start node could not be connected to any other node.")
 
     def connect_goal(
         self, coords: ShapelyPoint, quiet: bool = False, override_distance: float = None
@@ -173,18 +187,18 @@ class Graph:
             quiet (bool): If True, disables verbose print statements / progress bars.
 
         Raises:
-            ValueError: If the goal node is not collision-free or could not be connected to any other node.
+            RuntimeError: If the goal node is not collision-free or could not be connected to any other node.
         """
         # create shapely point
         goal_pt = ShapelyPoint(coords[0], coords[1])
 
         # start and goal node cannot be the same
         if self.start is not None and self.vertices[self.start] == goal_pt:
-            raise ValueError("Start and goal node cannot be the same.")
+            raise RuntimeError("Start and goal node cannot be the same.")
 
         # check if goal node is collision free
         if not self.env.static_collision_free(goal_pt):
-            raise ValueError("Goal node is not collision free.")
+            raise RuntimeError("Goal node is not collision free.")
 
         # extract index of goal node, which will be inserted
         self.goal = len(self.vertices)
@@ -204,7 +218,7 @@ class Graph:
 
         # check if the goal node was connected to any other node
         if not success or len(self.connections[self.goal]) == 0:
-            raise ValueError("Goal node could not be connected to any other node.")
+            raise RuntimeError("Goal node could not be connected to any other node.")
 
         # compute the heuristic cost-to-go values for all nodes
         if not quiet:
@@ -542,4 +556,51 @@ class Graph:
             os.remove(mp4_path)
             print(f"Simulation saved as {mp4_path}")
 
-    # TODO - add functions to save and load from file
+    def save(self, filename: str):
+        """
+        Saves the graph to a file.
+
+        Args:
+            filename (str): The name of the file to save the graph to.
+        """
+
+        json_object = {
+            "num_vertices": self.num_vertices,
+            "start": self.start,
+            "goal": self.goal,
+            "vertices": {key: vertex.wkt for key, vertex in self.vertices.items()},
+            "edges": {key: edge.export_to_json() for key, edge in self.edges.items()},
+            "connections": self.connections,
+            "heuristic": self.heuristic,
+        }
+
+        with open(filename, "w") as f:
+            json.dump(json_object, f)
+
+    def load(self, filename: str):
+        """
+        Loads the graph from a file.
+
+        Args:
+            filename (str): The name of the file to load the graph from.
+        """
+
+        with open(filename, "r") as f:
+            json_object = json.load(f)
+
+        self.num_vertices = json_object["num_vertices"]
+        self.start = json_object["start"]
+        self.goal = json_object["goal"]
+        self.vertices = {
+            int(key): wkt.loads(value) for key, value in json_object["vertices"].items()
+        }
+        self.edges = {
+            int(key): TimedEdge(geometry=None, availability=[], json_obj=value)
+            for key, value in json_object["edges"].items()
+        }
+        self.connections = {
+            int(key): value for key, value in json_object["connections"].items()
+        }
+        self.heuristic = {
+            int(key): value for key, value in json_object["heuristic"].items()
+        }

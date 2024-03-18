@@ -231,7 +231,7 @@ class TestPolygon:
 
     def test_check_collision_with_invalid_shape(self):
         polygon = self.setup_method()
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             polygon.check_collision("invalid shape")
 
     def test_temporal_collision_check(self):

@@ -155,14 +155,14 @@ class Geometry:
                     )
                 # other cases should not occur, throw an error
                 else:
-                    raise ValueError(
+                    raise RuntimeError(
                         "There occurred an error while checking for activity with recurrence parameter. Computed start and end parameters: "
                         + str(start_k)
                         + ", "
                         + str(end_k)
                     )
 
-        raise ValueError("There occurred an error while checking for activity.")
+        raise RuntimeError("There occurred an error while checking for activity.")
 
     def export_to_json(self):
         """
@@ -208,7 +208,7 @@ class Geometry:
             return None
 
         if len(input_str) < 2:
-            raise ValueError("Invalid interval string with length less than 2.")
+            raise RuntimeError("Invalid interval string with length less than 2.")
 
         interval_closed = "both"
         if input_str[0] == "(" and input_str[-1] == ")":

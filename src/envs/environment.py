@@ -58,7 +58,7 @@ class Environment:
 
     Raises
     ------
-    ValueError
+    RuntimeError
         If an invalid obstacle type is encountered. Only Point, Line, or Polygon are supported.
 
     FileNotFoundError
@@ -275,7 +275,7 @@ class Environment:
 
         Raises
         ------
-        ValueError
+        RuntimeError
             If an invalid obstacle type is encountered. Only Point, Line, or Polygon are supported.
         """
         output = {"points": [], "lines": [], "polygons": []}
@@ -290,7 +290,7 @@ class Environment:
             elif isinstance(obstacle, Polygon):
                 output["polygons"].append(json_data)
             else:
-                raise ValueError(
+                raise RuntimeError(
                     "Invalid obstacle type. Only Point, Line, or Polygon are supported."
                 )
 

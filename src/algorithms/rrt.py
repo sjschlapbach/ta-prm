@@ -1,6 +1,7 @@
 from typing import Tuple, List
 import numpy as np
 import matplotlib.pyplot as plt
+from pandas import Interval
 from shapely.geometry import Point as ShapelyPoint, LineString as ShapelyLine
 
 from src.envs.environment_instance import EnvironmentInstance
@@ -18,6 +19,7 @@ class RRT:
     - seed (int): The seed for the random number generator.
     - rewiring (bool): Whether to use the RRT* algorithm (default: False).
     - quiet (bool): Whether to suppress output messages.
+    - consider_dynamic (bool): Whether to consider dynamic obstacles active at the given query time (default: False).
 
     Attributes:
     - tree (dict): A dictionary representing the tree structure.
@@ -36,14 +38,41 @@ class RRT:
         start: Tuple[float, float],
         goal: Tuple[float, float],
         env: EnvironmentInstance,
+        query_time: float = None,
         num_samples: int = 100,
         seed: int = None,
         rewiring: bool = False,
         quiet: bool = False,
+        max_connection_trials: int = 100,
+        consider_dynamic: bool = False,
     ):
+        """
+        Initializes the RRT tree / optionally with rewiring for RRT*.
+
+        Arguments:
+        - start (Tuple[float, float]): The coordinates of the start node.
+        - goal (Tuple[float, float]): The coordinates of the goal node.
+        - env (EnvironmentInstance): An instance of the environment.
+        - query_time (float): The time at which the query is made (optional, only determined whether or not to check for dynamic obstacles, which are visible at this point in time).
+        - num_samples (int): The number of samples to build the tree.
+        - seed (int): The seed for the random number generator.
+        - rewiring (bool): Whether to use the RRT* algorithm (default: False).
+        - quiet (bool): Whether to suppress output messages.
+        - max_connection_trials (int): The maximum number of connection trials to attempt per new sample
+        - consider_dynamic (bool): Whether to consider dynamic obstacles active at the given query time (default: False).
+        """
+
+        # set the nummpy random seed if specified
+        if seed is not None:
+            np.random.seed(seed)
+
         # check for collision of start node
-        if not env.static_collision_free(ShapelyPoint(start[0], start[1])):
-            raise ValueError("start node is in collision with static obstacles.")
+        if not env.static_collision_free(
+            ShapelyPoint(start[0], start[1]), query_time=query_time
+        ):
+            raise RuntimeError(
+                "start node is in collision with obstacles visible at query time."
+            )
 
         # initialize tree
         if rewiring:
@@ -85,6 +114,7 @@ class RRT:
             self.gammaPRM = None
 
         # build the tree up to the required number of samples
+        sampling_attempts = 0
         while next_sample <= num_samples + 1:
             x_candidate = np.random.uniform(env.dim_x[0], env.dim_x[1])
             y_candidate = np.random.uniform(env.dim_y[0], env.dim_y[1])
@@ -98,7 +128,9 @@ class RRT:
             # check if edge is (static) collision-free, and if so, add the new node to the tree
             # dynamic obstacles are not considered during building phase of RRT graph
             if self.__check_connection_collision_free(
-                neighbor=xnearest, candidate=candidate
+                neighbor=xnearest,
+                candidate=candidate,
+                query_time=query_time if consider_dynamic else None,
             ):
                 self.__connect_new_sample(
                     xnearest=xnearest,
@@ -107,10 +139,19 @@ class RRT:
                     rewiring=rewiring,
                     distance=distance,
                     xnear=xnear,
+                    query_time=query_time if consider_dynamic else None,
                 )
 
                 # increment after successful sample addition
                 next_sample += 1
+                sampling_attempts = 0
+
+            else:
+                sampling_attempts += 1
+                if sampling_attempts > max_connection_trials:
+                    raise RuntimeError(
+                        "Exceeded maximum number of connection trials for new sample."
+                    )
 
         # connect goal to the tree as well
         self.goal = next_sample
@@ -120,7 +161,9 @@ class RRT:
         )
 
         if self.__check_connection_collision_free(
-            neighbor=xnearest, candidate=goal_node
+            neighbor=xnearest,
+            candidate=goal_node,
+            query_time=query_time if consider_dynamic else None,
         ):
             self.__connect_new_sample(
                 xnearest=xnearest,
@@ -129,10 +172,11 @@ class RRT:
                 rewiring=False,
                 distance=distance,
                 xnear=xnear,
+                query_time=query_time if consider_dynamic else None,
             )
 
         else:
-            raise ValueError(
+            raise RuntimeError(
                 "Goal node is not reachable from the tree or not collision free."
             )
 
@@ -150,6 +194,53 @@ class RRT:
             path.append(current)
 
         return path[::-1]
+
+    def validate_path(
+        self,
+        path: List[int],
+        start_time: float = 0.0,
+        stepsize: float = 1,
+        quiet: bool = False,
+    ):
+        """
+        Validates the given path for collision with dynamics obstacles.
+
+        Args:
+            path (List[int]): The path to be validated.
+            start_time (float): The time at which the path starts (default: 0.0).
+            stepsize (float): The stepsize for checking dynamic obstacles (default: 1).
+            quiet (bool): Whether to suppress output messages (default: False).
+
+        Returns:
+            bool: True if the path is collision-free, False otherwise.
+            int: The index of the first edge in the path that is not collision-free.
+            float: The time at the starting node of the first colliding node
+        """
+        time = start_time
+
+        for i in range(len(path) - 1):
+            parent = self.tree[path[i]]["position"]
+            child = self.tree[path[i + 1]]["position"]
+
+            distance = parent.distance(child)
+            edge_end_time = time + distance
+
+            edge = ShapelyLine([(parent.x, parent.y), (child.x, child.y)])
+
+            # check for dynamic collisions
+            collision_free, last_save, last_time = self.env.dynamic_collision_free_ln(
+                edge,
+                Interval(time, edge_end_time, closed="both"),
+                stepsize=stepsize,
+                quiet=quiet,
+            )
+
+            if not collision_free:
+                return False, i, time, last_save, last_time
+
+            time = edge_end_time
+
+        return True, None, None, None, None
 
     def __find_closest_neighbor(
         self, candidate: ShapelyPoint, rewiring: bool
@@ -183,13 +274,18 @@ class RRT:
 
         return closest, distance, xnear
 
-    def __check_connection_collision_free(self, neighbor: int, candidate: ShapelyPoint):
+    def __check_connection_collision_free(
+        self, neighbor: int, candidate: ShapelyPoint, query_time: float = None
+    ):
         """
         Checks if the connection between the neighbor node and the candidate node is collision-free.
 
         Args:
             neighbor (int): Index of the neighbor node in the tree.
             candidate (ShapelyPoint): The candidate node to connect with the neighbor node.
+            query_time (float): The time at which the query is made
+                (optional, only determined whether or not to check for dynamic obstacles,
+                 which are visible at this point in time).
 
         Returns:
             bool: True if the connection is collision-free, False otherwise.
@@ -200,7 +296,9 @@ class RRT:
         )
 
         # check for static collisions
-        collision_free, _ = self.env.static_collision_free_ln(edge)
+        collision_free, _ = self.env.static_collision_free_ln(
+            line=edge, query_time=query_time
+        )
         if not collision_free:
             return False
         else:
@@ -287,6 +385,24 @@ class RRT:
                 markersize=6,
             )
 
+    def get_path_cost(self, path: List[int]):
+        """
+        Computes the cost of the given path.
+
+        Args:
+            path (List[int]): The path for which to compute the cost.
+
+        Returns:
+            float: The cost of the path.
+        """
+        cost = 0
+        for i in range(len(path) - 1):
+            parent = self.tree[path[i]]["position"]
+            child = self.tree[path[i + 1]]["position"]
+            cost += parent.distance(child)
+
+        return cost
+
     def __connect_new_sample(
         self,
         xnearest: int,
@@ -295,6 +411,7 @@ class RRT:
         rewiring: bool,
         distance: float,
         xnear: List[Tuple[int, float]],
+        query_time: float = None,
     ):
         """
         Connects a new sample to the RRT tree.
@@ -306,6 +423,7 @@ class RRT:
             rewiring (bool): Flag indicating whether to use RRT* algorithm.
             distance (float): Distance between the nearest node and the candidate node.
             xnear (List[Tuple[int, float]]): List of indices of all nodes close to the candidate node and their distance (within rewiring distance according to RRT* definition).
+            query_time (float): The time at which the query is made (optional, only determined whether or not to check for dynamic obstacles, which are visible at this point in time).
 
         Returns:
             None
@@ -330,7 +448,7 @@ class RRT:
 
                 if (
                     self.__check_connection_collision_free(
-                        neighbor=x, candidate=candidate
+                        neighbor=x, candidate=candidate, query_time=query_time
                     )
                     and new_cost < cmin
                 ):
@@ -354,6 +472,7 @@ class RRT:
                     self.__check_connection_collision_free(
                         neighbor=next_sample,
                         candidate=self.tree[x]["position"],
+                        query_time=query_time,
                     )
                     and new_cost < self.tree[x]["cost"]
                 ):
