@@ -143,12 +143,16 @@ if __name__ == "__main__":
         env_inst_demo.plot(fig=fig)
         fig.tight_layout()
         plt.savefig("animations/scenario_setup/initial.png", dpi=300)
+        plt.savefig("animations/scenario_setup/initial_high_res.png", dpi=400)
+        plt.savefig("animations/scenario_setup/initial_highest_res.png", dpi=500)
 
         ## 2) Plot the scenario with only static obstacle active
         fig = plt.figure(figsize=(6, 2.4))
         env_inst_demo.plot(fig=fig, query_time=0, show_inactive=True)
         fig.tight_layout()
         plt.savefig("animations/scenario_setup/static.png", dpi=300)
+        plt.savefig("animations/scenario_setup/static_high_res.png", dpi=400)
+        plt.savefig("animations/scenario_setup/static_highest_res.png", dpi=500)
 
         ## 3) Plot the scenario with only dynamic obstacle active
         env_demo.reset()
@@ -171,6 +175,8 @@ if __name__ == "__main__":
         env_inst_demo.plot(fig=fig, query_time=20, show_inactive=True)
         fig.tight_layout()
         plt.savefig("animations/scenario_setup/dynamic.png", dpi=300)
+        plt.savefig("animations/scenario_setup/dynamic_high_res.png", dpi=400)
+        plt.savefig("animations/scenario_setup/dynamic_highest_res.png", dpi=500)
 
         ## 4) Highlight task without obstacle active
         fig = plt.figure(figsize=(6, 2.4))
@@ -179,6 +185,8 @@ if __name__ == "__main__":
         plt.plot(goal_coords[0], goal_coords[1], "go")
         fig.tight_layout()
         plt.savefig("animations/scenario_setup/task.png", dpi=300)
+        plt.savefig("animations/scenario_setup/task_high_res.png", dpi=400)
+        plt.savefig("animations/scenario_setup/task_highest_res.png", dpi=500)
 
     ### Create video of scenario in animations (with pictures in scenar_images)
     if generate_images:
