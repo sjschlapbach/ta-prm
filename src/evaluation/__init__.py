@@ -13,3 +13,10 @@ from .helpers import (
     results_from_file,
     analytics_from_file,
 )
+from .scenario_illustration import (
+    get_timed_path,
+    get_timed_path_rrt,
+    get_current_pos_timed_path,
+    plot_taprm_path,
+    plot_rrt_path,
+)
