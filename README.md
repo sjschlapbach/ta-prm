@@ -5,7 +5,7 @@
 
 This repository contains a Python implementation of the Time-Aware PRM (TA-PRM) algorithm. TA-PRM is a sampling-based path planning algorithm that is able to find a solution to a path planning problem in known time-varying environments. In addition to the algorithm itself, this repository contains a simple simulation environment and a number of example scripts that showcase the core functionalities of the implementation, as well as an evaluation of the algorithm's performance.
 
-![Demonstration of TA-PRM algorithm in randomized environment](https://github.com/user-attachments/assets/510a15ba-0248-4694-b1bd-0c649ec97392)
+![Demonstration of TA-PRM algorithm in randomized environment](https://github.com/user-attachments/assets/580aba00-7ab6-4c24-a8e5-3106b857e191)
 
 ## Setup
 
