@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: "Schlapbach"
+    given-names: "Julius"
+    orcid: "https://orcid.org/0009-0006-0118-6451"
+  - family-names: "Schopferer"
+    given-names: "Simon"
+    orcid: "https://orcid.org/0000-0001-5254-3961"
+title: "Time-Aware Probabilistic Roadmaps for Multi-Query Path Planning in Dynamic Environments"
+doi: 10.1109/IRC63610.2024.00008
+date-released: 2024-12-31
+url: "https://github.com/sjschlapbach/ta-prm/"
+preferred-citation:
+  type: proceedings
+  authors:
+    - family-names: "Schlapbach"
+      given-names: "Julius"
+      orcid: "https://orcid.org/0009-0006-0118-6451"
+    - family-names: "Schopferer"
+      given-names: "Simon"
+      orcid: "https://orcid.org/0000-0001-5254-3961"
+  doi: 10.1109/IRC63610.2024.00008
+  booktitle: "2024 Eighth IEEE International Conference on Robotic Computing (IRC)"
+  title: "Time-Aware Probabilistic Roadmaps for Multi-Query Path Planning in Dynamic Environments"
+  start: 9
+  end: 16
+  year: 2024
