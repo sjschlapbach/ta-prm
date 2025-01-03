@@ -3,7 +3,20 @@
 [![Python Testing](https://github.com/sjschlapbach/ta-prm/actions/workflows/python_testing.yml/badge.svg)](https://github.com/sjschlapbach/ta-prm/actions/workflows/python_testing.yml)
 [![Example Scripts](https://github.com/sjschlapbach/ta-prm/actions/workflows/python_scripts.yml/badge.svg)](https://github.com/sjschlapbach/ta-prm/actions/workflows/python_scripts.yml)
 
-This repository contains a Python implementation of the Time-Aware PRM (TA-PRM) algorithm. TA-PRM is a sampling-based path planning algorithm that is able to find a solution to a path planning problem in known time-varying environments. In addition to the algorithm itself, this repository contains a simple simulation environment and a number of example scripts that showcase the core functionalities of the implementation, as well as an evaluation of the algorithm's performance.
+This repository contains a Python implementation of the Time-Aware PRM (TA-PRM) algorithm. If you use this code in your academic work, please cite the corresponding paper ([PDF](https://doi.org/10.1109/IRC63610.2024.00008), [Video](https://youtu.be/wKgBmhl1tus)):
+
+```
+@inproceedings{schlapbach2024taprm,
+  author={Schlapbach, Julius and Schopferer, Simon},
+  booktitle={2024 Eighth IEEE International Conference on Robotic Computing (IRC)}, 
+  title={Time-Aware Probabilistic Roadmaps for Multi-Query Path Planning in Dynamic Environments}, 
+  year={2024},
+  pages={9-16},
+  doi={10.1109/IRC63610.2024.00008}
+}
+```
+
+TA-PRM is a sampling-based path planning algorithm that is able to find a solution to a path planning problem in known time-varying environments. In addition to the algorithm itself, this repository contains a simple simulation environment and a number of example scripts that showcase the core functionalities of the implementation, as well as an evaluation of the algorithm's performance.
 
 ![Demonstration of TA-PRM algorithm in randomized environment](https://github.com/user-attachments/assets/580aba00-7ab6-4c24-a8e5-3106b857e191)
 
